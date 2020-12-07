@@ -8,7 +8,7 @@ on:
   push:
   pull_request:
 
-name: R-CMD-check
+name: R Build and Checks
 
 jobs:
   R-CMD-check:
