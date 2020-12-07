@@ -90,8 +90,8 @@ PrintRowQc <- function(barcodeMatrix) {
 	# Mean Counts
 	P1 <- ggplot(df, aes(x = Barcode, y = mean)) +
 		geom_bar(stat = 'identity') +
-		ggtitle('Mean Count/Cell') +
-		ylab('Mean Count/Cell') +
+		ggtitle('Mean Counts/Cell') +
+		ylab('Mean Counts/Cell') +
 		egg::theme_presentation() +
 		theme(
 		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
@@ -100,7 +100,7 @@ PrintRowQc <- function(barcodeMatrix) {
 	P2 <- ggplot(df, aes(x = Barcode, y = mean)) +
 		geom_bar(stat = 'identity') +
 		egg::theme_presentation() +
-		ylab('Mean Count/Cell (log1p)') +
+		ylab('Mean Counts/Cell (log1p)') +
 		scale_y_continuous(trans = scales::log1p_trans()) +
 		theme(
 		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
@@ -111,8 +111,8 @@ PrintRowQc <- function(barcodeMatrix) {
 	# Mean Counts, Non-zero
 	P1 <- ggplot(df, aes(x = Barcode, y = mean_nonzero)) +
 		geom_bar(stat = 'identity') +
-		ggtitle('Mean Count/Cell') +
-		ylab('Mean Count/Cell') +
+		ggtitle('Mean Counts/Cell') +
+		ylab('Mean Counts/Cell') +
 		egg::theme_presentation() +
 		theme(
 		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
@@ -121,7 +121,7 @@ PrintRowQc <- function(barcodeMatrix) {
 	P2 <- ggplot(df, aes(x = Barcode, y = mean_nonzero)) +
 		geom_bar(stat = 'identity') +
 		egg::theme_presentation() +
-		ylab('Mean Count/Cell (log1p)') +
+		ylab('Mean Counts/Cell (log1p)') +
 		scale_y_continuous(trans = scales::log1p_trans()) +
 		theme(
 		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
