@@ -15,7 +15,7 @@ RUN apt-get update -y \
 # Let this run for the purpose of installing/caching dependencies
 RUN Rscript -e "install.packages(c('devtools', 'BiocManager', 'remotes'), dependencies=TRUE, ask = FALSE)" \
 	&& echo "local({\noptions(repos = BiocManager::repositories())\n})\n" >> ~/.Rprofile \
-    && Rscript -e "devtools::install_github(repo = 'bimberlab/cellhashR', ref = 'Dev', dependencies = T, upgrade = 'always')" \
+    && Rscript -e "devtools::install_github(repo = 'BimberLab/cellhashR', ref = 'master', dependencies = T, upgrade = 'always')" \
 	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 # This should not be cached if the files change

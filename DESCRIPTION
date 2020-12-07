@@ -1,6 +1,6 @@
 Package: cellhashR
 Type: Package
-Title: A package for demultiplexing cell hashing data
+Title: A Package for Demultiplexing Cell Hashing Data
 Version: 0.0.1
 Author: Bimber Lab
 Maintainer: The package maintainer <bimber@ohsu.edu>
@@ -20,6 +20,7 @@ Imports:
     ggplot2,
     forcats,
     egg,
+    cluster,
     patchwork,
     scales
 Suggests:
