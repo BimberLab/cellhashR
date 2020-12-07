@@ -41,8 +41,8 @@ jobs:
 
       - name: Query dependencies
         run: |
-          Rscript -e 'if (!requireNamespace("BiocManager", quietly=TRUE))  install.packages("BiocManager");'
-          Rscript -e 'BiocManager::install(version = "${{ matrix.config.bioc }}", ask = FALSE);cat(append = TRUE, file = "~/.Rprofile.site", "options(repos = BiocManager::repositories());")'
+          if (!requireNamespace("BiocManager", quietly=TRUE))  install.packages("BiocManager");
+          BiocManager::install(version = "${{ matrix.config.bioc }}", ask = FALSE);cat(append = TRUE, file = "~/.Rprofile.site", "options(repos = BiocManager::repositories());")
           install.packages('remotes')
           saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
           writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
