@@ -1,0 +1,24 @@
+Date: 2020-12-06
+Running time: 2.0 hours, 35.0 minutes, 8.899 seconds
+CITE-seq-Count Version: 1.4.3
+Reads processed: 48166857
+Percentage mapped: 99
+Percentage unmapped: 1
+Uncorrected cells: 58
+Correction:
+	Cell barcodes collapsing threshold: 1
+	Cell barcodes corrected: 33364
+	UMI collapsing threshold: 2
+	UMIs corrected: 3726580
+Run parameters:
+	Read1_paths: /home/groups/BimberLab/primeseq/449/@files/sequenceImportPipeline/SequenceImport_2020-08-25_09-22-27/s_38109_CKDL200160310-1a-AK2449_HCHJLCCX2_L4_1.fq.gz
+	Read2_paths: /home/groups/BimberLab/primeseq/449/@files/sequenceImportPipeline/SequenceImport_2020-08-25_09-22-27/s_38109_CKDL200160310-1a-AK2449_HCHJLCCX2_L4_2.fq.gz
+	Cell barcode:
+		First position: 1
+		Last position: 16
+	UMI barcode:
+		First position: 17
+		Last position: 26
+	Expected cells: 0
+	Tags max errors: 2
+	Start trim: 0

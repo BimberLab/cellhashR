@@ -6,8 +6,8 @@ output: html_document
 
 ```{r setup}
 
-#library(cellhashR)
-source('/projects/cellhashR/R/CellHashing.R')
+library(cellhashR)
+#source('/projects/cellhashR/R/CellHashing.R')
 
 knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error=TRUE)
 
