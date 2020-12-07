@@ -5,3 +5,4 @@
 ^cellhashR.iml$
 ^cellhashR.*\.tar\.gz$
 ^cellhashR.*\.zip$
+^\.github$

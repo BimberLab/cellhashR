@@ -1,0 +1,51 @@
+name: Build Docker
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  "0 4 * * *"
+  push:
+    branches:
+      - master
+jobs:
+  generate:
+    name: Build Docker
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+      - name: Docker meta
+        id: docker_meta
+        uses: crazy-max/ghaction-docker-meta@v1
+        with:
+          images: ghcr.io/bimberlab/cellhashR
+          tag-sha: true
+          tag-semver: |
+            {{version}}
+            {{major}}.{{minor}}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.PAT }}
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          pull: true
+          push: true
+          tags: ghcr.io/bimberlab/cellhashR:nightly,ghcr.io/bimberlab/cellhashR:latest
+          labels: |
+            ${{ steps.docker_meta.outputs.labels }}
+            org.opencontainers.image.title=cellhashR
+            org.opencontainers.image.description=cellhashR is an R package for demultiplexing cell hashing data, developed and maintained by the Bimber Lab.
+
+
