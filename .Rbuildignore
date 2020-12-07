@@ -1,0 +1,7 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.git*
+^\.idea*
+^cellhashR.iml$
+^cellhashR.*\.tar\.gz$
+^cellhashR.*\.zip$

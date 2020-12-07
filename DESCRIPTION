@@ -1,0 +1,30 @@
+Package: cellhashR
+Type: Package
+Title: A package for demultiplexing cell hashing data
+Version: 0.0.1
+Author: Bimber Lab
+Maintainer: The package maintainer <bimber@ohsu.edu>
+Description: The goal of this package is to provide tools for QC and demultiplexing of cell hashing data
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Depends:
+    R (>= 4.0.0)
+Imports:
+    Seurat,
+    dplyr,
+    tidyr,
+    naturalsort,
+    DropletUtils,
+    Matrix,
+    ggplot2,
+    forcats,
+    egg,
+    patchwork,
+    scales
+Suggests:
+    devtools,
+    testthat (>= 2.1.0)
+Remotes:
+    bioc::release/DropletUtils,
+RoxygenNote: 7.1.1

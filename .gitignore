@@ -1,0 +1,11 @@
+# Intellij files
+.idea/*
+.Rproj.user
+.Rhistory
+..Rcheck*
+cellhashR.Rcheck*
+cellhashR**.tar.gz
+cellhashR**.zip
+cellhashR.Rproj
+.shelf/*
+install.bat
