@@ -29,6 +29,7 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 		# older CITE-seq-Count versions created a CSV file, so support this:
 		barcodeData <- utils::read.table(rawCountData, sep = ',', header = T, row.names = 1)
 		barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% barcodeBlacklist)),]
+		barcodeData <- as.matrix(barcodeData)
 	}
 
 	print(paste0('Initial cell barcodes in hashing data: ', ncol(barcodeData)))
@@ -51,8 +52,6 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 	if (!is.null(minCountPerCell)) {
 		barcodeData <- DoCellFiltering(barcodeData, minCountPerCell = minCountPerCell)
 	}
-
-
 
 	if (doPlot) {
 		PrintColumnQc(barcodeData)
