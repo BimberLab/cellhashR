@@ -291,6 +291,67 @@ PrintColumnQc <- function(barcodeMatrix) {
 	P1 <- P1 + plot_annotation(caption = paste0('Total cells where top barcode is >0.75 of counts: ', sum(topValue > 0.75), ' of ', length(topValue))) & theme(plot.caption = element_text(size = 14))
 
 	print(P1)
+
+	#plot the relative counts for a barcode
+	cellNormalizedBarcodes <- as.data.frame(prop.table(as.matrix(barcodeMatrix), margin = 2))
+	rownames(cellNormalizedBarcodes) <- simplifyHtoNames(rownames(cellNormalizedBarcodes))
+	cellNormalizedBarcodes.pivot <- tidyr::pivot_longer(as.data.frame(t(cellNormalizedBarcodes)),
+	cols = colnames(t(cellNormalizedBarcodes)),
+	names_to = "barcode",
+	values_to = "relative_counts")
+
+	P1 <- cellNormalizedBarcodes.pivot %>%
+		tidyr::gather(barcode, relative_counts) %>%
+		ggplot(aes(x = relative_counts)) +
+		geom_histogram(aes(color = barcode, fill=barcode), binwidth = .01, position="identity", alpha = 0.5)+
+		xlab("Fraction of Total Counts") +
+		ylab("Density") +
+		ggtitle("Relative Counts (All Barcodes)") +
+		egg::theme_presentation()
+
+	print(P1)
+
+	#relative counts plots with a threshold for minimum percentage
+
+	P1 <- cellNormalizedBarcodes.pivot %>%
+		tidyr::gather(barcode, relative_counts) %>%
+		ggplot(aes(x = relative_counts)) +
+		geom_histogram(aes(color = barcode, fill=barcode), binwidth = .01, position="identity", alpha = 0.5)+
+		xlab("Fraction of Total Counts") +
+		ylab("Density") +
+		xlim(0.01,1) +
+		ggtitle("Relative Counts (>1% of Total Counts)") +
+		egg::theme_presentation()
+
+	P2 <- cellNormalizedBarcodes.pivot %>%
+		tidyr::gather(barcode, relative_counts) %>%
+		ggplot(aes(x = relative_counts)) +
+		geom_histogram(aes(color = barcode, fill=barcode), binwidth = .01, position="identity", alpha = 0.5)+
+		xlab("Fraction of Total Counts") +
+		ylab("Density") +
+		xlim(0.05,1) +
+		ggtitle("Relative Counts (>5% of Total Counts)") +
+		egg::theme_presentation()
+
+	print(P1 | P2)
+
+	#stacked ridge plots
+	cellNormalizedBarcodes.pivot <- cellNormalizedBarcodes.pivot %>%
+	dplyr::filter(relative_counts > 0.05)
+
+	P1 <- cellNormalizedBarcodes.pivot %>%
+		tidyr::gather(barcode, relative_counts) %>%
+		ggplot(aes(x = relative_counts)) +
+		geom_histogram(aes(color = barcode, fill=barcode), binwidth = .01, position="identity", alpha = 0.5)+
+		xlab("Fraction of Total Counts") +
+		ylab("Density") +
+		xlim(0.05,1) +
+		ggtitle("Relative Counts (>5% of Total Counts)") +
+		facet_grid(barcode ~ .)+
+		coord_cartesian(xlim = c(0.05, 1))+
+		egg::theme_presentation()
+
+	print(P1)
 }
 
 utils::globalVariables(
