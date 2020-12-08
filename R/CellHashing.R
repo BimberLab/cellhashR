@@ -244,7 +244,7 @@ GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, method = 'seurat') {
     if (method == 'seurat') {
       seuratObj <- DoMULTIseqDemux(seuratObj)
     } else {
-      stop(pate0('Unknown method: ', method))
+      stop(paste0('Unknown method: ', method))
     }
 
     return(data.frame(Barcode = as.factor(colnames(seuratObj)), HTO_classification = seuratObj$MULTI_ID, HTO_classification.global = seuratObj$MULTI_classification.global, key = c('Barcode')))
