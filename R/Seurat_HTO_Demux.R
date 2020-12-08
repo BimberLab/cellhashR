@@ -1,3 +1,5 @@
+#' @include Utils.R
+
 DoHtoDemux <- function(seuratObj, positive.quantile = 0.99, label = 'Seurat HTODemux', plotDist = FALSE) {
 	# Normalize HTO data, here we use centered log-ratio (CLR) transformation
 	seuratObj <- NormalizeData(seuratObj, assay = "HTO", normalization.method = "CLR", verbose = FALSE)
@@ -153,7 +155,7 @@ plotDist = FALSE
 	donor.id = rownames(x = data)
 	hash.max <- apply(X = data, MARGIN = 2, FUN = max)
 	hash.maxID <- apply(X = data, MARGIN = 2, FUN = which.max)
-	hash.second <- apply(X = data, MARGIN = 2, FUN = Seurat:::MaxN, N = 2)
+	hash.second <- apply(X = data, MARGIN = 2, FUN = MaxN, N = 2)
 	hash.maxID <- as.character(x = donor.id[sapply(
 	X = 1:ncol(x = data),
 	FUN = function(x) {

@@ -1,3 +1,6 @@
+#' @include Utils.R
+
+
 #' @title Perform HTO classification using Seurat's implementation of MULTI-seq classification
 #'
 #' @description Perform HTO classification using Seurat's implementation of MULTI-seq classification
@@ -67,7 +70,7 @@ verbose = TRUE
 			}
 
 			# Determine which q values results in the highest pSinglet
-			threshold.results1 <- Seurat:::FindThresh(call.list = bar.table_sweep.list)
+			threshold.results1 <- FindThresh(call.list = bar.table_sweep.list)
 			res_round <- threshold.results1$res
 			res.use <- res_round[res_round$Subset == "pSinglet", ]
 			q.use <- res.use[which.max(res.use$Proportion),"q"]
@@ -112,7 +115,7 @@ verbose = TRUE
 	X = multi_data_norm,
 	MARGIN = 1,
 	FUN = function(x) {
-		return(which(x == Seurat:::MaxN(x)))
+		return(which(x == MaxN(x)))
 	}
 	))]
 	doublet.names <- unlist(x = lapply(
@@ -126,6 +129,55 @@ verbose = TRUE
 	MULTI_classification[doublet.id] <- doublet.names[doublet.id]
 	object$MULTI_classification <- factor(x = MULTI_classification)
 	return(object)
+}
+
+# Inter-maxima quantile sweep to find ideal barcode thresholds
+#
+# Finding ideal thresholds for positive-negative signal classification per multiplex barcode
+#
+# @param call.list A list of sample classification result from different quantiles using ClassifyCells
+#
+# @return A list with two values: \code{res} and \code{extrema}:
+# \describe{
+#   \item{res}{A data.frame named res_id documenting the quantile used, subset, number of cells and proportion}
+#   \item{extrema}{...}
+# }
+#
+# @author Chris McGinnis, Gartner Lab, UCSF
+#
+# @examples
+# FindThresh(call.list = bar.table_sweep.list)
+#
+FindThresh <- function(call.list) {
+	# require(reshape2)
+	res <- as.data.frame(x = matrix(
+	data = 0L,
+	nrow = length(x = call.list),
+	ncol = 4
+	))
+	colnames(x = res) <- c("q","pDoublet","pNegative","pSinglet")
+	q.range <- unlist(x = strsplit(x = names(x = call.list), split = "q="))
+	res$q <- as.numeric(x = q.range[grep(pattern = "0", x = q.range)])
+	nCell <- length(x = call.list[[1]])
+	for (i in 1:nrow(x = res)) {
+		temp <- table(call.list[[i]])
+		if ("Doublet" %in% names(x = temp) == TRUE) {
+			res$pDoublet[i] <- temp[which(x = names(x = temp) == "Doublet")]
+		}
+		if ( "Negative" %in% names(temp) == TRUE ) {
+			res$pNegative[i] <- temp[which(x = names(x = temp) == "Negative")]
+		}
+		res$pSinglet[i] <- sum(temp[which(x = !names(x = temp) %in% c("Doublet", "Negative"))])
+	}
+	res.q <- res$q
+	q.ind <- grep(pattern = 'q', x = colnames(x = res))
+	res <- Melt(x = res[, -q.ind])
+	res[, 1] <- rep.int(x = res.q, times = length(x = unique(res[, 2])))
+	colnames(x = res) <- c('q', 'variable', 'value')
+	res[, 4] <- res$value/nCell
+	colnames(x = res)[2:4] <- c("Subset", "nCells", "Proportion")
+	extrema <- res$q[LocalMaxima(x = res$Proportion[which(x = res$Subset == "pSinglet")])]
+	return(list(res = res, extrema = extrema))
 }
 
 #' @importFrom KernSmooth bkde
@@ -156,7 +208,7 @@ ClassifyCells <- function(data, q) {
 		to = quantile(x = data[, i], probs = 0.999),
 		length.out = 100
 		)
-		extrema <- Seurat:::LocalMaxima(x = model(x))
+		extrema <- LocalMaxima(x = model(x))
 		if (length(x = extrema) <= 1) {
 			print(paste0("No extrema/threshold found for ", colnames(x = data)[i]))
 			next

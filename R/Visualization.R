@@ -20,7 +20,7 @@ DebugDemux <- function(seuratObj, assay = 'HTO', reportKmeans = FALSE) {
 	# Calculate tSNE embeddings with a distance matrix
 	tryCatch({
 		perplexity <- .InferPerplexityFromSeuratObj(seuratObj, 100)
-		seuratObj[['hto_tsne']] <- RunTSNE(dist(t(data)), assay = assay, perplexity = perplexity)
+		seuratObj[['hto_tsne']] <- RunTSNE(stats::dist(Matrix::t(data)), assay = assay, perplexity = perplexity)
 		P <- DimPlot(seuratObj, reduction = 'hto_tsne', label = TRUE)
 		P <- P + ggtitle('Clusters: clara')
 		print(P)
@@ -67,7 +67,7 @@ PlotHtoCountData <- function(seuratObj, label, assay = 'HTO') {
 	df2 <- as.data.frame(data)
 	df2$HTO <- row.names(data)
 	df2 <- tidyr::gather(df2, key = 'CellBarcode', value = 'Count', -HTO)
-	df2$HTO <- OOSAP:::simplifyHtoNames(as.character(df2$HTO))
+	df2$HTO <- simplifyHtoNames(as.character(df2$HTO))
 	df2$HTO <- naturalsort::naturalfactor(df2$HTO)
 
 	df2$Count <- log10(df2$Count + 0.5)
@@ -81,7 +81,7 @@ PlotHtoCountData <- function(seuratObj, label, assay = 'HTO') {
 	df2 <- as.data.frame(data)
 	df2$HTO <- row.names(data)
 	df2 <- tidyr::gather(df2, key = 'CellBarcode', value = 'Count', -HTO)
-	df2$HTO <- OOSAP:::simplifyHtoNames(as.character(df2$HTO))
+	df2$HTO <- simplifyHtoNames(as.character(df2$HTO))
 	df2$HTO <- naturalsort::naturalfactor(df2$HTO)
 
 	print(ggplot(df2, aes(y = Count, x = HTO, fill = HTO)) +
@@ -111,7 +111,7 @@ HtoSummary <- function(seuratObj, htoClassificationField, globalClassificationFi
 	if (doTSNE) {
 		perplexity <- .InferPerplexityFromSeuratObj(seuratObj, 100)
 		tryCatch({
-			seuratObj[['hto_tsne']] <- RunTSNE(dist(Matrix::t(GetAssayData(seuratObj, slot = "data", assay = assay))), assay = assay, perplexity = perplexity)
+			seuratObj[['hto_tsne']] <- RunTSNE(stats::dist(Matrix::t(GetAssayData(seuratObj, slot = "data", assay = assay))), assay = assay, perplexity = perplexity)
 			print(DimPlot(seuratObj, reduction = 'hto_tsne', group.by = htoClassificationField, label = FALSE) + ggtitle(label))
 			print(DimPlot(seuratObj, reduction = 'hto_tsne', group.by = globalClassificationField, label = FALSE) + ggtitle(label))
 		}, error = function(e){
