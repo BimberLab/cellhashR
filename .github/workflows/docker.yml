@@ -18,7 +18,7 @@ jobs:
         id: docker_meta
         uses: crazy-max/ghaction-docker-meta@v1
         with:
-          images: ghcr.io/bimberlab/cellhashR
+          images: ghcr.io/bimberlab/cellhashr
           tag-sha: true
           tag-semver: |
             {{version}}
@@ -42,7 +42,7 @@ jobs:
           file: ./Dockerfile
           pull: true
           push: true
-          tags: ghcr.io/bimberlab/cellhashR:nightly,ghcr.io/bimberlab/cellhashR:latest
+          tags: ghcr.io/bimberlab/cellhashr:nightly,ghcr.io/bimberlab/cellhashr:latest
           labels: |
             ${{ steps.docker_meta.outputs.labels }}
             org.opencontainers.image.title=cellhashR
