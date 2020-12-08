@@ -22,7 +22,9 @@ Imports:
     egg,
     cluster,
     patchwork,
-    scales
+    scales,
+    KernSmooth,
+    fitdistrplus
 Suggests:
     devtools,
     testthat (>= 2.1.0)
