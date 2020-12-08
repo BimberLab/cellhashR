@@ -6,8 +6,8 @@ output: html_document
 
 ```{r setup}
 
-#library(cellhashR)
-source('/projects/cellhashR/R/CellHashing.R')
+library(cellhashR)
+#source('/projects/cellhashR/R/CellHashing.R')
 
 knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error=TRUE)
 
@@ -33,7 +33,7 @@ if (ncol(barcodeData) == 0) {
 
 ```{r QC, fig.width=12}
 
-source('/projects/cellhashR/R/Preprocessing.R')
+#source('/projects/cellhashR/R/Preprocessing.R')
 barcodeDir <- '/Projects/cellhashR/tests/testdata/cellHashing/247-1-hashTagCounts.txt'
 
 barcodeData <- ProcessCountMatrix(rawCountData = barcodeDir, minCountPerCell = 5, barcodeWhitelist = c('HTO-1', 'HTO-2', 'HTO-3', 'HTO-4', 'HTO-6'))

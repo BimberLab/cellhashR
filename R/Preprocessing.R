@@ -5,7 +5,8 @@
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
 #' @import ggplot2
 #' @import patchwork
-#' @return
+#' @import utils
+#' @return The updated count matrix
 #' @export
 ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), doPlot = T) {
 	if (is.na(rawCountData)){
@@ -29,6 +30,7 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 		# older CITE-seq-Count versions created a CSV file, so support this:
 		barcodeData <- utils::read.table(rawCountData, sep = ',', header = T, row.names = 1)
 		barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% barcodeBlacklist)),]
+		barcodeData <- as.matrix(barcodeData)
 	}
 
 	print(paste0('Initial cell barcodes in hashing data: ', ncol(barcodeData)))
@@ -52,14 +54,18 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 		barcodeData <- DoCellFiltering(barcodeData, minCountPerCell = minCountPerCell)
 	}
 
-
-
 	if (doPlot) {
 		PrintColumnQc(barcodeData)
 	}
 
 	return(barcodeData)
 }
+
+utils::globalVariables(
+	names = c('Barcode', 'Value', 'CellBarcode', 'Freq', 'Str'),
+	package = 'cellhashR',
+	add = TRUE
+)
 
 PrintRowQc <- function(barcodeMatrix) {
 	df <- GenerateByRowSummary(barcodeMatrix)
@@ -90,8 +96,8 @@ PrintRowQc <- function(barcodeMatrix) {
 	# Mean Counts
 	P1 <- ggplot(df, aes(x = Barcode, y = mean)) +
 		geom_bar(stat = 'identity') +
-		ggtitle('Mean Count/Cell') +
-		ylab('Mean Count/Cell') +
+		ggtitle('Mean Counts/Cell') +
+		ylab('Mean Counts/Cell') +
 		egg::theme_presentation() +
 		theme(
 		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
@@ -100,7 +106,7 @@ PrintRowQc <- function(barcodeMatrix) {
 	P2 <- ggplot(df, aes(x = Barcode, y = mean)) +
 		geom_bar(stat = 'identity') +
 		egg::theme_presentation() +
-		ylab('Mean Count/Cell (log1p)') +
+		ylab('Mean Counts/Cell (log1p)') +
 		scale_y_continuous(trans = scales::log1p_trans()) +
 		theme(
 		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
@@ -111,8 +117,8 @@ PrintRowQc <- function(barcodeMatrix) {
 	# Mean Counts, Non-zero
 	P1 <- ggplot(df, aes(x = Barcode, y = mean_nonzero)) +
 		geom_bar(stat = 'identity') +
-		ggtitle('Mean Count/Cell') +
-		ylab('Mean Count/Cell') +
+		ggtitle('Mean Counts/Cell') +
+		ylab('Mean Counts/Cell') +
 		egg::theme_presentation() +
 		theme(
 		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
@@ -121,7 +127,7 @@ PrintRowQc <- function(barcodeMatrix) {
 	P2 <- ggplot(df, aes(x = Barcode, y = mean_nonzero)) +
 		geom_bar(stat = 'identity') +
 		egg::theme_presentation() +
-		ylab('Mean Count/Cell (log1p)') +
+		ylab('Mean Counts/Cell (log1p)') +
 		scale_y_continuous(trans = scales::log1p_trans()) +
 		theme(
 		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
@@ -150,7 +156,7 @@ PrintRowQc <- function(barcodeMatrix) {
 	df <- data.frame(t(barcodeMatrix))
 	colnames(df) <- simplifyHtoNames(rownames(barcodeMatrix))
 	df <- tidyr::gather(df, Barcode, Count)
-	out <- boxplot.stats(df$Count)$out
+	out <- grDevices::boxplot.stats(df$Count)$out
 	out <- out[out > mean(df$Count[df$Count > 0])]
 	df <- df[df$Count < min(out),]
 
@@ -240,7 +246,7 @@ PrintColumnQc <- function(barcodeMatrix) {
 	
 	print(P1)
 	
-	out <- boxplot.stats(df$Count)$out
+	out <- grDevices::boxplot.stats(df$Count)$out
 	out <- out[out > mean(df$Count[df$Count > 0])]
 	toPlot <- toPlot[toPlot$Value < min(out),]
 	

@@ -18,7 +18,7 @@ ProcessCountMatrix(
 \item{minCountPerCell}{Cells (columns) will be dropped if their total count is less than this value.}
 }
 \value{
-
+The updated count matrix
 }
 \description{
 The primary entrypoint for parsing and QC of the cell hashing count matrix.

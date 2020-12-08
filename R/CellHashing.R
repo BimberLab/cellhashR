@@ -172,7 +172,7 @@ DebugDemux <- function(seuratObj, assay = 'HTO', reportKmeans = FALSE) {
   # Calculate tSNE embeddings with a distance matrix
 	tryCatch({
 		perplexity <- .InferPerplexityFromSeuratObj(seuratObj, 100)
-		seuratObj[['hto_tsne']] <- RunTSNE(dist(t(data)), assay = assay, perplexity = perplexity)
+		seuratObj[['hto_tsne']] <- RunTSNE(stats::dist(Matrix::t(data)), assay = assay, perplexity = perplexity)
 		P <- DimPlot(seuratObj, reduction = 'hto_tsne', label = TRUE)
 		P <- P + ggtitle('Clusters: clara')
 		print(P)
@@ -191,7 +191,7 @@ DebugDemux <- function(seuratObj, assay = 'HTO', reportKmeans = FALSE) {
 
   if (reportKmeans) {
     print('kmeans:')
-    init.clusters <- kmeans(
+    init.clusters <- stats::kmeans(
       x = t(x = data),
       centers = ncenters,
       nstart = 100
@@ -244,7 +244,7 @@ GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, method = 'seurat') {
     if (method == 'seurat') {
       seuratObj <- DoMULTIseqDemux(seuratObj)
     } else {
-      stop(pate0('Unknown method: ', method))
+      stop(paste0('Unknown method: ', method))
     }
 
     return(data.frame(Barcode = as.factor(colnames(seuratObj)), HTO_classification = seuratObj$MULTI_ID, HTO_classification.global = seuratObj$MULTI_classification.global, key = c('Barcode')))
@@ -362,7 +362,7 @@ HtoSummary <- function(seuratObj, htoClassificationField, globalClassificationFi
   if (doTSNE) {
     perplexity <- .InferPerplexityFromSeuratObj(seuratObj, 100)
     tryCatch({
-      seuratObj[['hto_tsne']] <- RunTSNE(dist(Matrix::t(GetAssayData(seuratObj, slot = "data", assay = assay))), assay = assay, perplexity = perplexity)
+      seuratObj[['hto_tsne']] <- RunTSNE(stats::dist(Matrix::t(GetAssayData(seuratObj, slot = "data", assay = assay))), assay = assay, perplexity = perplexity)
       print(DimPlot(seuratObj, reduction = 'hto_tsne', group.by = htoClassificationField, label = FALSE) + ggtitle(label))
       print(DimPlot(seuratObj, reduction = 'hto_tsne', group.by = globalClassificationField, label = FALSE) + ggtitle(label))
     }, error = function(e){
@@ -537,7 +537,7 @@ ProcessEnsemblHtoCalls <- function(mc, sc, barcodeMatrix,
 
 
 utils::globalVariables(
-  names = c('HTO_Classification', 'TotalCounts'),
+  names = c('HTO_Classification', 'TotalCounts', 'Freq', 'HTO'),
   package = 'cellhashR',
   add = TRUE
 )
@@ -650,7 +650,7 @@ PrintFinalSummary <- function(df, barcodeMatrix){
     #Melt data:
     melted <- as.data.frame(merged)
     melted <- melted[melted$HTO == 'Negative', !(colnames(melted) %in% c('HTO_Classification', 'HTO', 'key', 'Seurat', 'MultiSeq', 'Count', 'TotalCounts')), drop = FALSE]
-    print(str(melted))
+    print(utils::str(melted))
     melted <- tidyr::gather(melted, key = 'HTO', value = 'Count', -CellBarcode)
 
     htoNames <- simplifyHtoNames(as.character(melted$HTO))
@@ -672,7 +672,7 @@ PrintFinalSummary <- function(df, barcodeMatrix){
   df$Pct <- round((df$Freq / sum(df$Freq)) * 100, 2)
   print(kableExtra::kbl(df) %>% kableExtra::kable_styling())
 
-  getPalette <- colorRampPalette(RColorBrewer::brewer.pal(max(3, min(9, length(names(tbl)))), "Set1"))
+  getPalette <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(max(3, min(9, length(names(tbl)))), "Set1"))
   colorValues <- getPalette(length(names(tbl)))
 
   print(ggplot(df, aes(x = '', y=Freq, fill=HTO_Classification)) +
