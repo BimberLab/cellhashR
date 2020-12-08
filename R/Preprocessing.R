@@ -6,8 +6,7 @@
 #' @import ggplot2
 #' @import patchwork
 #' @import utils
-#' @import stats
-#' @return
+#' @return The updated count matrix
 #' @export
 ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), doPlot = T) {
 	if (is.na(rawCountData)){
@@ -61,6 +60,12 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 
 	return(barcodeData)
 }
+
+utils::globalVariables(
+	names = c('Barcode', 'Value', 'CellBarcode', 'Freq', 'Str'),
+	package = 'cellhashR',
+	add = TRUE
+)
 
 PrintRowQc <- function(barcodeMatrix) {
 	df <- GenerateByRowSummary(barcodeMatrix)

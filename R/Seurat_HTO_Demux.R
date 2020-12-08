@@ -21,6 +21,7 @@ DoHtoDemux <- function(seuratObj, positive.quantile = 0.99, label = 'Seurat HTOD
 #' @return A modified Seurat object.
 #' @keywords SerIII_template
 #' @export
+#' @import Seurat
 #' @importFrom fitdistrplus fitdist
 #' @importFrom cluster clara
 #' @importFrom Matrix t

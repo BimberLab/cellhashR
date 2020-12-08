@@ -537,7 +537,7 @@ ProcessEnsemblHtoCalls <- function(mc, sc, barcodeMatrix,
 
 
 utils::globalVariables(
-  names = c('HTO_Classification', 'TotalCounts'),
+  names = c('HTO_Classification', 'TotalCounts', 'Freq', 'HTO'),
   package = 'cellhashR',
   add = TRUE
 )
@@ -650,7 +650,7 @@ PrintFinalSummary <- function(df, barcodeMatrix){
     #Melt data:
     melted <- as.data.frame(merged)
     melted <- melted[melted$HTO == 'Negative', !(colnames(melted) %in% c('HTO_Classification', 'HTO', 'key', 'Seurat', 'MultiSeq', 'Count', 'TotalCounts')), drop = FALSE]
-    print(str(melted))
+    print(utils::str(melted))
     melted <- tidyr::gather(melted, key = 'HTO', value = 'Count', -CellBarcode)
 
     htoNames <- simplifyHtoNames(as.character(melted$HTO))
