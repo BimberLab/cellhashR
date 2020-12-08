@@ -48,7 +48,7 @@ plotDist = FALSE
 	switch(
 	EXPR = kfunc,
 	'kmeans' = {
-		init.clusters <- kmeans(
+		init.clusters <- stats::kmeans(
 		x = t(x = data),
 		centers = ncenters,
 		nstart = nstarts

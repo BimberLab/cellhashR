@@ -39,7 +39,7 @@ DebugDemux <- function(seuratObj, assay = 'HTO', reportKmeans = FALSE) {
 
 	if (reportKmeans) {
 		print('kmeans:')
-		init.clusters <- kmeans(
+		init.clusters <- stats::kmeans(
 		x = t(x = data),
 		centers = ncenters,
 		nstart = 100

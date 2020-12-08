@@ -191,7 +191,7 @@ DebugDemux <- function(seuratObj, assay = 'HTO', reportKmeans = FALSE) {
 
   if (reportKmeans) {
     print('kmeans:')
-    init.clusters <- kmeans(
+    init.clusters <- stats::kmeans(
       x = t(x = data),
       centers = ncenters,
       nstart = 100
@@ -672,7 +672,7 @@ PrintFinalSummary <- function(df, barcodeMatrix){
   df$Pct <- round((df$Freq / sum(df$Freq)) * 100, 2)
   print(kableExtra::kbl(df) %>% kableExtra::kable_styling())
 
-  getPalette <- colorRampPalette(RColorBrewer::brewer.pal(max(3, min(9, length(names(tbl)))), "Set1"))
+  getPalette <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(max(3, min(9, length(names(tbl)))), "Set1"))
   colorValues <- getPalette(length(names(tbl)))
 
   print(ggplot(df, aes(x = '', y=Freq, fill=HTO_Classification)) +

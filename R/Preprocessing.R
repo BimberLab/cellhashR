@@ -5,6 +5,8 @@
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
 #' @import ggplot2
 #' @import patchwork
+#' @import utils
+#' @import stats
 #' @return
 #' @export
 ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), doPlot = T) {
@@ -149,7 +151,7 @@ PrintRowQc <- function(barcodeMatrix) {
 	df <- data.frame(t(barcodeMatrix))
 	colnames(df) <- simplifyHtoNames(rownames(barcodeMatrix))
 	df <- tidyr::gather(df, Barcode, Count)
-	out <- boxplot.stats(df$Count)$out
+	out <- grDevices::boxplot.stats(df$Count)$out
 	out <- out[out > mean(df$Count[df$Count > 0])]
 	df <- df[df$Count < min(out),]
 
@@ -239,7 +241,7 @@ PrintColumnQc <- function(barcodeMatrix) {
 	
 	print(P1)
 	
-	out <- boxplot.stats(df$Count)$out
+	out <- grDevices::boxplot.stats(df$Count)$out
 	out <- out[out > mean(df$Count[df$Count > 0])]
 	toPlot <- toPlot[toPlot$Value < min(out),]
 	

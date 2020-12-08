@@ -24,7 +24,10 @@ Imports:
     patchwork,
     scales,
     KernSmooth,
-    fitdistrplus
+    fitdistrplus,
+    grDevices,
+    utils,
+    stats
 Suggests:
     devtools,
     testthat (>= 2.1.0)
