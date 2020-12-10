@@ -352,6 +352,31 @@ PrintColumnQc <- function(barcodeMatrix) {
 		egg::theme_presentation()
 
 	print(P1)
+	
+	#MA-plot
+	df <- data.frame(t(barcodeMatrix))
+	colnames(df) <- simplifyHtoNames(rownames(barcodeMatrix))
+	if (ncol(df) == 2){
+	  M = log2(df[,1]) - log2(df[,2])
+	  A = (log2(df[,1]) + log2(df[,2]))/2
+
+	  o <- order(A)
+	  a <- A[o]
+	  m <- M[o]
+	  ind <- round(seq(1, length(a), len = 5000))
+	  a <- a[ind]
+	  m <- m[ind]
+	  fit <- loess(m ~ a)
+	  bias <- predict(fit, newdata = data.frame(a = A))
+	  nM <- M - bias
+	  newdat <- data.frame(a, pred = fit$fitted)
+
+	  ggplot(df, aes(x=A, y=M)) + geom_point() +
+	    geom_line(data = newdat, aes(x=a, y = pred), size = 1, col=2) +
+	    ggtitle("MA-plot with Loess Fit of Bias") +
+	    egg::theme_presentation()
+	}
+
 }
 
 utils::globalVariables(
