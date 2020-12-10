@@ -360,6 +360,8 @@ PrintColumnQc <- function(barcodeMatrix) {
 	  M = log2(df[,1]) - log2(df[,2])
 	  A = (log2(df[,1]) + log2(df[,2]))/2
 
+	  df$M <- M
+	  df$A <- A
 	  o <- order(A)
 	  a <- A[o]
 	  m <- M[o]
@@ -368,7 +370,7 @@ PrintColumnQc <- function(barcodeMatrix) {
 	  m <- m[ind]
 	  fit <- loess(m ~ a)
 	  bias <- predict(fit, newdata = data.frame(a = A))
-	  nM <- M - bias
+	  df$nM <- M - bias
 	  newdat <- data.frame(a, pred = fit$fitted)
 
 	  ggplot(df, aes(x=A, y=M)) + geom_point() +
