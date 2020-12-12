@@ -25,7 +25,7 @@ NormalizeRelative <- function(mat) {
 }
 
 #' @export
-NormalizationQC <- function(barcodeData) {
+PlotNormalizationQC <- function(barcodeData) {
 	toQC <- list(
 		'log2' = NormalizeLog2(barcodeData, mean.center = FALSE),
 		'log2Center' = NormalizeLog2(barcodeData, mean.center = TRUE),
@@ -51,7 +51,7 @@ NormalizationQC <- function(barcodeData) {
 	#density of norn count by type
 	print(ggplot(df, aes(x = NormCount, color = Barcode)) +
 		egg::theme_presentation(base_size = 14) +
-		geom_density() +
-		facet_grid(. ~ Normalization)
+		geom_density(size = 1) + labs(y = 'Density', x = 'Value') + ggtitle('Normalized Data') +
+		facet_wrap(. ~ Normalization, scales = 'free', ncol = 2)
 	)
 }

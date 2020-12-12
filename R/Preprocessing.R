@@ -274,6 +274,7 @@ PrintColumnQc <- function(barcodeMatrix) {
 	
 }
 
+#' @export
 PlotLibrarySaturation <- function(citeseqCountDir) {
 	countData <- Seurat::Read10X(paste0(citeseqCountDir, '/read_count'), gene.column=1, strip.suffix = TRUE)
 	countData <- countData[rownames(countData) != 'unmapped',]

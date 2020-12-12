@@ -24,7 +24,7 @@ cellhashR:::PlotLibrarySaturation('./tests/testdata/438-21-GEX')
 
 ## Basic QC and Filtering on input:
 
-```{r QC, fig.width=12}
+```{r LibraryQC, fig.width=12}
 
 barcodeDir <- './tests/testdata/cellHashing/247-1-hashTagCounts.txt'
 
@@ -54,22 +54,18 @@ if (ncol(barcodeData) == 0) {
 
 ```
 
-```{r}
+```{r NormalizationQC, fig.width=12}
 
-
-NormalizationQC(barcodeData)
-
-
+PlotNormalizationQC(barcodeData)
 
 ```
-
 
 ## Generate calls
 
 ```{r GenerateCalls, fig.width=12}
 
 if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
-    dt <- GenerateCellHashingCalls(barcodeData = barcodeData, outFile = finalCallFile, allCallsOutFile = allCallsOutFile, useSeurat = useSeurat, useMultiSeq = useMultiSeq)
+    dt <- GenerateCellHashingCalls(barcodeData = barcodeData, outFile = finalCallFile, allCallsOutFile = allCallsOutFile, methods = c('HTODemux', 'Multiseq'))
 
     if (exists('whitelistFile') && !is.null(whitelistFile)){
       GenerateSummaryForExpectedBarcodes(dt, whitelistFile=whitelistFile, outputFile=metricsFile, barcodeData=barcodeData)
