@@ -40,3 +40,22 @@ LocalMaxima <- function(x) {
 	}
 	return(y)
 }
+
+GetPlotColors <- function(total, palette = 'Set1') {
+ 	return(grDevices::colorRampPalette(RColorBrewer::brewer.pal(max(3, min(9, total))), "Set1")(total))
+}
+
+GetTotalPlotPages <- function(totalValues, perPage = 4) {
+	return(ceiling(totalValues / perPage))
+}
+
+SimplifyHtoNames <- function(v) {
+	return(sapply(v, function(x){
+		x <- unlist(strsplit(x, '-'))
+		if (length(x) > 1) {
+			x <- x[-(length(x))]
+		}
+
+		paste0(x, collapse = "-")
+	}))
+}

@@ -67,7 +67,7 @@ PlotHtoCountData <- function(seuratObj, label, assay = 'HTO') {
 	df2 <- as.data.frame(data)
 	df2$HTO <- row.names(data)
 	df2 <- tidyr::gather(df2, key = 'CellBarcode', value = 'Count', -HTO)
-	df2$HTO <- simplifyHtoNames(as.character(df2$HTO))
+	df2$HTO <- SimplifyHtoNames(as.character(df2$HTO))
 	df2$HTO <- naturalsort::naturalfactor(df2$HTO)
 
 	df2$Count <- log10(df2$Count + 0.5)
@@ -81,7 +81,7 @@ PlotHtoCountData <- function(seuratObj, label, assay = 'HTO') {
 	df2 <- as.data.frame(data)
 	df2$HTO <- row.names(data)
 	df2 <- tidyr::gather(df2, key = 'CellBarcode', value = 'Count', -HTO)
-	df2$HTO <- simplifyHtoNames(as.character(df2$HTO))
+	df2$HTO <- SimplifyHtoNames(as.character(df2$HTO))
 	df2$HTO <- naturalsort::naturalfactor(df2$HTO)
 
 	print(ggplot(df2, aes(y = Count, x = HTO, fill = HTO)) +
