@@ -7,18 +7,26 @@ output: html_document
 ```{r setup}
 
 library(cellhashR)
-#source('/projects/cellhashR/R/CellHashing.R')
 
 knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error=TRUE)
 
+knitr::opts_knit$set(root.dir = '/Projects/cellhashR')
 
 ```
+
+```{r libraryQC}
+
+cellhashR:::PlotLibrarySaturation('./tests/testdata/438-21-GEX')
+
+
+```
+
 
 ## Basic QC and Filtering on input:
 
 ```{r QC, fig.width=12}
 
-barcodeDir <- '/Projects/cellhashR/tests/testdata/cellHashing/247-1-hashTagCounts.txt'
+barcodeDir <- './tests/testdata/cellHashing/247-1-hashTagCounts.txt'
 
 barcodeData <- ProcessCountMatrix(rawCountData = barcodeDir, minCountPerCell = 5)
 if (nrow(barcodeData) == 0) {
@@ -33,7 +41,6 @@ if (ncol(barcodeData) == 0) {
 
 ```{r QC, fig.width=12}
 
-#source('/projects/cellhashR/R/Preprocessing.R')
 barcodeDir <- '/Projects/cellhashR/tests/testdata/cellHashing/247-1-hashTagCounts.txt'
 
 barcodeData <- ProcessCountMatrix(rawCountData = barcodeDir, minCountPerCell = 5, barcodeWhitelist = c('HTO-1', 'HTO-2', 'HTO-3', 'HTO-4', 'HTO-6'))
@@ -46,6 +53,16 @@ if (ncol(barcodeData) == 0) {
 }
 
 ```
+
+```{r}
+
+
+NormalizationQC(barcodeData)
+
+
+
+```
+
 
 ## Generate calls
 

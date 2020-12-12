@@ -34,6 +34,7 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 	}
 
 	print(paste0('Initial cell barcodes in hashing data: ', ncol(barcodeData)))
+	#rownames(barcodeData) <- SimplifyHtoNames(rownames(barcodeData))
 
 	# Print QC of counts by cell and barcode:
 	if (doPlot) {
@@ -44,7 +45,7 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 		print(paste0('Limiting to barcodes: ', paste0(barcodeWhitelist, collapse = ',')))
 		sel <- rownames(barcodeData) %in% barcodeWhitelist
 		if (sum(sel) == 0) {
-			sel <- simplifyHtoNames(rownames(barcodeData)) %in% barcodeWhitelist
+			sel <- SimplifyHtoNames(rownames(barcodeData)) %in% barcodeWhitelist
 		}
 		
 		barcodeData <- barcodeData[sel,]
@@ -137,40 +138,38 @@ PrintRowQc <- function(barcodeMatrix) {
 
 	# Density:
 	df <- data.frame(t(barcodeMatrix))
-	colnames(df) <- simplifyHtoNames(rownames(barcodeMatrix))
+	colnames(df) <- SimplifyHtoNames(rownames(barcodeMatrix))
 	df <- tidyr::gather(df, Barcode, Count)
 
 	P1 <- ggplot(df, aes(x = Count, color = Barcode)) +
 		geom_density() +
 		ggtitle('Counts/Cell') +
-		egg::theme_presentation() +
+		egg::theme_presentation(base_size = 18) +
 		xlab('Counts/Cell') + ylab('Density') +
 		scale_x_continuous(trans = scales::log1p_trans()) +
 		theme(
-		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = rel(0.5)),
 		)
-
-	print(P1)
 
 	# Density, trimmed:
 	df <- data.frame(t(barcodeMatrix))
-	colnames(df) <- simplifyHtoNames(rownames(barcodeMatrix))
+	colnames(df) <- SimplifyHtoNames(rownames(barcodeMatrix))
 	df <- tidyr::gather(df, Barcode, Count)
 	out <- grDevices::boxplot.stats(df$Count)$out
 	out <- out[out > mean(df$Count[df$Count > 0])]
 	df <- df[df$Count < min(out),]
 
-	P1 <- ggplot(df, aes(x = Count, color = Barcode)) +
+	P2 <- ggplot(df, aes(x = Count, color = Barcode)) +
 		geom_density() +
 		ggtitle('Counts/Cell, Outlier Trimmed') +
-		egg::theme_presentation() +
+		egg::theme_presentation(base_size = 18) +
 		xlab('Counts/Cell') + ylab('Density') +
 		scale_x_continuous(trans = scales::log1p_trans()) +
 		theme(
-		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = rel(0.5))
 		)
 
-	print(P1)
+	print(P1 / P2 + plot_layout(guides = "collect"))
 
 }
 
@@ -181,7 +180,7 @@ GenerateByRowSummary <- function(barcodeMatrix) {
 	}
 
 	barcodeMatrix <- as.matrix(barcodeMatrix)
-	df <- data.frame(Barcode = naturalsort::naturalfactor(simplifyHtoNames(rownames(barcodeMatrix))), BarcodeFull = naturalsort::naturalfactor(rownames(barcodeMatrix)), min = apply(barcodeMatrix, 1, min), max = apply(barcodeMatrix, 1, max), mean = apply(barcodeMatrix, 1, mean), logmean = log(apply(barcodeMatrix, 1, mean) + 1), nonzero = apply(barcodeMatrix, 1, function(x){
+	df <- data.frame(Barcode = naturalsort::naturalfactor(SimplifyHtoNames(rownames(barcodeMatrix))), BarcodeFull = naturalsort::naturalfactor(rownames(barcodeMatrix)), min = apply(barcodeMatrix, 1, min), max = apply(barcodeMatrix, 1, max), mean = apply(barcodeMatrix, 1, mean), logmean = log(apply(barcodeMatrix, 1, mean) + 1), nonzero = apply(barcodeMatrix, 1, function(x){
 		sum(x > 0)
 	}), mean_nonzero = (rowSums(barcodeMatrix) / rowSums(!!barcodeMatrix)), total_gt1 = apply(barcodeMatrix, 1, function(x){
 		sum(x > 1)
@@ -217,7 +216,7 @@ utils::globalVariables(
 
 PrintColumnQc <- function(barcodeMatrix) {
 	df <- data.frame(t(barcodeMatrix))
-	colnames(df) <- simplifyHtoNames(rownames(barcodeMatrix))
+	colnames(df) <- SimplifyHtoNames(rownames(barcodeMatrix))
 	df <- tidyr::gather(df, Barcode, Count)
 
 	values <- sort(unique(df$Count), decreasing = FALSE)
@@ -242,21 +241,19 @@ PrintColumnQc <- function(barcodeMatrix) {
 		geom_point() +
 		ggtitle('Counts/Cell') +
 		xlab('Count') + ylab('Total Cells') +
-		egg::theme_presentation() 
-	
-	print(P1)
+		egg::theme_presentation(base_size = 18)
 	
 	out <- grDevices::boxplot.stats(df$Count)$out
 	out <- out[out > mean(df$Count[df$Count > 0])]
 	toPlot <- toPlot[toPlot$Value < min(out),]
 	
-	P1 <- ggplot(toPlot, aes(x = Value, y = Count, color = Barcode)) +
+	P2 <- ggplot(toPlot, aes(x = Value, y = Count, color = Barcode)) +
 		geom_point() +
-		ggtitle('Counts/Cell') +
+		ggtitle('Counts/Cell, Outlier Trimmed') +
 		xlab('Count') + ylab('Total Cells') +
-		egg::theme_presentation() 
+		egg::theme_presentation(base_size = 18)
 	
-	print(P1)
+	print(P1 / P2 + plot_layout(guides = "collect"))
 
 
 	#normalize columns, print top barcode fraction:
@@ -275,4 +272,31 @@ PrintColumnQc <- function(barcodeMatrix) {
 
 	print(paste0('Total cells where top barcode is >0.75 of counts: ', length(topValue > 0.75)))
 	
+}
+
+PlotLibrarySaturation <- function(citeseqCountDir) {
+	countData <- Seurat::Read10X(paste0(citeseqCountDir, '/read_count'), gene.column=1, strip.suffix = TRUE)
+	countData <- countData[rownames(countData) != 'unmapped',]
+	countData <- colSums(countData)
+
+	umiData <- Seurat::Read10X(paste0(citeseqCountDir, '/umi_count'), gene.column=1, strip.suffix = TRUE)
+	umiData <- umiData[rownames(umiData) != 'unmapped',]
+	umiData <- colSums(umiData)
+
+	saturation <- 1 - (umiData / countData)
+
+	df <- data.frame(CountsPerCell = countData, Saturation = saturation)
+	df <- df %>% arrange(CountsPerCell)
+
+	overall <- 1 - round((sum(umiData) / sum(countData)), 2)
+
+	print(ggplot(df, aes(x = CountsPerCell, y = Saturation)) +
+		labs(x = 'Counts/Cell', y = '% Saturation') + egg::theme_presentation() +
+		geom_point() +
+		annotate("text", x = max(df$CountsPerCell), y = min(df$Saturation), hjust = 1, vjust = -1, label = paste0(
+			'Total Counts: ', format(sum(countData), big.mark=','), '\n',
+			'UMI Counts: ', format(sum(umiData), big.mark=','), '\n',
+			'Saturation: ', overall
+		)) + ggtitle('Library Saturation')
+	)
 }

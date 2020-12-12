@@ -318,7 +318,7 @@ PlotHtoCountData <- function(seuratObj, label, assay = 'HTO') {
   df2 <- as.data.frame(data)
   df2$HTO <- row.names(data)
   df2 <- tidyr::gather(df2, key = 'CellBarcode', value = 'Count', -HTO)
-  df2$HTO <- simplifyHtoNames(as.character(df2$HTO))
+  df2$HTO <- SimplifyHtoNames(as.character(df2$HTO))
   df2$HTO <- naturalsort::naturalfactor(df2$HTO)
 
   df2$Count <- log10(df2$Count + 0.5)
@@ -332,7 +332,7 @@ PlotHtoCountData <- function(seuratObj, label, assay = 'HTO') {
   df2 <- as.data.frame(data)
   df2$HTO <- row.names(data)
   df2 <- tidyr::gather(df2, key = 'CellBarcode', value = 'Count', -HTO)
-  df2$HTO <- simplifyHtoNames(as.character(df2$HTO))
+  df2$HTO <- SimplifyHtoNames(as.character(df2$HTO))
   df2$HTO <- naturalsort::naturalfactor(df2$HTO)
 
   print(ggplot(df2, aes(y = Count, x = HTO, fill = HTO)) +
@@ -575,7 +575,7 @@ PrintFinalSummary <- function(df, barcodeMatrix){
   cs <- cs[as.character(merged$CellBarcode)]
   merged$TotalCounts <- cs
 
-  htoNames <- simplifyHtoNames(as.character(merged$HTO))
+  htoNames <- SimplifyHtoNames(as.character(merged$HTO))
 
   merged$HTO <- naturalfactor(as.character(htoNames))
 
@@ -604,7 +604,7 @@ PrintFinalSummary <- function(df, barcodeMatrix){
   print(ggplot(df, aes(x = '', y=Freq, fill=HTO)) +
     geom_bar(width = 1, stat = "identity", color = "black") +
     coord_polar("y", start=0) +
-    scale_fill_brewer(palette = "Set1") +
+    scale_fill_manual(values = GetPlotColors(length(unique(df$HTO)))) +
     theme_minimal() +
     theme(
       axis.text.x=element_blank(),
@@ -626,23 +626,28 @@ PrintFinalSummary <- function(df, barcodeMatrix){
   cellData$TotalCounts <- log(cellData$TotalCounts + 0.5)
   cellData$Count <- log(cellData$Count + 0.5)
 
-  print(ggplot(cellData, aes(x = TotalCounts, fill = HTO_Classification)) +
+  basePlot <- ggplot(cellData, aes(x = TotalCounts, fill = HTO_Classification)) +
     geom_density() +
-    scale_fill_brewer(palette = "Set1") +
+    scale_fill_manual(values = GetPlotColors(length(unique(cellData$HTO_Classification)))) +
     xlab('Total Counts/Cell (log)') +
     ylab('Density') +
-    ggtitle('Total Counts By HTO') +
-    facet_grid(HTO_Classification ~ ., scales = 'free')
-  )
+    ggtitle('Total Counts By HTO')
 
-  print(ggplot(cellData[!(cellData$HTO %in% c('Negative', 'Doublet', 'Discordant')),], aes(x = Count, fill = HTO)) +
+
+  for (i in 1:GetTotalPlotPages(length(unique(cellData$HTO_Classification)))) {
+    print(basePlot + ggforce::facet_grid_paginate(HTO_Classification ~ ., scales = 'free', rows = 4, page = i))
+  }
+
+  basePlot <- ggplot(cellData[!(cellData$HTO %in% c('Negative', 'Doublet', 'Discordant')),], aes(x = Count, fill = HTO)) +
     geom_density() +
-    scale_fill_brewer(palette = "Set1") +
+    scale_fill_manual(values = GetPlotColors(length(unique(cellData$HTO)))) +
     xlab('HTO Counts/Cell (log)') +
     ylab('Density') +
-    ggtitle('Counts By HTO') +
-    facet_grid(HTO ~ ., scales = 'free')
-  )
+    ggtitle('Counts By HTO')
+
+  for (i in 1:GetTotalPlotPages(length(unique(cellData$HTO)))) {
+    print(basePlot + ggforce::facet_grid_paginate(HTO ~ ., scales = 'free', rows = 4, page = i))
+  }
 
   if (sum(merged$HTO == 'Negative') == 0) {
     print('There were no negative cells')
@@ -653,18 +658,20 @@ PrintFinalSummary <- function(df, barcodeMatrix){
     print(utils::str(melted))
     melted <- tidyr::gather(melted, key = 'HTO', value = 'Count', -CellBarcode)
 
-    htoNames <- simplifyHtoNames(as.character(melted$HTO))
+    htoNames <- SimplifyHtoNames(as.character(melted$HTO))
     melted$HTO <- naturalfactor(as.character(htoNames))
     melted$Count <- log10(melted$Count + 0.5)
 
-    print(ggplot(melted, aes(x = Count, fill = HTO)) +
+    basePlot <- ggplot(melted, aes(x = Count, fill = HTO)) +
       geom_density() +
-      scale_fill_brewer(palette = "Set1") +
+      scale_fill_manual(values = GetPlotColors(length(unique(melted$HTO)))) +
       xlab('HTO Counts/Cell (log)') +
       ylab('Density') +
-      ggtitle('Raw HTO Counts For Negative Cells (log10)') +
-      facet_grid(HTO ~ ., scales = 'free')
-    )
+      ggtitle('Raw HTO Counts For Negative Cells (log10)')
+
+    for (i in 1:GetTotalPlotPages(length(unique(melted$HTO)))) {
+      print(basePlot + ggforce::facet_grid_paginate(HTO ~ ., scales = 'free', rows = 4, page = i))
+    }
   }
 
   tbl <- table(HTO_Classification = merged$HTO_Classification)
@@ -672,13 +679,10 @@ PrintFinalSummary <- function(df, barcodeMatrix){
   df$Pct <- round((df$Freq / sum(df$Freq)) * 100, 2)
   print(kableExtra::kbl(df) %>% kableExtra::kable_styling())
 
-  getPalette <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(max(3, min(9, length(names(tbl)))), "Set1"))
-  colorValues <- getPalette(length(names(tbl)))
-
   print(ggplot(df, aes(x = '', y=Freq, fill=HTO_Classification)) +
     geom_bar(width = 1, stat = "identity", color = "black") +
     coord_polar("y", start=0) +
-    scale_fill_brewer(palette = "Set1") +
+    scale_fill_manual(values = GetPlotColors(length(names(tbl)))) +
     theme_minimal() +
     theme(
       axis.text.x=element_blank(),
@@ -694,16 +698,6 @@ PrintFinalSummary <- function(df, barcodeMatrix){
 
 
 
-simplifyHtoNames <- function(v) {
-  return(sapply(v, function(x){
-    x <- unlist(strsplit(x, '-'))
-    if (length(x) > 1) {
-      x <- x[-(length(x))]
-    }
-
-    paste0(x, collapse = "-")
-  }))
-}
 
 
 
@@ -772,37 +766,37 @@ GenerateSummaryForExpectedBarcodes <- function(dt, whitelistFile, outputFile, ba
 }
 
 
-#' @title DownloadAndAppendCellHashing
-#'
-#' @description Downloads matching Cell Hashing data using barcodePrefix on the seurat object and appends it to metadata
-#' @param seuratObject, A Seurat object.
-#' @return A modified Seurat object.
-#' @export
-DownloadAndAppendCellHashing <- function(seuratObject, outPath = '.'){
-  if (is.null(seuratObject[['BarcodePrefix']])){
-    stop('Seurat object lacks BarcodePrefix column')
-  }
-
-  for (barcodePrefix in unique(unique(unlist(seuratObject[['BarcodePrefix']])))) {
-    print(paste0('Possibly adding cell hashing data for prefix: ', barcodePrefix))
-
-    cellHashingId <- .FindMatchedCellHashing(barcodePrefix)
-    if (is.null(cellHashingId)){
-      print(paste0('Cell hashing not used for prefix: ', barcodePrefix, ', skipping'))
-      next
-    } else if (is.na(cellHashingId)){
-      stop(paste0('Unable to find cellHashing calls table file for prefix: ', barcodePrefix))
-    }
-
-    callsFile <- file.path(outPath, paste0(barcodePrefix, '_cellHashingCalls.csv'))
-    DownloadOutputFile(outputFileId = cellHashingId, outFile = callsFile, overwrite = T)
-    if (!file.exists(callsFile)){
-      stop(paste0('Unable to download calls table for prefix: ', barcodePrefix))
-    }
-
-    seuratObject <- AppendCellHashing(seuratObj = seuratObject, barcodeCallFile = callsFile, barcodePrefix = barcodePrefix)
-  }
-
-  return(seuratObject)
-}
-
+# #' @title DownloadAndAppendCellHashing
+# #'
+# #' @description Downloads matching Cell Hashing data using barcodePrefix on the seurat object and appends it to metadata
+# #' @param seuratObject, A Seurat object.
+# #' @return A modified Seurat object.
+# #' @export
+# DownloadAndAppendCellHashing <- function(seuratObject, outPath = '.'){
+#   if (is.null(seuratObject[['BarcodePrefix']])){
+#     stop('Seurat object lacks BarcodePrefix column')
+#   }
+#
+#   for (barcodePrefix in unique(unique(unlist(seuratObject[['BarcodePrefix']])))) {
+#     print(paste0('Possibly adding cell hashing data for prefix: ', barcodePrefix))
+#
+#     cellHashingId <- .FindMatchedCellHashing(barcodePrefix)
+#     if (is.null(cellHashingId)){
+#       print(paste0('Cell hashing not used for prefix: ', barcodePrefix, ', skipping'))
+#       next
+#     } else if (is.na(cellHashingId)){
+#       stop(paste0('Unable to find cellHashing calls table file for prefix: ', barcodePrefix))
+#     }
+#
+#     callsFile <- file.path(outPath, paste0(barcodePrefix, '_cellHashingCalls.csv'))
+#     DownloadOutputFile(outputFileId = cellHashingId, outFile = callsFile, overwrite = T)
+#     if (!file.exists(callsFile)){
+#       stop(paste0('Unable to download calls table for prefix: ', barcodePrefix))
+#     }
+#
+#     seuratObject <- AppendCellHashing(seuratObj = seuratObject, barcodeCallFile = callsFile, barcodePrefix = barcodePrefix)
+#   }
+#
+#   return(seuratObject)
+# }
+#

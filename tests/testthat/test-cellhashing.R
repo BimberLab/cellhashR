@@ -23,18 +23,84 @@ tests <- list(
         Seurat = 3459,
         TotalRows = 6027,
         DoRowFilter = T
+    ),
+    '438-21' = list(
+      input = '../testdata/438-21/umi_count',
+      htos = c(2:3, 8, 10, 12),
+      CalledCells = 6296,
+      Singlet = 4207,
+      MultiSeq = 5860,
+      Discordant = 1704,
+      Seurat = 3623,
+      TotalRows = 8000,
+      DoRowFilter = T
+    ),
+    '438-24' = list(
+      input = '../testdata/438-24/umi_count',
+      htos = c(2:3, 8, 10, 12),
+      CalledCells = 6296,
+      Singlet = 4207,
+      MultiSeq = 5860,
+      Discordant = 1704,
+      Seurat = 3623,
+      TotalRows = 8000,
+      DoRowFilter = T
+    ),
+    '449-1' = list(
+      input = '../testdata/449-1/umi_count',
+      htos = c(2:3, 8, 10, 12),
+      CalledCells = 6296,
+      Singlet = 4207,
+      MultiSeq = 5860,
+      Discordant = 1704,
+      Seurat = 3623,
+      TotalRows = 8000,
+      DoRowFilter = T
+    ),
+    '457-1' = list(
+      input = '../testdata/457-1/umi_count',
+      htos = c(2:3, 8, 10, 12),
+      CalledCells = 6296,
+      Singlet = 4207,
+      MultiSeq = 5860,
+      Discordant = 1704,
+      Seurat = 3623,
+      TotalRows = 8000,
+      DoRowFilter = T
+    ),
+    '471-1' = list(
+      input = '../testdata/471-1/umi_count',
+      htos = c(2:3, 8, 10, 12),
+      CalledCells = 6296,
+      Singlet = 4207,
+      MultiSeq = 5860,
+      Discordant = 1704,
+      Seurat = 3623,
+      TotalRows = 8000,
+      DoRowFilter = T
+    ),
+    '471-2' = list(
+      input = '../testdata/471-2/umi_count',
+      htos = c(2:3, 8, 10, 12),
+      CalledCells = 6296,
+      Singlet = 4207,
+      MultiSeq = 5860,
+      Discordant = 1704,
+      Seurat = 3623,
+      TotalRows = 8000,
+      DoRowFilter = T
+    ),
+    '483-3' = list(
+      input = '../testdata/483-3/umi_count',
+      htos = c(2:3, 8, 10, 12),
+      CalledCells = 6296,
+      Singlet = 4207,
+      MultiSeq = 5860,
+      Discordant = 1704,
+      Seurat = 3623,
+      TotalRows = 8000,
+      DoRowFilter = T
     )
-    # 'NewFormat' = list(
-    #     input = '../testdata/cellHashing/umi_count',
-    #     htos = c(1:4),
-    #     gexBarcodeFile = NULL,
-    #     CalledCells = 5346,
-    #     Singlet = 2697,
-    #     MultiSeq = 853,
-    #     Seurat = 2900,
-    #     TotalRows = 100,
-    #     DoRowFilter = F
-    # )
 )
 
 test_that("Cell hashing works", {
@@ -85,7 +151,7 @@ test_that("Cell hashing works", {
     #     barcodeData <- l$barcodeData
     #
     #     expectedHtos <- sort(paste0('HTO-', test$htos))
-    #     actualHtosMatrix <- sort(unname(cellhashR:::simplifyHtoNames(rownames(barcodeData))))
+    #     actualHtosMatrix <- sort(unname(cellhashR:::SimplifyHtoNames(rownames(barcodeData))))
     #
     #     expect_equal(expectedHtos, actualHtosMatrix)
     #
