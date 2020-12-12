@@ -25,7 +25,7 @@ tests <- list(
         DoRowFilter = T
     ),
     '438-21' = list(
-      input = '../testdata/438-21/umi_count',
+      input = '../testdata/438-21-GEX/umi_count',
       htos = c(2:3, 8, 10, 12),
       CalledCells = 6296,
       Singlet = 4207,
@@ -36,7 +36,7 @@ tests <- list(
       DoRowFilter = T
     ),
     '438-24' = list(
-      input = '../testdata/438-24/umi_count',
+      input = '../testdata/438-24-GEX/umi_count',
       htos = c(2:3, 8, 10, 12),
       CalledCells = 6296,
       Singlet = 4207,
@@ -47,7 +47,7 @@ tests <- list(
       DoRowFilter = T
     ),
     '449-1' = list(
-      input = '../testdata/449-1/umi_count',
+      input = '../testdata/449-1-GEX/umi_count',
       htos = c(2:3, 8, 10, 12),
       CalledCells = 6296,
       Singlet = 4207,
@@ -58,7 +58,7 @@ tests <- list(
       DoRowFilter = T
     ),
     '457-1' = list(
-      input = '../testdata/457-1/umi_count',
+      input = '../testdata/457-1-GEX/umi_count',
       htos = c(2:3, 8, 10, 12),
       CalledCells = 6296,
       Singlet = 4207,
@@ -69,7 +69,7 @@ tests <- list(
       DoRowFilter = T
     ),
     '471-1' = list(
-      input = '../testdata/471-1/umi_count',
+      input = '../testdata/471-1-GEX/umi_count',
       htos = c(2:3, 8, 10, 12),
       CalledCells = 6296,
       Singlet = 4207,
@@ -80,7 +80,7 @@ tests <- list(
       DoRowFilter = T
     ),
     '471-2' = list(
-      input = '../testdata/471-2/umi_count',
+      input = '../testdata/471-2-GEX/umi_count',
       htos = c(2:3, 8, 10, 12),
       CalledCells = 6296,
       Singlet = 4207,
@@ -91,7 +91,7 @@ tests <- list(
       DoRowFilter = T
     ),
     '483-3' = list(
-      input = '../testdata/483-3/umi_count',
+      input = '../testdata/483-3-GEX/umi_count',
       htos = c(2:3, 8, 10, 12),
       CalledCells = 6296,
       Singlet = 4207,
