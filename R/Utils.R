@@ -51,11 +51,8 @@ GetTotalPlotPages <- function(totalValues, perPage = 4) {
 
 SimplifyHtoNames <- function(v) {
 	return(sapply(v, function(x){
-		x <- unlist(strsplit(x, '-'))
-		if (length(x) > 1) {
-			x <- x[-(length(x))]
-		}
+		x <- gsub(x, pattern = '-[ATGC]$', replacement = '')
 
-		paste0(x, collapse = "-")
+		return(x)
 	}))
 }
