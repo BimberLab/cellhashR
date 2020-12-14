@@ -7,12 +7,20 @@
 # @return returns element at given index
 #
 MaxN <- function(x, N = 2){
+	TopN(x, N = N, useMin = FALSE)
+}
+
+MinN <- function(x, N = 2){
+	TopN(x, N = N, useMin = TRUE)
+}
+
+TopN <- function(x, N = 2, useMin = FALSE){
 	len <- length(x)
 	if (N > len) {
 		warning('N greater than length(x).  Setting N=length(x)')
 		N <- length(x)
 	}
-	sort(x, partial = len - N + 1)[len - N + 1]
+	sort(x, partial = len - N + 1, decreasing = useMin)[len - N + 1]
 }
 
 # Local maxima estimator
@@ -42,17 +50,28 @@ LocalMaxima <- function(x) {
 }
 
 GetPlotColors <- function(total, palette = 'Set1') {
- 	return(grDevices::colorRampPalette(RColorBrewer::brewer.pal(max(3, min(9, total))), "Set1")(total))
+ 	return(grDevices::colorRampPalette(RColorBrewer::brewer.pal(max(3, min(9, total)), palette))(total))
 }
 
 GetTotalPlotPages <- function(totalValues, perPage = 4) {
 	return(ceiling(totalValues / perPage))
 }
 
-SimplifyHtoNames <- function(v) {
-	return(sapply(v, function(x){
-		x <- gsub(x, pattern = '-[ATGC]$', replacement = '')
+SimplifyHtoNames <- function(x) {
+	return(gsub(x, pattern = '-[ATGC]+$', replacement = ''))
+}
 
-		return(x)
-	}))
+.InferPerplexityFromSeuratObj <- function(seuratObj, perplexity = 30) {
+	return(.InferPerplexity(ncol(seuratObj), perplexity))
+}
+
+.InferPerplexity <- function(sampleNumber, perplexity = 30) {
+	if (sampleNumber - 1 < 3 * perplexity) {
+		print(paste0('Perplexity is too large for the number of samples: ', sampleNumber))
+		perplexityNew <- floor((sampleNumber - 1) / 3)
+		print(paste0('lowering from ', perplexity, ' to: ', perplexityNew))
+		perplexity <- perplexityNew
+	}
+
+	return(perplexity)
 }

@@ -6,12 +6,8 @@
 \usage{
 GenerateCellHashingCalls(
   barcodeMatrix,
-  positive.quantile = 0.99,
-  attemptRecovery = FALSE,
-  useSeurat = TRUE,
-  useMultiSeq = TRUE,
-  outFile = "combinedHtoCalls.txt",
-  allCallsOutFile = NA
+  htodemux.positive.quantile = 0.95,
+  methods = c("htodemux", "multiseq")
 )
 }
 \value{

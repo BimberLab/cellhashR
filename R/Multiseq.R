@@ -1,59 +1,52 @@
 #' @include Utils.R
+#' @include Visualization.R
+#' @include Normalization.R
 
+GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO') {
+	tryCatch({
+		seuratObj <- DoMULTIseqDemux(barcodeMatrix, assay = assay)
 
-#' @title Perform HTO classification using Seurat's implementation of MULTI-seq classification
-#'
-#' @description Perform HTO classification using Seurat's implementation of MULTI-seq classification
-#' @param seuratObj, A Seurat object.
-#' @return A modified Seurat object.
-DoMULTIseqDemux <- function(seuratObj, assay = 'HTO', autoThresh = TRUE, quantile = NULL, maxiter = 20, qrange = seq(from = 0.2, to = 0.95, by = 0.05)) {
-	## Normalize Data: Log2 Transform, mean-center
-	counts <- GetAssayData(seuratObj, assay = assay, slot = 'counts')
-	log2Scaled <- as.data.frame(log2(Matrix::t(counts)))
-	for (i in 1:ncol(log2Scaled)) {
-		ind <- which(is.finite(log2Scaled[,i]) == FALSE)
-		log2Scaled[ind,i] <- 0
-		log2Scaled[,i] <- log2Scaled[,i]-mean(log2Scaled[,i])
-	}
-	seuratObjMS <- CreateSeuratObject(counts, assay = 'MultiSeq')
-	seuratObjMS[['MultiSeq']]@data <- Matrix::t(as.matrix(log2Scaled))
+		return(data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'multiseq', classification = seuratObj$classification.multiseq, classification.global = seuratObj$classification.global.multiseq, stringsAsFactors = FALSE))
+	}, error = function(e){
+		print(e)
+		print('Error generating multiseq calls, aborting')
+		saveRDS(seuratObj, file = './multiseqHashingError.rds')
+		return(NULL)
+	})
+}
 
-	PlotHtoCountData(seuratObjMS, label = 'MultiSeq', assay = 'MultiSeq')
+DoMULTIseqDemux <- function(barcodeMatrix, assay = 'HTO', autoThresh = TRUE, quantile = NULL, maxiter = 20, qrange = seq(from = 0.2, to = 0.95, by = 0.05)) {
+	seuratObj <- CreateSeuratObject(barcodeMatrix, assay = assay)
+	seuratObj[[assay]]@data <- NormalizeLog2(barcodeMatrix)
 
-	seuratObjMS <- MULTIseqDemux2(seuratObjMS, assay = "MultiSeq", quantile = quantile, verbose = TRUE, autoThresh = autoThresh, maxiter = maxiter, qrange = qrange)
+	seuratObj <- MULTIseqDemux(seuratObj, assay = assay, quantile = quantile, verbose = TRUE, autoThresh = autoThresh, maxiter = maxiter, qrange = qrange)
 
-	seuratObjMS$MULTI_classification.global <- as.character(seuratObjMS$MULTI_ID)
-	seuratObjMS$MULTI_classification.global[!(seuratObjMS$MULTI_ID %in% c('Negative', 'Doublet'))] <- 'Singlet'
-	seuratObjMS$MULTI_classification.global <- as.factor(seuratObjMS$MULTI_classification.global)
-
-	seuratObjMS$MULTI_ID <- naturalsort::naturalfactor(as.character(seuratObjMS$MULTI_ID))
-
-	HtoSummary(seuratObjMS, label = 'MULTI-SEQ', htoClassificationField = 'MULTI_ID', globalClassificationField = 'MULTI_classification.global', assay = 'MultiSeq')
-
-	seuratObj$MULTI_ID <- as.character(seuratObjMS$MULTI_ID)
-	seuratObj$MULTI_classification.global <- seuratObjMS$MULTI_classification.global
+	SummarizeHashingCalls(seuratObj, label = 'Multiseq deMULTIplex', htoClassificationField = 'classification.multiseq', globalClassificationField = 'classification.global.multiseq', assay = assay)
 
 	return(seuratObj)
 }
 
 #' @rawNamespace import(Matrix, except = c('tail', 'head'))
-MULTIseqDemux2 <- function(
-object,
-assay = "HTO",
-quantile = 0.7,
-autoThresh = FALSE,
-maxiter = 5,
-qrange = seq(from = 0.1, to = 0.9, by = 0.05),
-verbose = TRUE
+#' @author
+#' @url
+MULTIseqDemux <- function(
+	object,
+	assay = "HTO",
+	quantile = 0.7,
+	autoThresh = FALSE,
+	maxiter = 5,
+	qrange = seq(from = 0.1, to = 0.9, by = 0.05),
+	verbose = TRUE
 ) {
 	if (is.na(assay) || is.null(assay)) {
 		assay <- DefaultAssay(object = object)
 	}
 	multi_data_norm <- t(x = GetAssayData(
-	object = object,
-	slot = "data",
-	assay = assay
+		object = object,
+		slot = "data",
+		assay = assay
 	))
+
 	if (autoThresh) {
 		iter <- 1
 		negatives <- c()
@@ -106,9 +99,10 @@ verbose = TRUE
 	} else{
 		demux_result <- ClassifyCells(data = multi_data_norm, q = quantile)
 	}
+
 	demux_result <- demux_result[rownames(x = object[[]])]
-	object[['MULTI_ID']] <- factor(x = demux_result)
-	Idents(object = object) <- "MULTI_ID"
+	object[['classification.multiseq']] <- factor(x = demux_result)
+	Idents(object = object) <- "classification.multiseq"
 	bcs <- colnames(x = multi_data_norm)
 	bc.max <- bcs[apply(X = multi_data_norm, MARGIN = 1, FUN = which.max)]
 	bc.second <- bcs[unlist(x = apply(
@@ -124,10 +118,15 @@ verbose = TRUE
 		return(paste(sort(x = c(bc.max[x], bc.second[x])), collapse =  "_"))
 	}
 	))
-	doublet.id <- which(x = demux_result == "Doublet")
-	MULTI_classification <- as.character(object$MULTI_ID)
-	MULTI_classification[doublet.id] <- doublet.names[doublet.id]
-	object$MULTI_classification <- factor(x = MULTI_classification)
+	doublet.id <- which(x = demux_result == 'Doublet')
+	classification.multiseq <- as.character(object$classification.multiseq)
+	classification.multiseq[doublet.id] <- 'Doublet'
+	object$classification.multiseq <- naturalsort::naturalfactor(x = classification.multiseq)
+
+	object$classification.global.multiseq <- as.character(object$classification.multiseq)
+	object$classification.global.multiseq[!(object$classification.multiseq %in% c('Negative', 'Doublet'))] <- 'Singlet'
+	object$classification.global.multiseq <- naturalsort::naturalfactor(object$classification.global.multiseq)
+
 	return(object)
 }
 
@@ -204,15 +203,16 @@ ClassifyCells <- function(data, q) {
 		}
 
 		x <- seq.int(
-		from = quantile(x = data[, i], probs = 0.001),
-		to = quantile(x = data[, i], probs = 0.999),
-		length.out = 100
+			from = quantile(x = data[, i], probs = 0.001),
+			to = quantile(x = data[, i], probs = 0.999),
+			length.out = 100
 		)
 		extrema <- LocalMaxima(x = model(x))
 		if (length(x = extrema) <= 1) {
 			print(paste0("No extrema/threshold found for ", colnames(x = data)[i]))
 			next
 		}
+
 		low.extremum <- min(extrema)
 		high.extremum <- max(extrema)
 		thresh <- (x[high.extremum] + x[low.extremum])/2
@@ -253,4 +253,21 @@ ClassifyCells <- function(data, q) {
 	}
 	names(x = calls) <- rownames(x = data)
 	return(calls)
+}
+
+# Melt a data frame
+#
+# @param x A data frame
+# @author Seurat
+# @return A molten data frame
+#
+Melt <- function(x) {
+	if (!is.data.frame(x = x)) {
+		x <- as.data.frame(x = x)
+	}
+	return(data.frame(
+	rows = rep.int(x = rownames(x = x), times = ncol(x = x)),
+	cols = unlist(x = lapply(X = colnames(x = x), FUN = rep.int, times = nrow(x = x))),
+	vals = unlist(x = x, use.names = FALSE)
+	))
 }

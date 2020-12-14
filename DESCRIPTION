@@ -37,10 +37,10 @@ RoxygenNote: 7.1.1
 URL: https://github.com/BimberLab/cellhashR
 BugReports: https://github.com/BimberLab/cellhashR/issues
 Collate: 
-    'CellHashing.R'
     'Utils.R'
-    'Multiseq.R'
+    'Visualization.R'
+    'CellHashing.R'
     'Normalization.R'
+    'Multiseq.R'
     'Preprocessing.R'
     'Seurat_HTO_Demux.R'
-    'Visualization.R'

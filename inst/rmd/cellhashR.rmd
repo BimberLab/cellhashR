@@ -7,6 +7,7 @@ output: html_document
 ```{r setup}
 
 library(cellhashR)
+library(ggplot2)
 
 knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error=TRUE)
 
@@ -52,11 +53,13 @@ if (ncol(barcodeData) == 0) {
   print('No passing cells')
 }
 
+
 ```
 
 ```{r NormalizationQC, fig.width=12}
 
 PlotNormalizationQC(barcodeData)
+
 
 ```
 
@@ -64,14 +67,25 @@ PlotNormalizationQC(barcodeData)
 
 ```{r GenerateCalls, fig.width=12}
 
-if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
-    dt <- GenerateCellHashingCalls(barcodeData = barcodeData, outFile = finalCallFile, allCallsOutFile = allCallsOutFile, methods = c('HTODemux', 'Multiseq'))
+barcodeData <- readRDS(file = 'barcodeData.rds')
 
-    if (exists('whitelistFile') && !is.null(whitelistFile)){
-      GenerateSummaryForExpectedBarcodes(dt, whitelistFile=whitelistFile, outputFile=metricsFile, barcodeData=barcodeData)
-    }
+if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
+	dt <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'))
+	
 }
 
+```
+
+```{r}
+
+barcodeData <- readRDS(file = 'barcodeData.rds')
+cl <- readRDS(file = 'callList.rds')
+
+df <- cellhashR:::ProcessEnsemblHtoCalls(cl, barcodeData)
+	
+
+
+  
 ```
 
 ## Print Session Info
