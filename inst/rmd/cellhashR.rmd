@@ -76,7 +76,7 @@ if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
 
 ```
 
-```{r}
+```{r fig.width=10}
 
 barcodeData <- readRDS(file = 'barcodeData.rds')
 cl <- readRDS(file = 'callList.rds')
@@ -87,6 +87,16 @@ df <- cellhashR:::ProcessEnsemblHtoCalls(cl, barcodeData)
 
   
 ```
+
+
+```{r}
+
+
+
+
+
+```
+
 
 ## Print Session Info
 

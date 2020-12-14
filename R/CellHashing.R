@@ -154,8 +154,8 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
     }
   }
 
-  dataClassification <- allCalls[c('cellbarcode', 'method', 'classification')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification)
-  dataClassificationGlobal <- allCalls[c('cellbarcode', 'method', 'classification.global')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification.global)
+  dataClassification <- allCalls[c('cellbarcode', 'method', 'classification')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification, values_fill = 'Negative')
+  dataClassificationGlobal <- allCalls[c('cellbarcode', 'method', 'classification.global')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification.global, values_fill = 'Negative')
 
   # Because cell barcodes might have been filtered from the original whitelist (i.e. total counts), re-add:
   if (!is.na(cellbarcodeWhitelist)) {
@@ -163,7 +163,6 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
     if (length(toAdd) > 0) {
       print(paste0('Re-adding ', length(toAdd), ' cell barcodes to call list'))
       toAdd <- merge(data.frame(cellbarcode = toAdd), dataClassification[FALSE,], by = 'cellbarcode', all.x = TRUE)
-      print(str(toAdd))
       dataClassification <- rbind(dataClassification, toAdd)
 
       toAdd <- merge(data.frame(cellbarcode = toAdd), dataClassificationGlobal[FALSE,], by = 'cellbarcode', all.x = TRUE)
@@ -199,76 +198,57 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
   dataClassification$ConsensusCall <- apply(dataClassification[,methods], 1, MakeConsensusCall)
   dataClassificationGlobal$ConsensusCall <- apply(dataClassificationGlobal[,methods], 1, MakeConsensusCall)
 
+  #TODO: make plots of this:
   print(paste0('Total concordant: ', sum(dataClassification$ConsensusCall != 'Discordant')))
   print(paste0('Total discordant (barcode call): ', sum(dataClassification$ConsensusCall == 'Discordant')))
   print(paste0('Total discordant (global classification): ', sum(dataClassificationGlobal$ConsensusCall != 'Discordant')))
 
   discord <- dataClassification[dataClassification$ConsensusCall == 'Discordant',]
   if (nrow(discord) > 0) {
-    plotList <- list()
-    i <- 0
-    for (method1 in methods) {
-      for (method2 in methods) {
-        if (method1 == method2) {
-          next
-        }
+    combos <- .GetAllCombinations(methods)
 
-        discord <- dataClassification[c(method1, method2)]
-        discord$ConsensusCall <- apply(discord[,c(method1, method2)], 1, MakeConsensusCall)
-        discord <- discord[discord$ConsensusCall == 'Discordant',]
-        if (nrow(discord) == 0) {
-          next
-        }
+    for (j in 1:nrow(combos)) {
+      method1 <- as.character(combos$method1[j])
+      method2 <- as.character(combos$method2[j])
 
-        discord <- discord %>% dplyr::group_by_at(c(method1, method2)) %>% summarise(Count = dplyr::n())
-
-        P1 <- ggplot(discord, aes_string(x = method1, y = method2, fill = 'Count')) +
-          geom_tile() +
-          egg::theme_presentation() +
-          theme(
-            axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-            legend.position = 'none'
-          ) +
-          scale_fill_gradient2(low = "blue", mid = "white", high = "red") +
-          ylab(method2) + xlab(method1)
-
-        i <- i + 1
-        plotList[i] <- P1
+      data <- dataClassification[c(method1, method2)]
+      data$ConsensusCall <- apply(data[,c(method1, method2)], 1, MakeConsensusCall)
+      data$DisagreeWithNeg <- data[method1] != data[method2]
+      data <- data[data$DisagreeWithNeg,]
+      if (nrow(data) == 0) {
+        next
       }
-    }
 
-    if (length(plotList) > 0) {
-      print(wrap_plots(plotList, ncol = 2))
+      discord <- data[data$ConsensusCall == 'Discordant',] %>% dplyr::group_by_at(c(method1, method2)) %>% summarise(Count = dplyr::n())
+      P1 <- ggplot(discord, aes_string(x = method1, y = method2, fill = 'Count')) +
+        geom_tile() +
+        geom_text(aes(label = Count)) +
+        egg::theme_presentation(base_size = 12) +
+        theme(
+          axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          legend.position = 'none'
+        ) +
+        scale_fill_gradient2(low = "blue", mid = "white", high = "red") +
+        ylab(method2) + xlab(method1)
+
+      discordWithNeg <- data %>% dplyr::group_by_at(c(method1, method2)) %>% summarise(Count = dplyr::n())
+      P2 <- ggplot(discordWithNeg, aes_string(x = method1, y = method2, fill = 'Count')) +
+        geom_tile() +
+        geom_text(aes(label = Count)) +
+        egg::theme_presentation(base_size = 12) +
+        theme(
+          axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          legend.position = 'none'
+        ) +
+        scale_fill_gradient2(low = "blue", mid = "white", high = "red") +
+        ylab(method2) + xlab(method1)
+
+      print(P1 + P2 + plot_annotation(title = paste0('Discordant calls: ', method1, ' vs. ', method2)))
     }
   }
 
   return(dataClassification)
-  #
-  #
 
-  #
-  # discord <- merged[!merged$Concordant,]
-  # discord <- discord %>% group_by(HTO_classification.MultiSeq, HTO_classification.Seurat) %>% summarise(Count = dplyr::n())
-  #
-  # print(qplot(x=HTO_classification.MultiSeq, y=HTO_classification.Seurat, data=discord, fill=Count, geom="tile") +
-  #         theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  #         scale_fill_gradient2(low = "blue", mid = "white", high = "red") +
-  #         ggtitle('Discordance By HTO Call') + ylab('Seurat') + xlab('MULTI-seq')
-  # )
-  #
-  # discord <- merged[!merged$HasSeuratCall | !merged$HasMultiSeqCall,]
-  # discord <- discord[discord$HasSeuratCall | discord$HasMultiSeqCall,]
-  # discord <- discord %>% group_by(HTO_classification.MultiSeq, HTO_classification.Seurat) %>% summarise(Count = dplyr::n())
-  # print(qplot(x=HTO_classification.MultiSeq, y=HTO_classification.Seurat, data=discord, fill=Count, geom="tile") +
-  #   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  #   scale_fill_gradient2(low = "blue", mid = "white", high = "red") +
-  #   ggtitle('Calls Made By Single Caller') + ylab('Seurat') + xlab('MULTI-seq')
-  # )
-
-  # These calls should be identical, except for possibly negatives from one method that are non-negative in the other
-  # For the time being, accept those as correct.
-
-  #
   # df <- data.frame(
   #   TotalSinglet = c(sum(merged$HTO_classification.global.Seurat == 'Singlet'), sum(merged$HTO_classification.global.MultiSeq == 'Singlet'), sum(merged$FinalClassification == 'Singlet')),
   #   ConcordantSinglet = c(sum(merged$Concordant & merged$HTO_classification.global.Seurat == 'Singlet'), sum(merged$Concordant & merged$HTO_classification.global.MultiSeq == 'Singlet'), sum(merged$FinalClassification == 'Singlet'))
@@ -452,4 +432,23 @@ PrintFinalSummary <- function(df, barcodeMatrix){
   )
 
   return(merged)
+}
+
+.GetAllCombinations <- function(methods){
+  ret <- data.frame(method1 = character(), method2 = character())
+
+  encountered <- character()
+  for (method1 in methods) {
+    for (method2 in methods) {
+      if (method2 %in% encountered || method1 == method2) {
+        next
+      }
+
+      ret <- rbind(ret, data.frame(method1 = method1, method2 = method2))
+    }
+
+    encountered <- c(encountered, method1)
+  }
+
+  return(ret)
 }
