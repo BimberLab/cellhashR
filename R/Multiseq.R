@@ -44,6 +44,10 @@ MULTIseqDemux <- function(
 	qrange = seq(from = 0.1, to = 0.9, by = 0.05),
 	verbose = TRUE
 ) {
+	if (verbose) {
+		print('Starting Multiseq deMULTIplex')
+	}
+
 	if (is.na(assay) || is.null(assay)) {
 		assay <- DefaultAssay(object = object)
 	}

@@ -126,17 +126,17 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
     }
   }
 
-  return(ProcessEnsemblHtoCalls(callList, barcodeMatrix, cellbarcodeWhitelist))
+  return(ProcessEnsemblHtoCalls(callList, cellbarcodeWhitelist))
 }
 
 #' @title ProcessEnsemblHtoCalls
 #'
 #' @import ggplot2
-#' @param callList A list of dataframes, produced by callers
-#' @param barcodeMatrix The barcode count matrix
+#' @import patchwork
+#' @param callList A list of data frames, produced by callers
 #' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
 #' @importFrom dplyr %>% group_by summarise
-ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist = NULL) {
+ProcessEnsemblHtoCalls <- function(callList, cellbarcodeWhitelist = NULL) {
   if (length(callList) == 0){
     print('No algorithms produced calls, aborting')
     return()
@@ -163,23 +163,23 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
 
       for (method in methods) {
         if (method %in% names(dataClassification)) {
-          dataClassification[[method]] <- naturalsort::naturalfactor(dataClassification[[method]], levels = c(levels(dataClassification[[method]]), 'No Counts'))
+          dataClassification[[method]] <- naturalsort::naturalfactor(dataClassification[[method]], levels = c(levels(dataClassification[[method]]), 'Low Counts'))
         }
 
         if (method %in% names(dataClassificationGlobal)) {
-          dataClassificationGlobal[[method]] <- naturalsort::naturalfactor(dataClassificationGlobal[[method]], levels = c(levels(dataClassificationGlobal[[method]]), 'No Counts'))
+          dataClassificationGlobal[[method]] <- naturalsort::naturalfactor(dataClassificationGlobal[[method]], levels = c(levels(dataClassificationGlobal[[method]]), 'Low Counts'))
         }
       }
 
       merged <- merge(data.frame(cellbarcode = toAdd), dataClassification[FALSE,], by = c('cellbarcode'), all.x = TRUE)
-      merged[is.na(merged)] <- 'No Counts'
+      merged[is.na(merged)] <- 'Low Counts'
       dataClassification <- rbind(dataClassification, merged)
 
 
       merged <- merge(data.frame(cellbarcode = toAdd), dataClassificationGlobal[FALSE,], by = c('cellbarcode'), all.x = TRUE)
-      merged[is.na(merged)] <- 'No Counts'
+      merged[is.na(merged)] <- 'Low Counts'
       dataClassificationGlobal <- rbind(dataClassificationGlobal, merged)
-      dataClassificationGlobal[is.na(dataClassificationGlobal)] <- 'No Counts'
+      dataClassificationGlobal[is.na(dataClassificationGlobal)] <- 'Low Counts'
     }
   }
 
@@ -318,7 +318,7 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
       panel.grid  = element_blank()
     )
 
-  print(P1 + P2 + plot_annotation(title = 'Final Calls'))
+  print(P1 + P2 + plot_annotation(title = paste0('Final Calls: ', nrow(dataClassification), ' cells')))
 
   return(dataClassification)
 }

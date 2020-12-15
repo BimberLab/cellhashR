@@ -4,12 +4,10 @@
 \alias{ProcessEnsemblHtoCalls}
 \title{ProcessEnsemblHtoCalls}
 \usage{
-ProcessEnsemblHtoCalls(callList, barcodeMatrix, cellbarcodeWhitelist = NULL)
+ProcessEnsemblHtoCalls(callList, cellbarcodeWhitelist = NULL)
 }
 \arguments{
-\item{callList}{A list of dataframes, produced by callers}
-
-\item{barcodeMatrix}{The barcode count matrix}
+\item{callList}{A list of data frames, produced by callers}
 
 \item{cellbarcodeWhitelist}{A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.}
 }
