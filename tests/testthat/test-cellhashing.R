@@ -108,7 +108,7 @@ test_that("RMarkdown Copy works", {
 	fn <- 'foo.rmd'
 	GetExampleMarkdown(dest = fn)
 	expect_true(file.exists(fn))
-	unlike(fn)
+	unlink(fn)
 })
 
 test_that("Saturation plot works", {
