@@ -252,8 +252,7 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
 
       data <- dataClassification[c(method1, method2)]
       data$consensuscall <- apply(data[,c(method1, method2)], 1, MakeConsensusCall)
-      data$DisagreeWithNeg <- data[method1] != data[method2]
-print(typeof(data$DisagreeWithNeg))
+      data$DisagreeWithNeg <- data[[method1]] != data[[method2]]
       data <- data[data$DisagreeWithNeg,]
       if (nrow(data) == 0) {
         next

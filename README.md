@@ -13,8 +13,9 @@ An R package designed to demultiplex cell hashing data.
 ### <a name="example">Example Usage</a>
 
 [Click here to download an example R Markdown report](examples/cellhashR.html)
-```
 
+Below are the primary functions of cellhashR needed to QC and score hashing data:
+```r
 # Example 1: parse CITE-seq-Count output, printing QC
 barcodeData <- ProcessCountMatrix(rawCountData = 'myCountDir', minCountPerCell = 5)
 
@@ -26,16 +27,19 @@ PlotNormalizationQC(barcodeData)
 
 # Generate the final cell hashing calls
 dt <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'))
-
-
 ```
 
+Or save a template RMarkdown file outlining the default workflow, which can be run interactively or headlessly as part of a pipeline:
+ 
+```r
+GetExampleMarkdown(dest = 'cellhashR_template.rmd')
+```
 ### <a name="installation">Installation</a>
 
 ```{r}
 
-# Make sure to update your Rprofile i.e., ~/.Rprofile.site
-# local({options(repos = BiocManager::repositories())})
+# Make sure to update your Rprofile to include Bioconductor repos, such as adding this line to ~/.Rprofile:
+local({options(repos = BiocManager::repositories())})
 
 #Latest version:
 devtools::install_github(repo = 'bimberlab/cellhashR', ref = 'master', dependencies = TRUE, upgrade = 'always')
