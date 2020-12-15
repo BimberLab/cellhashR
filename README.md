@@ -12,7 +12,7 @@ An R package designed to demultiplex cell hashing data.
 
 ### <a name="example">Example Usage</a>
 
-[Click here to download an example R Markdown report](examples/cellhashR.html)
+[Click here to download an example R Markdown report](https://htmlpreview.github.io/?https://github.com/BimberLab/cellhashR/blob/master/examples/cellhashR.html)
 
 Below are the primary functions of cellhashR needed to QC and score hashing data:
 ```r

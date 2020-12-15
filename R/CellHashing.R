@@ -137,6 +137,8 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
 #' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
 #' @importFrom dplyr %>% group_by summarise
 ProcessEnsemblHtoCalls <- function(callList, cellbarcodeWhitelist = NULL) {
+  print('Generating consensus calls')
+
   if (length(callList) == 0){
     print('No algorithms produced calls, aborting')
     return()
@@ -152,36 +154,26 @@ ProcessEnsemblHtoCalls <- function(callList, cellbarcodeWhitelist = NULL) {
     }
   }
 
-  dataClassification <- allCalls[c('cellbarcode', 'method', 'classification')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification, values_fill = 'Negative')
-  dataClassificationGlobal <- allCalls[c('cellbarcode', 'method', 'classification.global')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification.global, values_fill = 'Negative')
-
   # Because cell barcodes might have been filtered from the original whitelist (i.e. total counts), re-add:
   if (!is.null(cellbarcodeWhitelist)) {
-    toAdd <- cellbarcodeWhitelist[!(cellbarcodeWhitelist %in% unique(allCalls$cellbarcode))]
-    if (length(toAdd) > 0) {
-      print(paste0('Re-adding ', length(toAdd), ' cell barcodes to call list'))
+    allCalls$classification <- as.character(allCalls$classification)
+    allCalls$classification.global <- as.character(allCalls$classification.global)
 
-      for (method in methods) {
-        if (method %in% names(dataClassification)) {
-          dataClassification[[method]] <- naturalsort::naturalfactor(dataClassification[[method]], levels = c(levels(dataClassification[[method]]), 'Low Counts'))
-        }
-
-        if (method %in% names(dataClassificationGlobal)) {
-          dataClassificationGlobal[[method]] <- naturalsort::naturalfactor(dataClassificationGlobal[[method]], levels = c(levels(dataClassificationGlobal[[method]]), 'Low Counts'))
-        }
+    for (method in unique(allCalls$method)) {
+      dat <- allCalls[allCalls$method == method,]
+      toAdd <- cellbarcodeWhitelist[!(cellbarcodeWhitelist %in% unique(dat$cellbarcode))]
+      if (length(toAdd) > 0) {
+        print(paste0('Re-adding ', length(toAdd), ' cell barcodes to call list for: ', method))
+        allCalls <- rbind(allCalls, data.frame(cellbarcode = toAdd, method = method, classification = 'Low Counts', classification.global = 'Low Counts'))
       }
-
-      merged <- merge(data.frame(cellbarcode = toAdd), dataClassification[FALSE,], by = c('cellbarcode'), all.x = TRUE)
-      merged[is.na(merged)] <- 'Low Counts'
-      dataClassification <- rbind(dataClassification, merged)
-
-
-      merged <- merge(data.frame(cellbarcode = toAdd), dataClassificationGlobal[FALSE,], by = c('cellbarcode'), all.x = TRUE)
-      merged[is.na(merged)] <- 'Low Counts'
-      dataClassificationGlobal <- rbind(dataClassificationGlobal, merged)
-      dataClassificationGlobal[is.na(dataClassificationGlobal)] <- 'Low Counts'
     }
+
+    allCalls$classification <- naturalsort::naturalfactor(allCalls$classification)
+    allCalls$classification.global <- naturalsort::naturalfactor(allCalls$classification.global)
   }
+
+  dataClassification <- allCalls[c('cellbarcode', 'method', 'classification')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification, values_fill = 'Negative')
+  dataClassificationGlobal <- allCalls[c('cellbarcode', 'method', 'classification.global')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification.global, values_fill = 'Negative')
 
   for (method in methods) {
     if (!(method %in% names(dataClassification))) {
@@ -361,7 +353,7 @@ GetExampleMarkdown <- function(dest) {
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
 #' @param barcodeWhitelist A vector of barcode names to retain.
 #' @param cellbarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), or the string 'matrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'matrix') {
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, minCountPerCell = 5, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'matrix') {
   rmd <- system.file("rmd/cellhashR.Rmd", package = "cellhashR")
 
   rmarkdown::render(output_file = reportFile, input = rmd)
