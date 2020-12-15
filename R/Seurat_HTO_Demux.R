@@ -67,9 +67,9 @@ HTODemux <- function(
 		EXPR = kfunc,
 		'kmeans' = {
 			init.clusters <- stats::kmeans(
-			x = t(x = data),
-			centers = ncenters,
-			nstart = nstarts
+				x = t(x = data),
+				centers = ncenters,
+				nstart = nstarts
 			)
 			#identify positive and negative signals for all HTO
 			Idents(object = object, cells = names(x = init.clusters$cluster)) <- init.clusters$cluster
@@ -77,9 +77,9 @@ HTODemux <- function(
 		'clara' = {
 			#use fast k-medoid clustering
 			init.clusters <- clara(
-			x = t(x = data),
-			k = ncenters,
-			samples = nsamples
+				x = t(x = data),
+				k = ncenters,
+				samples = nsamples
 			)
 			#identify positive and negative signals for all HTO
 			Idents(object = object, cells = names(x = init.clusters$clustering), drop = TRUE) <- init.clusters$clustering

@@ -96,7 +96,7 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 	)
 	Idents(object = seuratObj, cells = names(x = init.clusters$clustering), drop = TRUE) <- init.clusters$clustering
 	seuratObj$cluster.clara <- Idents(seuratObj)
-	P <- DimPlot(seuratObj, reduction = 'hto_tsne', label = TRUE)
+	P <- DimPlot(seuratObj, reduction = 'hto_tsne', group.by = 'cluster.clara', label = TRUE)
 	P <- P + ggtitle(paste0('Clusters: ', norm, ' (clara)'))
 
 	P2 <- .CreateClusterTilePlot(seuratObj, assay = norm)
@@ -111,7 +111,7 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 	Idents(object = seuratObj, cells = names(x = init.clusters$cluster), drop = TRUE) <- init.clusters$cluster
 	seuratObj$cluster.kmeans <- Idents(seuratObj)
 
-	P <- DimPlot(seuratObj, label = TRUE)
+	P <- DimPlot(seuratObj, group.by = 'cluster.kmeans', label = TRUE)
 	P <- P + ggtitle(paste0('Clusters: ', norm, ' (kmeans)'))
 	P2 <- .CreateClusterTilePlot(seuratObj, assay = norm)
 	print(P | P2)
