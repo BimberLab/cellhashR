@@ -353,7 +353,7 @@ GetExampleMarkdown <- function(dest) {
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
 #' @param barcodeWhitelist A vector of barcode names to retain.
 #' @param cellbarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), or the string 'matrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'matrix') {
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, minCountPerCell = 5, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'matrix') {
   rmd <- system.file("rmd/cellhashR.Rmd", package = "cellhashR")
 
   rmarkdown::render(output_file = reportFile, input = rmd)

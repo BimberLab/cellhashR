@@ -279,7 +279,7 @@ PrintColumnQc <- function(barcodeMatrix) {
 	P1 <- ggplot(df, aes(x = Barcode1)) +
 		geom_histogram(binwidth = 0.05) +
 		egg::theme_presentation() +
-		xlim(-0.1, 1.1) +
+		xlim(-0.2, 1.2) +
 		xlab('Fraction') +
 		ylab('# Cells') + ggtitle('Top Barcode Fraction Per Cell')
 
