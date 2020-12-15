@@ -105,14 +105,15 @@ tests <- list(
 )
 
 test_that("RMarkdown Copy works", {
-	fn <- './foo.rmd'
+	fn <- paste0(getwd(), '/foo.rmd')
 	GetExampleMarkdown(dest = fn)
 	expect_true(file.exists(fn))
 	unlink(fn)
 })
 
 test_that("Saturation plot works", {
-  PlotLibrarySaturation('../testdata/438-21-GEX')
+  saturation <- PlotLibrarySaturation('../testdata/438-21-GEX')
+	expect_equal(0.36, saturation)
 })
 
 test_that("Cell hashing works", {
