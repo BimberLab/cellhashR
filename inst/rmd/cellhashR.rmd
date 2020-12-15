@@ -1,5 +1,5 @@
 ---
-title: "Cell Hashing Example"
+title: "cellhashR Example"
 date: "`r Sys.Date()`"
 output:
   rmdformats::html_clean:
@@ -8,8 +8,7 @@ output:
     thumbnails: yes
     fig_width: 12
     code_folding: hide
-  html_document:
-    df_print: paged
+
 ---
 
 ```{r setup}
@@ -106,8 +105,17 @@ df <- cellhashR:::ProcessEnsemblHtoCalls(cl, barcodeData, cellbarcodeWhitelist =
 
 ```
 
+# Final Calls
 
-## Print Session Info
+The output is a data frame, with the calls from each caller, and a consensus call.  See AppendCellHashing to append the results to a seurat object as metadata.
+
+```{r}
+
+print(head(df))
+
+```
+
+# Print Session Info
 
 ```{r SessionInfo}
 

@@ -15,9 +15,8 @@ GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95)
 
 		return(data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'htodemux', classification= seuratObj$classification.htodemux, classification.global = seuratObj$classification.global.htodemux, stringsAsFactors = FALSE))
 	}, error = function(e){
+		print('Error generating seurat htodemux calls, aborting')
 		print(e)
-		saveRDS(seuratObj, file = './seuratHashingError.rds')
-		print('Error generating seurat calls, aborting')
 
 		return(NULL)
 	})

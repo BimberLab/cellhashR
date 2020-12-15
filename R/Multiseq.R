@@ -14,9 +14,9 @@ GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO') {
 
 		return(data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'multiseq', classification = seuratObj$classification.multiseq, classification.global = seuratObj$classification.global.multiseq, stringsAsFactors = FALSE))
 	}, error = function(e){
-		print(e)
 		print('Error generating multiseq calls, aborting')
-		saveRDS(seuratObj, file = './multiseqHashingError.rds')
+		print(e)
+
 		return(NULL)
 	})
 }
