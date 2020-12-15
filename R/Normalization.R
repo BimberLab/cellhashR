@@ -1,3 +1,10 @@
+#' @include Utils.R
+
+utils::globalVariables(
+	names = c('NormCount', 'Saturation'),
+	package = 'cellhashR',
+	add = TRUE
+)
 
 NormalizeLog2 <- function(mat, mean.center = TRUE) {
 	log2Scaled <- log2(mat)

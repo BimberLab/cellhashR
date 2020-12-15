@@ -7,10 +7,6 @@ utils::globalVariables(
 	add = TRUE
 )
 
-#' @title GenerateCellHashCallsSeurat
-#'
-#' @description Generates cell hashing calls using Seurat's HTODemux
-#' @return A data frame of results
 GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95) {
 	seuratObj <- CreateSeuratObject(barcodeMatrix, assay = 'HTO')
 

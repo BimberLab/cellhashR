@@ -112,7 +112,7 @@ test_that("Cell hashing works", {
           whitelistFile <- test$gexBarcodeFile
 
 					barcodeData <- ProcessCountMatrix(rawCountData = barcodeFile)
-					PlotNormalizationQC(barcodeData)
+					#PlotNormalizationQC(barcodeData)
 
 					if (nrow(barcodeData) == 0) {
 							stop('No passing HTOs')
@@ -128,13 +128,9 @@ test_that("Cell hashing works", {
 							barcodeData <- barcodeData[1:8000]
 					}
 
-					#dt <- cellhashR:::ProcessEnsemblHtoCalls(mc, sc, barcodeData, outFile = callsFile)
+          df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'))
 
-					#if (!is.null(whitelistFile) && !is.null(summaryFile)){
-					#  cellhashR:::GenerateSummaryForExpectedBarcodes(dt, whitelistFile = whitelistFile, outputFile = summaryFile, barcodeData = barcodeData)
-					#}
-
-					return(list(barcodeData = barcodeData, dt = dt))
+					return(list(barcodeData = barcodeData, df = df))
 				}
 
 				print(paste0('Running test: ', testName))
@@ -147,21 +143,22 @@ test_that("Cell hashing works", {
 				}
 
 				l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile)
-				# barcodeData <- l$barcodeData
-				#
+				barcodeData <- l$barcodeData
+        df <- l$df
+
 				# expectedHtos <- sort(paste0('HTO-', test$htos))
 				# actualHtosMatrix <- sort(unname(cellhashR:::SimplifyHtoNames(rownames(barcodeData))))
 				#
 				# expect_equal(expectedHtos, actualHtosMatrix)
 				#
-				# dt <- l$dt
+
 				#
-				# expect_equal(test[['CalledCells']], sum(dt$HTO_Classification != 'Discordant'))
-				# expect_equal(test[['Singlet']], sum(dt$HTO_Classification == 'Singlet'))
-				# expect_equal(test[['Seurat']], sum(dt$Seurat))
-				# expect_equal(test[['MultiSeq']], sum(dt$MultiSeq))
-				# expect_equal(test[['Discordant']], sum(dt$HTO == 'Discordant'))
-				# expect_equal(test[['Discordant']], sum(dt$HTO_Classification == 'Discordant'))
+				# expect_equal(test[['CalledCells']], sum(df$HTO_Classification != 'Discordant'))
+				# expect_equal(test[['Singlet']], sum(df$HTO_Classification == 'Singlet'))
+				# expect_equal(test[['Seurat']], sum(df$Seurat))
+				# expect_equal(test[['MultiSeq']], sum(df$MultiSeq))
+				# expect_equal(test[['Discordant']], sum(df$HTO == 'Discordant'))
+				# expect_equal(test[['Discordant']], sum(df$HTO_Classification == 'Discordant'))
 				#
 				# d <- read.table(callsFile, header = T, sep = '\t')
 				# expect_equal(test[['TotalRows']], nrow(d))

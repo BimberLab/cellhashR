@@ -29,7 +29,8 @@ Imports:
     stats,
     RColorBrewer,
     kableExtra,
-    reshape2
+    reshape2,
+    rmdformats
 Suggests:
     devtools,
     testthat (>= 2.1.0)

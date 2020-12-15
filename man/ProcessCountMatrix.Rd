@@ -9,7 +9,7 @@ ProcessCountMatrix(
   minCountPerCell = 5,
   barcodeWhitelist = NULL,
   barcodeBlacklist = c("no_match", "total_reads", "unmapped"),
-  doPlot = T,
+  doPlot = TRUE,
   simplifyBarcodeNames = TRUE
 )
 }
@@ -17,6 +17,12 @@ ProcessCountMatrix(
 \item{rawCountData, }{The input barcode file or umi_count folder}
 
 \item{minCountPerCell}{Cells (columns) will be dropped if their total count is less than this value.}
+
+\item{barcodeWhitelist}{A vector of barcode names to retain.}
+
+\item{barcodeBlacklist}{A vector of barcodes names to discard.}
+
+\item{doPlot}{If true, QC plots will be generated}
 
 \item{simplifyBarcodeNames}{If true, the sequence tag portion will be removed from the barcode names (i.e. HTO-1-ATGTGTGA -> HTO-1)}
 }

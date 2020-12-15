@@ -2,6 +2,12 @@
 #' @include Visualization.R
 #' @include Normalization.R
 
+utils::globalVariables(
+	names = c('Proportion', 'Subset'),
+	package = 'cellhashR',
+	add = TRUE
+)
+
 GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO') {
 	tryCatch({
 		seuratObj <- DoMULTIseqDemux(barcodeMatrix, assay = assay)

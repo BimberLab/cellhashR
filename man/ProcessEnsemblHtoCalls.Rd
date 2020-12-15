@@ -10,6 +10,8 @@ ProcessEnsemblHtoCalls(callList, barcodeMatrix, cellbarcodeWhitelist = NA)
 \item{callList}{A list of dataframes, produced by callers}
 
 \item{barcodeMatrix}{The barcode count matrix}
+
+\item{cellbarcodeWhitelist}{A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.}
 }
 \description{
 ProcessEnsemblHtoCalls

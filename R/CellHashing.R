@@ -15,6 +15,9 @@ utils::globalVariables(
 
 #' @title AppendCellHashing
 #'
+#' @param seuratObj The seurat object
+#' @param barcodeCallFile The tsv containing cell hashing calls
+#' @param barcodePrefix A prefix to be applied before the cell barcodes
 #' @description Appends cell hashing calls to a seurat object
 #' @param seuratObj, A Seurat object.
 #' @return A modified Seurat object.
@@ -103,10 +106,13 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
 
 #' @title GenerateCellHashingCalls
 #'
-#' @description A description
-#' @return A data table of results.
+#' @param barcodeMatrix The filtered matrix of hashing count data
+#' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux and multiseq
+#' @param htodemux.positive.quantile
+#' @description The primary methods to generating cell hashing calls from a filtered matrix of count data
+#' @return A data frame of results.
 #' @export
-GenerateCellHashingCalls <- function(barcodeMatrix, htodemux.positive.quantile = 0.95, methods = c('htodemux', 'multiseq')) {
+GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'multiseq'), htodemux.positive.quantile = 0.95) {
   callList <- list()
   for (method in methods) {
     if (method == 'htodemux') {
@@ -122,8 +128,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, htodemux.positive.quantile =
     }
   }
 
-  return(callList)
-  #return(ProcessEnsemblHtoCalls(callList, barcodeMatrix, outFile = outFile))
+  return(ProcessEnsemblHtoCalls(callList, barcodeMatrix))
 }
 
 utils::globalVariables(
@@ -137,6 +142,7 @@ utils::globalVariables(
 #' @import ggplot2
 #' @param callList A list of dataframes, produced by callers
 #' @param barcodeMatrix The barcode count matrix
+#' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
 #' @importFrom dplyr %>% group_by summarise
 ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist = NA) {
   if (length(callList) == 0){
@@ -164,19 +170,21 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
       print(paste0('Re-adding ', length(toAdd), ' cell barcodes to call list'))
       toAdd <- merge(data.frame(cellbarcode = toAdd), dataClassification[FALSE,], by = 'cellbarcode', all.x = TRUE)
       dataClassification <- rbind(dataClassification, toAdd)
+      dataClassification[is.na(dataClassification)] <- 'No Counts'
 
       toAdd <- merge(data.frame(cellbarcode = toAdd), dataClassificationGlobal[FALSE,], by = 'cellbarcode', all.x = TRUE)
       dataClassificationGlobal <- rbind(dataClassificationGlobal, toAdd)
+      dataClassificationGlobal[is.na(dataClassificationGlobal)] <- 'No Counts'
     }
   }
 
   for (method in methods) {
     if (!(method %in% names(dataClassification))) {
-      dataClassification[method] <- 'Negative'
+      dataClassification[method] <- 'Not Called'
     }
 
     if (!(method %in% names(dataClassificationGlobal))) {
-      dataClassificationGlobal[method] <- 'Negative'
+      dataClassificationGlobal[method] <- 'Not Called'
     }
   }
 
@@ -198,7 +206,33 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
   dataClassification$ConsensusCall <- apply(dataClassification[,methods], 1, MakeConsensusCall)
   dataClassificationGlobal$ConsensusCall <- apply(dataClassificationGlobal[,methods], 1, MakeConsensusCall)
 
-  #TODO: make plots of this:
+  #Summary plots:
+  summary <- dataClassification[c('cellbarcode', 'ConsensusCall')]
+  summary$method <- 'consensus'
+  names(summary) <- c('cellbarcode', 'classification', 'method')
+  summary <- rbind(allCalls[c('cellbarcode', 'classification', 'method')], summary)
+  P1 <- ggplot(summary, aes(x = classification, group = method, fill = method)) +
+    geom_bar(position = position_dodge2(preserve = 'single')) +
+    egg::theme_presentation(base_size = 14) +
+    labs(x = '', y = 'Cells', fill = 'Classification') +
+    theme(
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+    )
+
+  summary <- dataClassificationGlobal[c('cellbarcode', 'ConsensusCall')]
+  summary$method <- 'consensus'
+  names(summary) <- c('cellbarcode', 'classification.global', 'method')
+  summary <- rbind(allCalls[c('cellbarcode', 'classification.global', 'method')], summary)
+  P2 <- ggplot(summary, aes(x = method, group = classification.global, fill = classification.global)) +
+    geom_bar() +
+    egg::theme_presentation(base_size = 14) +
+    labs(x = '', y = 'Cells', fill = 'Classification') +
+    theme(
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+    )
+
+  print(P2 + P1)
+
   print(paste0('Total concordant: ', sum(dataClassification$ConsensusCall != 'Discordant')))
   print(paste0('Total discordant (barcode call): ', sum(dataClassification$ConsensusCall == 'Discordant')))
   print(paste0('Total discordant (global classification): ', sum(dataClassificationGlobal$ConsensusCall != 'Discordant')))
@@ -247,191 +281,41 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
     }
   }
 
+  toAdd <- dataClassificationGlobal[c('cellbarcode', 'ConsensusCall')]
+  names(toAdd) <- c('cellbarcode', 'ConsensusCall.global')
+
+  dataClassification <- merge(dataClassification, toAdd, by = 'cellbarcode', all.x = T)
+
+  #final outcome
+  df <- data.frame(prop.table(table(Barcode = dataClassification$ConsensusCall)))
+  P1 <- ggplot(df, aes(x = '', y = Freq, fill = Barcode)) +
+    geom_bar(width = 1, color = "black", stat = "identity") +
+    coord_polar("y", start=0) +
+    scale_fill_manual(values = GetPlotColors(length(unique(dataClassification$ConsensusCall)))) +
+    theme_minimal() +
+    theme(
+      axis.text.x=element_blank(),
+      axis.title = element_blank(),
+      axis.ticks = element_blank(),
+      panel.grid  = element_blank()
+    )
+
+  df <- data.frame(table(Classification = dataClassification$ConsensusCall.global))
+  P2 <- ggplot(df, aes(x = '', y = Freq, fill = Classification)) +
+    geom_bar(width = 1, color = "black", stat = "identity") +
+    coord_polar("y", start=0) +
+    scale_fill_manual(values = GetPlotColors(length(unique(dataClassification$ConsensusCall.global)))) +
+    theme_minimal() +
+    theme(
+      axis.text.x=element_blank(),
+      axis.title = element_blank(),
+      axis.ticks = element_blank(),
+      panel.grid  = element_blank()
+    )
+
+  print(P1 + P2 + plot_annotation(label = 'Final Calls'))
+
   return(dataClassification)
-
-  # df <- data.frame(
-  #   TotalSinglet = c(sum(merged$HTO_classification.global.Seurat == 'Singlet'), sum(merged$HTO_classification.global.MultiSeq == 'Singlet'), sum(merged$FinalClassification == 'Singlet')),
-  #   ConcordantSinglet = c(sum(merged$Concordant & merged$HTO_classification.global.Seurat == 'Singlet'), sum(merged$Concordant & merged$HTO_classification.global.MultiSeq == 'Singlet'), sum(merged$FinalClassification == 'Singlet'))
-  # )
-  # rownames(df) <- c('Seurat', 'MultiSeq', 'Final')
-  # df <- t(df)
-  # print(kableExtra::kbl(df) %>% kableExtra::kable_styling())
-  #
-  # if (!is.na(allCallsOutFile) && nrow(merged) > 0) {
-  #   write.table(merged, file = allCallsOutFile, row.names = F, sep = '\t', quote = F)
-  # }
-  #
-  # if (nrow(merged) > 0){
-  #   dt <- data.frame(CellBarcode = merged$Barcode, HTO = merged$FinalCall, HTO_Classification = merged$FinalClassification, key = 'CellBarcode', Seurat = merged$HasSeuratCall, MultiSeq = merged$HasMultiSeqCall)
-  #   dt <- PrintFinalSummary(dt, barcodeMatrix)
-  #   write.table(dt, file = outFile, row.names = F, sep = '\t', quote = F)
-  #
-  #   return(dt)
-  #
-  # } else {
-  #   print('No rows, not saving ')
-  # }
-}
-
-
-utils::globalVariables(
-  names = c('HTO_Classification', 'TotalCounts', 'Freq', 'HTO'),
-  package = 'cellhashR',
-  add = TRUE
-)
-
-#' @title PrintFinalSummary
-#'
-#' @return A modified Seurat object.
-#' @importFrom naturalsort naturalfactor
-#' @param The data table with calls
-#' @param The barcode counts matrix
-#' @import ggplot2
-PrintFinalSummary <- function(df, barcodeMatrix){
-  #Append raw counts:
-  bc <- t(barcodeMatrix)
-  x <- reshape2::melt(bc)
-  names(x) <- c('CellBarcode', 'HTO', 'Count')
-
-  merged <- merge(df, x, by = c('CellBarcode', 'HTO'), all.x = T, all.y = F)
-
-  bc <- as.data.frame(bc)
-  bc$CellBarcode <- rownames(bc)
-  merged <- merge(merged, bc, by = c('CellBarcode'), all.x = T, all.y = F)
-
-  merged$HTO <- as.character(merged$HTO)
-  merged$HTO[is.na(merged$HTO)] <- c('Negative')
-  merged$HTO <- as.factor(merged$HTO)
-
-  merged$HTO_Classification <- as.character(merged$HTO_Classification)
-  merged$HTO_Classification[is.na(merged$HTO_Classification)] <- c('Negative')
-  merged$HTO_Classification <- as.factor(merged$HTO_Classification)
-
-  #summarise reads by type:
-  barcodeMatrix <- as.matrix(barcodeMatrix)
-  cs <- colSums(barcodeMatrix)
-  cs <- cs[as.character(merged$CellBarcode)]
-  merged$TotalCounts <- cs
-
-  htoNames <- SimplifyHtoNames(as.character(merged$HTO))
-
-  merged$HTO <- naturalfactor(as.character(htoNames))
-
-  tbl <- table(SeuratCall = merged$Seurat, MultiSeqCall = merged$MultiSeq)
-
-  colnames(tbl)[colnames(tbl) == T] <- c('MultiSeq Call')
-  colnames(tbl)[colnames(tbl) == F] <- c('MultiSeq No Call')
-
-  rownames(tbl)[rownames(tbl) == T] <- c('Seurat Call')
-  rownames(tbl)[rownames(tbl) == F] <- c('Seurat No Call')
-
-  print(kableExtra::kbl(tbl) %>% kableExtra::kable_styling())
-
-  print(ggplot(merged, aes(x = HTO)) +
-          geom_bar(stat = 'count') +
-          xlab('HTO') +
-          ylab('Count') +
-          theme(axis.text.x = element_text(angle = 90, hjust = 1))
-  )
-
-  tbl <- table(HTO = merged$HTO)
-  df <- data.frame(tbl)
-  df$Pct <- round((df$Freq / sum(df$Freq)) * 100, 2)
-  print(kableExtra::kbl(df) %>% kableExtra::kable_styling())
-
-  print(ggplot(df, aes(x = '', y=Freq, fill=HTO)) +
-    geom_bar(width = 1, stat = "identity", color = "black") +
-    coord_polar("y", start=0) +
-    scale_fill_manual(values = GetPlotColors(length(unique(df$HTO)))) +
-    theme_minimal() +
-    theme(
-      axis.text.x=element_blank(),
-      axis.title = element_blank(),
-      axis.ticks = element_blank(),
-      panel.grid  = element_blank()
-    ) +
-    ggtitle('HTO')
-  )
-
-  print(ggplot(merged, aes(x = HTO)) +
-          geom_bar(stat = 'count') +
-          xlab('HTO') +
-          ylab('Count') +
-          theme(axis.text.x = element_text(angle = 90, hjust = 1))
-  )
-
-  cellData <- merged[c('TotalCounts', 'Count', 'HTO_Classification', 'HTO')]
-  cellData$TotalCounts <- log(cellData$TotalCounts + 0.5)
-  cellData$Count <- log(cellData$Count + 0.5)
-
-  basePlot <- ggplot(cellData, aes(x = TotalCounts, fill = HTO_Classification)) +
-    geom_density() +
-    scale_fill_manual(values = GetPlotColors(length(unique(cellData$HTO_Classification)))) +
-    xlab('Total Counts/Cell (log)') +
-    ylab('Density') +
-    ggtitle('Total Counts By HTO')
-
-
-  for (i in 1:GetTotalPlotPages(length(unique(cellData$HTO_Classification)))) {
-    print(basePlot + ggforce::facet_grid_paginate(HTO_Classification ~ ., scales = 'free', rows = 4, page = i))
-  }
-
-  basePlot <- ggplot(cellData[!(cellData$HTO %in% c('Negative', 'Doublet', 'Discordant')),], aes(x = Count, fill = HTO)) +
-    geom_density() +
-    scale_fill_manual(values = GetPlotColors(length(unique(cellData$HTO)))) +
-    xlab('HTO Counts/Cell (log)') +
-    ylab('Density') +
-    ggtitle('Counts By HTO')
-
-  for (i in 1:GetTotalPlotPages(length(unique(cellData$HTO)))) {
-    print(basePlot + ggforce::facet_grid_paginate(HTO ~ ., scales = 'free', rows = 4, page = i))
-  }
-
-  if (sum(merged$HTO == 'Negative') == 0) {
-    print('There were no negative cells')
-  } else {
-    #Melt data:
-    melted <- as.data.frame(merged)
-    melted <- melted[melted$HTO == 'Negative', !(colnames(melted) %in% c('HTO_Classification', 'HTO', 'key', 'Seurat', 'MultiSeq', 'Count', 'TotalCounts')), drop = FALSE]
-    print(utils::str(melted))
-    melted <- tidyr::gather(melted, key = 'HTO', value = 'Count', -CellBarcode)
-
-    htoNames <- SimplifyHtoNames(as.character(melted$HTO))
-    melted$HTO <- naturalfactor(as.character(htoNames))
-    melted$Count <- log10(melted$Count + 0.5)
-
-    basePlot <- ggplot(melted, aes(x = Count, fill = HTO)) +
-      geom_density() +
-      scale_fill_manual(values = GetPlotColors(length(unique(melted$HTO)))) +
-      xlab('HTO Counts/Cell (log)') +
-      ylab('Density') +
-      ggtitle('Raw HTO Counts For Negative Cells (log10)')
-
-    for (i in 1:GetTotalPlotPages(length(unique(melted$HTO)))) {
-      print(basePlot + ggforce::facet_grid_paginate(HTO ~ ., scales = 'free', rows = 4, page = i))
-    }
-  }
-
-  tbl <- table(HTO_Classification = merged$HTO_Classification)
-  df <- data.frame(tbl)
-  df$Pct <- round((df$Freq / sum(df$Freq)) * 100, 2)
-  print(kableExtra::kbl(df) %>% kableExtra::kable_styling())
-
-  print(ggplot(df, aes(x = '', y=Freq, fill=HTO_Classification)) +
-    geom_bar(width = 1, stat = "identity", color = "black") +
-    coord_polar("y", start=0) +
-    scale_fill_manual(values = GetPlotColors(length(names(tbl)))) +
-    theme_minimal() +
-    theme(
-      axis.text.x=element_blank(),
-      axis.title = element_blank(),
-      axis.ticks = element_blank(),
-      panel.grid  = element_blank()
-    ) +
-    ggtitle('HTO Classification')
-  )
-
-  return(merged)
 }
 
 .GetAllCombinations <- function(methods){
@@ -451,4 +335,14 @@ PrintFinalSummary <- function(df, barcodeMatrix){
   }
 
   return(ret)
+}
+
+#' @title GetExampleMarkdown
+#'
+#' @description Save a template R markdown file, showing usage of this package
+#' @param dest The destination filepath, where the file will be saved
+#' @export
+GetExampleMarkdown <- function(dest) {
+  source <- file.path(R_PACKAGE_DIR, paste0('inst/rmd/cellhashR.rmd'))
+  file.copy(source, dest, overwrite = TRUE)
 }

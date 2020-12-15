@@ -6,13 +6,18 @@
 \usage{
 GenerateCellHashingCalls(
   barcodeMatrix,
-  htodemux.positive.quantile = 0.95,
-  methods = c("htodemux", "multiseq")
+  methods = c("htodemux", "multiseq"),
+  htodemux.positive.quantile = 0.95
 )
 }
+\arguments{
+\item{barcodeMatrix}{The filtered matrix of hashing count data}
+
+\item{methods}{A vector of one or more calling methods to use. Currently supported are: htodemux and multiseq}
+}
 \value{
-A data table of results.
+A data frame of results.
 }
 \description{
-A description
+The primary methods to generating cell hashing calls from a filtered matrix of count data
 }
