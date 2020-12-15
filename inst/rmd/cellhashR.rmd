@@ -59,8 +59,6 @@ This is identical to above, except we provide a whitelist of the expected barcod
 
 ```{r QC2, fig.width=12}
 
-barcodeDir <- './tests/testdata/cellHashing/247-1-hashTagCounts.txt'
-
 barcodeData <- ProcessCountMatrix(rawCountData = barcodeDir, minCountPerCell = 5, barcodeWhitelist = c('HTO-1', 'HTO-2', 'HTO-3', 'HTO-4', 'HTO-6'))
 if (nrow(barcodeData) == 0) {
   print('No passing barcodes')
@@ -105,8 +103,6 @@ cl <- readRDS(file = 'callList.rds')
 
 df <- cellhashR:::ProcessEnsemblHtoCalls(cl, barcodeData, cellbarcodeWhitelist = c('a', 'b','c'))
 	
-
-
 
 ```
 

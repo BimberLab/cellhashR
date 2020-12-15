@@ -85,18 +85,18 @@ PrintRowQc <- function(barcodeMatrix) {
 		geom_bar(stat = 'identity') +
 		ggtitle('Raw Counts/Barcode') +
 		ylab('Row Sums') +
-		egg::theme_presentation() +
+		egg::theme_presentation(base_size = 14) +
 		theme(
-		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
 		)
 
 	P2 <- ggplot(df, aes(x = Barcode, y = rowSums)) +
 		geom_bar(stat = 'identity') +
-		egg::theme_presentation() +
+		egg::theme_presentation(base_size = 14) +
 		ylab('Row Sums (log1p)') +
 		scale_y_continuous(trans = scales::log1p_trans()) +
 		theme(
-		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
 		)
 
 	print(P1 | P2)
@@ -106,18 +106,18 @@ PrintRowQc <- function(barcodeMatrix) {
 		geom_bar(stat = 'identity') +
 		ggtitle('Mean Counts/Cell') +
 		ylab('Mean Counts/Cell') +
-		egg::theme_presentation() +
+		egg::theme_presentation(base_size = 14) +
 		theme(
-		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
 		)
 
 	P2 <- ggplot(df, aes(x = Barcode, y = mean)) +
 		geom_bar(stat = 'identity') +
-		egg::theme_presentation() +
+		egg::theme_presentation(base_size = 14) +
 		ylab('Mean Counts/Cell (log1p)') +
 		scale_y_continuous(trans = scales::log1p_trans()) +
 		theme(
-		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
 		)
 
 	print(P1 | P2)
@@ -273,7 +273,7 @@ PrintColumnQc <- function(barcodeMatrix) {
 	P1 <- ggplot(df, aes(x = Barcode1)) +
 		geom_histogram(binwidth = 0.05) +
 		egg::theme_presentation() +
-		xlim(0,1) +
+		xlim(0,1.05) +
 		xlab('Fraction') +
 		ylab('# Cells') + ggtitle('Top Barcode Fraction Per Cell')
 

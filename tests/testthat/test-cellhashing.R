@@ -3,7 +3,7 @@ context("scRNAseq")
 tests <- list(
 		'282-1' = list(
         input = '../testdata/cellHashing/282-1-HTO_cellHashingRawCounts.txt',
-        htos = c(2:3, 8, 10, 12),
+        htos = paste0('HTO', c(2:3, 8, 10, 12)),
         gexBarcodeFile = '../testdata/cellHashing/282-1-whitelist.txt',
         CalledCells = 6296,
         Singlet = 4207,
@@ -14,7 +14,8 @@ tests <- list(
         DoRowFilter = T
     ),
 		'283' = list(
-        input = '../testdata/cellHashing/283-cellbarcodeToHTO.calls.citeSeqCounts.txt', htos = c(2:6),
+        input = '../testdata/cellHashing/283-cellbarcodeToHTO.calls.citeSeqCounts.txt',
+        htos = paste0('HTO', c(2:6)),
         gexBarcodeFile = '../testdata/cellHashing/283-validCellIndexes.csv',
         CalledCells = 4759,
         Singlet = 3365,
@@ -26,7 +27,7 @@ tests <- list(
     ),
     '438-21' = list(
       input = '../testdata/438-21-GEX/umi_count',
-      htos = c(2:3, 8, 10, 12),
+      htos = paste0('MS-', c(11, 12),
       CalledCells = 6296,
       Singlet = 4207,
       MultiSeq = 5860,
@@ -37,7 +38,7 @@ tests <- list(
     ),
     '438-24' = list(
       input = '../testdata/438-24-GEX/umi_count',
-      htos = c(2:3, 8, 10, 12),
+      htos = paste0('MS-', c(11, 12),
       CalledCells = 6296,
       Singlet = 4207,
       MultiSeq = 5860,
@@ -48,7 +49,7 @@ tests <- list(
     ),
     '449-1' = list(
       input = '../testdata/449-1-GEX/umi_count',
-      htos = c(2:3, 8, 10, 12),
+      htos = paste0('MS-', c(2:16),
       CalledCells = 6296,
       Singlet = 4207,
       MultiSeq = 5860,
@@ -59,7 +60,7 @@ tests <- list(
     ),
     '457-1' = list(
       input = '../testdata/457-1-GEX/umi_count',
-      htos = c(2:3, 8, 10, 12),
+      htos = paste0('MS-', c(1:3, 5:8),
       CalledCells = 6296,
       Singlet = 4207,
       MultiSeq = 5860,
@@ -70,7 +71,7 @@ tests <- list(
     ),
     '471-1' = list(
       input = '../testdata/471-1-GEX/umi_count',
-      htos = c(2:3, 8, 10, 12),
+      htos = paste0('MS-', c(1, 2),
       CalledCells = 6296,
       Singlet = 4207,
       MultiSeq = 5860,
@@ -81,7 +82,7 @@ tests <- list(
     ),
     '471-2' = list(
       input = '../testdata/471-2-GEX/umi_count',
-      htos = c(2:3, 8, 10, 12),
+      htos = paste0('MS-', c(3, 4),
       CalledCells = 6296,
       Singlet = 4207,
       MultiSeq = 5860,
@@ -92,7 +93,7 @@ tests <- list(
     ),
     '483-3' = list(
       input = '../testdata/483-3-GEX/umi_count',
-      htos = c(2:3, 8, 10, 12),
+      htos = paste0('MS-', c(2:4, 6:8, 10:13),
       CalledCells = 6296,
       Singlet = 4207,
       MultiSeq = 5860,
@@ -103,17 +104,18 @@ tests <- list(
     )
 )
 
-test_that("Cell hashing works", {
-    #cellhashR:::PlotLibrarySaturation('./tests/testdata/438-21-GEX')
+test_that("Saturation plot works", {
+  PlotLibrarySaturation('./tests/testdata/438-21-GEX')
+})
 
+test_that("Cell hashing works", {
     for (testName in names(tests)) {
         DoTest <- function(test, callsFile, summaryFile) {
           barcodeFile <- test$input
           whitelistFile <- test$gexBarcodeFile
 
-					barcodeData <- ProcessCountMatrix(rawCountData = barcodeFile)
-					#PlotNormalizationQC(barcodeData)
-
+					barcodeData <- ProcessCountMatrix(rawCountData = barcodeFile, barcodeWhitelist = test$htos)
+					
 					if (nrow(barcodeData) == 0) {
 							stop('No passing HTOs')
 					}
@@ -123,10 +125,13 @@ test_that("Cell hashing works", {
 					}
 
 					#Subset to keep reasonable
-					if (ncol(barcodeData) > 8000) {
-							print('Subsetting barcodeData to 8000 cells')
-							barcodeData <- barcodeData[1:8000]
+					if (ncol(barcodeData) > 5000) {
+							print('Subsetting barcodeData to 8000 cells')             
+							barcodeData <- barcodeData[,1:5000]
 					}
+
+          # This is giving memory errors on github runners:
+          PlotNormalizationQC(barcodeData)
 
           df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'))
 
@@ -146,13 +151,10 @@ test_that("Cell hashing works", {
 				barcodeData <- l$barcodeData
         df <- l$df
 
-				# expectedHtos <- sort(paste0('HTO-', test$htos))
-				# actualHtosMatrix <- sort(unname(cellhashR:::SimplifyHtoNames(rownames(barcodeData))))
-				#
-				# expect_equal(expectedHtos, actualHtosMatrix)
-				#
+				expectedHtos <- sort(test$htos)
+				actualHtosMatrix <- sort(unname(cellhashR:::SimplifyHtoNames(rownames(barcodeData))))
+				expect_equal(expectedHtos, actualHtosMatrix)
 
-				#
 				# expect_equal(test[['CalledCells']], sum(df$HTO_Classification != 'Discordant'))
 				# expect_equal(test[['Singlet']], sum(df$HTO_Classification == 'Singlet'))
 				# expect_equal(test[['Seurat']], sum(df$Seurat))
