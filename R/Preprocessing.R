@@ -1,14 +1,21 @@
+#' @include Utils.R
+
 #' @title ProcessCiteSeqCount
 #'
 #' @description The primary entrypoint for parsing and QC of the cell hashing count matrix.
-#' @param rawCountData, The input barcode file.
+#' @param rawCountData, The input barcode file or umi_count folder
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
+#' @param barcodeWhitelist A vector of barcode names to retain.
+#' @param barcodeBlacklist A vector of barcodes names to discard.
+#' @param doPlot If true, QC plots will be generated
+#' @param simplifyBarcodeNames If true, the sequence tag portion will be removed from the barcode names (i.e. HTO-1-ATGTGTGA -> HTO-1)
+#' @param saveOriginalCellBarcodeFile An optional file path, where the set of original cell barcodes, prior to filtering, will be written. The primary use-case is if the count matrix was generated using a cell whitelist (like cells with passing gene expression). Preserving this list allows downstream reporting.
 #' @import ggplot2
 #' @import patchwork
 #' @import utils
 #' @return The updated count matrix
 #' @export
-ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), doPlot = T) {
+ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), doPlot = TRUE, simplifyBarcodeNames = TRUE, saveOriginalCellBarcodeFile = NULL) {
 	if (is.na(rawCountData)){
 		stop("No file set: change rawCountData")
 	}
@@ -22,7 +29,6 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 	}
 
 	if (dir.exists(rawCountData)) {
-		#CITE-seq-Count 1.4.2 and higher creates a folder
 		barcodeData <- Seurat::Read10X(rawCountData, gene.column=1, strip.suffix = TRUE)
 		barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% barcodeBlacklist)), , drop = F]
 		barcodeData <- as.matrix(barcodeData)
@@ -34,7 +40,14 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 	}
 
 	print(paste0('Initial cell barcodes in hashing data: ', ncol(barcodeData)))
-	#rownames(barcodeData) <- SimplifyHtoNames(rownames(barcodeData))
+	if (simplifyBarcodeNames) {
+		rownames(barcodeData) <- SimplifyHtoNames(rownames(barcodeData))
+	}
+
+	if (!is.null(saveOriginalCellBarcodeFile)) {
+		toWrite <- data.frame(cellbarcode = colnames(barcodeData))
+		write.table(toWrite, file = saveOriginalCellBarcodeFile, quote = FALSE, row.names = FALSE, col.names = FALSE)
+	}
 
 	# Print QC of counts by cell and barcode:
 	if (doPlot) {
@@ -63,7 +76,7 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 }
 
 utils::globalVariables(
-	names = c('Barcode', 'Value', 'CellBarcode', 'Freq', 'Str'),
+	names = c('Barcode', 'Value', 'CellBarcode', 'Freq', 'Str', 'mean_nonzero'),
 	package = 'cellhashR',
 	add = TRUE
 )
@@ -78,18 +91,18 @@ PrintRowQc <- function(barcodeMatrix) {
 		geom_bar(stat = 'identity') +
 		ggtitle('Raw Counts/Barcode') +
 		ylab('Row Sums') +
-		egg::theme_presentation() +
+		egg::theme_presentation(base_size = 14) +
 		theme(
-		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
 		)
 
 	P2 <- ggplot(df, aes(x = Barcode, y = rowSums)) +
 		geom_bar(stat = 'identity') +
-		egg::theme_presentation() +
+		egg::theme_presentation(base_size = 14) +
 		ylab('Row Sums (log1p)') +
 		scale_y_continuous(trans = scales::log1p_trans()) +
 		theme(
-		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
 		)
 
 	print(P1 | P2)
@@ -99,18 +112,18 @@ PrintRowQc <- function(barcodeMatrix) {
 		geom_bar(stat = 'identity') +
 		ggtitle('Mean Counts/Cell') +
 		ylab('Mean Counts/Cell') +
-		egg::theme_presentation() +
+		egg::theme_presentation(base_size = 14) +
 		theme(
-		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
 		)
 
 	P2 <- ggplot(df, aes(x = Barcode, y = mean)) +
 		geom_bar(stat = 'identity') +
-		egg::theme_presentation() +
+		egg::theme_presentation(base_size = 14) +
 		ylab('Mean Counts/Cell (log1p)') +
 		scale_y_continuous(trans = scales::log1p_trans()) +
 		theme(
-		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
 		)
 
 	print(P1 | P2)
@@ -195,7 +208,7 @@ GenerateByRowSummary <- function(barcodeMatrix) {
 	return(df)
 }
 
-DoCellFiltering <- function(barcodeData, minQuant = 0.05, minCountPerCell = 5){
+DoCellFiltering <- function(barcodeData, minCountPerCell = 5){
 	if (!is.null(minCountPerCell)) {
 		toDrop <- sum(colSums(barcodeData) < minCountPerCell)
 		if (toDrop > 0){
@@ -257,23 +270,36 @@ PrintColumnQc <- function(barcodeMatrix) {
 
 
 	#normalize columns, print top barcode fraction:
-	normalizedBarcodes <- sweep(barcodeMatrix,2,colSums(barcodeMatrix),`/`)
+	normalizedBarcodes <- sweep(barcodeMatrix, 2, colSums(barcodeMatrix),`/`)
 	topValue <- apply(normalizedBarcodes,2,function(x){
 		max(x)
 	})
 
 	df <- data.frame(Barcode1 = topValue)
-	print(ggplot(df, aes(x = Barcode1)) +
+	P1 <- ggplot(df, aes(x = Barcode1)) +
 		geom_histogram(binwidth = 0.05) +
 		egg::theme_presentation() +
-		xlab('Top Barcode Fraction') +
-		ylab('Count')
-	)
+		xlim(-0.05, 1.05) +
+		xlab('Fraction') +
+		ylab('# Cells') + ggtitle('Top Barcode Fraction Per Cell')
 
-	print(paste0('Total cells where top barcode is >0.75 of counts: ', length(topValue > 0.75)))
-	
+	P1 <- P1 + plot_annotation(caption = paste0('Total cells where top barcode is >0.75 of counts: ', sum(topValue > 0.75), ' of ', length(topValue))) & theme(plot.caption = element_text(size = 14))
+
+	print(P1)
 }
 
+utils::globalVariables(
+	names = c('CountsPerCell', 'Saturation'),
+	package = 'cellhashR',
+	add = TRUE
+)
+
+#' @title PlotLibrarySaturation
+#'
+#' @description Create a plot of the library saturation per cell
+#' @param citeseqCountDir, The root of the Cite-seq-Count output folder, which should contain umi_count and read_count folders.
+#' @return The overall saturation for this library
+#' @export
 PlotLibrarySaturation <- function(citeseqCountDir) {
 	countData <- Seurat::Read10X(paste0(citeseqCountDir, '/read_count'), gene.column=1, strip.suffix = TRUE)
 	countData <- countData[rownames(countData) != 'unmapped',]
@@ -291,7 +317,7 @@ PlotLibrarySaturation <- function(citeseqCountDir) {
 	overall <- 1 - round((sum(umiData) / sum(countData)), 2)
 
 	print(ggplot(df, aes(x = CountsPerCell, y = Saturation)) +
-		labs(x = 'Counts/Cell', y = '% Saturation') + egg::theme_presentation() +
+		labs(x = 'Counts/Cell', y = '% Saturation') + egg::theme_presentation(base_size = 18) +
 		geom_point() +
 		annotate("text", x = max(df$CountsPerCell), y = min(df$Saturation), hjust = 1, vjust = -1, label = paste0(
 			'Total Counts: ', format(sum(countData), big.mark=','), '\n',
@@ -299,4 +325,6 @@ PlotLibrarySaturation <- function(citeseqCountDir) {
 			'Saturation: ', overall
 		)) + ggtitle('Library Saturation')
 	)
+
+	return(overall)
 }

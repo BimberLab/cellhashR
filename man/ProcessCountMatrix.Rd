@@ -9,13 +9,25 @@ ProcessCountMatrix(
   minCountPerCell = 5,
   barcodeWhitelist = NULL,
   barcodeBlacklist = c("no_match", "total_reads", "unmapped"),
-  doPlot = T
+  doPlot = TRUE,
+  simplifyBarcodeNames = TRUE,
+  saveOriginalCellBarcodeFile = NULL
 )
 }
 \arguments{
-\item{rawCountData, }{The input barcode file.}
+\item{rawCountData, }{The input barcode file or umi_count folder}
 
 \item{minCountPerCell}{Cells (columns) will be dropped if their total count is less than this value.}
+
+\item{barcodeWhitelist}{A vector of barcode names to retain.}
+
+\item{barcodeBlacklist}{A vector of barcodes names to discard.}
+
+\item{doPlot}{If true, QC plots will be generated}
+
+\item{simplifyBarcodeNames}{If true, the sequence tag portion will be removed from the barcode names (i.e. HTO-1-ATGTGTGA -> HTO-1)}
+
+\item{saveOriginalCellBarcodeFile}{An optional file path, where the set of original cell barcodes, prior to filtering, will be written. The primary use-case is if the count matrix was generated using a cell whitelist (like cells with passing gene expression). Preserving this list allows downstream reporting.}
 }
 \value{
 The updated count matrix

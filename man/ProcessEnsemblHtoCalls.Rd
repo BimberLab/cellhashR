@@ -4,28 +4,13 @@
 \alias{ProcessEnsemblHtoCalls}
 \title{ProcessEnsemblHtoCalls}
 \usage{
-ProcessEnsemblHtoCalls(
-  mc,
-  sc,
-  barcodeMatrix,
-  outFile = "combinedHtoCalls.txt",
-  allCallsOutFile = NA
-)
+ProcessEnsemblHtoCalls(callList, cellbarcodeWhitelist = NULL)
 }
 \arguments{
-\item{mc}{Multiseq calls dataframe}
+\item{callList}{A list of data frames, produced by callers}
 
-\item{sc}{Seurat calls dataframe}
-
-\item{barcodeMatrix}{The barcode count matrix}
-
-\item{outFile}{The output TSV file}
-
-\item{allCallsOutFile}{If provided, a more detailed output will be written here}
-}
-\value{
-A modified Seurat object.
+\item{cellbarcodeWhitelist}{A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.}
 }
 \description{
-A description
+ProcessEnsemblHtoCalls
 }

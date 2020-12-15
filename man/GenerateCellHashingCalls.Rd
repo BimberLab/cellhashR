@@ -6,17 +6,23 @@
 \usage{
 GenerateCellHashingCalls(
   barcodeMatrix,
-  positive.quantile = 0.99,
-  attemptRecovery = FALSE,
-  useSeurat = TRUE,
-  useMultiSeq = TRUE,
-  outFile = "combinedHtoCalls.txt",
-  allCallsOutFile = NA
+  methods = c("htodemux", "multiseq"),
+  cellbarcodeWhitelist = NULL,
+  htodemux.positive.quantile = 0.95
 )
 }
+\arguments{
+\item{barcodeMatrix}{The filtered matrix of hashing count data}
+
+\item{methods}{A vector of one or more calling methods to use. Currently supported are: htodemux and multiseq}
+
+\item{cellbarcodeWhitelist}{A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.}
+
+\item{htodemux.positive.quantile}{The positive.quantile passed to HTODemux}
+}
 \value{
-A data table of results.
+A data frame of results.
 }
 \description{
-A description
+The primary methods to generating cell hashing calls from a filtered matrix of count data
 }

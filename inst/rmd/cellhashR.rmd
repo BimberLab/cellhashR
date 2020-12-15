@@ -1,6 +1,13 @@
 ---
-title: 'Cell Hashing Example'
-output: html_document
+title: "cellhashR Example"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    self_contained: yes
+    thumbnails: yes
+    fig_width: 12
+    code_folding: hide
 
 ---
 
@@ -14,17 +21,21 @@ knitr::opts_knit$set(root.dir = '/Projects/cellhashR')
 
 ```
 
-```{r libraryQC}
+# Library Saturation
 
-cellhashR:::PlotLibrarySaturation('./tests/testdata/438-21-GEX')
+```{r Saturation}
+
+saturation <- cellhashR:::PlotLibrarySaturation('./tests/testdata/438-21-GEX')
 
 
 ```
 
 
-## Basic QC and Filtering on input:
+# Data Loading / QC:
 
-```{r QC, fig.width=12}
+Load raw counts, perform basic filtering an QC. The input count matrix was generated to include all possible barcodes, even though this sample only contains 5. The figures demonstrate the other barcodes are absent, which is useful information to verify.
+
+```{r QC1, fig.width=12}
 
 barcodeDir <- './tests/testdata/cellHashing/247-1-hashTagCounts.txt'
 
@@ -39,11 +50,15 @@ if (ncol(barcodeData) == 0) {
 
 ```
 
-```{r QC, fig.width=12}
+# Data Loading / QC Using Barcode Whitelist:
 
-barcodeDir <- '/Projects/cellhashR/tests/testdata/cellHashing/247-1-hashTagCounts.txt'
+This is identical to above, except we provide a whitelist of the expected barcodes, which will be used to subset data. This is a more realistic usage example.
 
-barcodeData <- ProcessCountMatrix(rawCountData = barcodeDir, minCountPerCell = 5, barcodeWhitelist = c('HTO-1', 'HTO-2', 'HTO-3', 'HTO-4', 'HTO-6'))
+
+```{r QC2, fig.width=12}
+
+saveOriginalCellBarcodeFile <- 'originalBarcodes.txt'
+barcodeData <- ProcessCountMatrix(rawCountData = barcodeDir, minCountPerCell = 5, barcodeWhitelist = c('HTO-1', 'HTO-2', 'HTO-3', 'HTO-4', 'HTO-6'), saveOriginalCellBarcodeFile = saveOriginalCellBarcodeFile)
 if (nrow(barcodeData) == 0) {
   print('No passing barcodes')
 }
@@ -52,33 +67,49 @@ if (ncol(barcodeData) == 0) {
   print('No passing cells')
 }
 
-```
-
-```{r}
-
-
-NormalizationQC(barcodeData)
-
-
 
 ```
 
+# Normalization / QC
 
-## Generate calls
+These plots are designed to provide visualization of potential normalizations.
+
+```{r NormalizationQC, fig.width=12}
+
+PlotNormalizationQC(barcodeData)
+
+
+```
+
+# Generate Hashing Calls
+
+The actual hashing calls are generated below. One or more calling algorithms can be used. If multiple algorithms are selected, the consensus call is used, which is the union of all non-negative calls. Any discordant call is marked as such.
+
+Note: if you provide a vector of expected barcodes (such as all barcodes with passing gene expresison data), the plots will include these in the summary. This is useful to evaluate whether cells were dropped due to lack of cell hashing counts, as opposed to uncallable for other reasons.
 
 ```{r GenerateCalls, fig.width=12}
 
 if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
-    dt <- GenerateCellHashingCalls(barcodeData = barcodeData, outFile = finalCallFile, allCallsOutFile = allCallsOutFile, useSeurat = useSeurat, useMultiSeq = useMultiSeq)
-
-    if (exists('whitelistFile') && !is.null(whitelistFile)){
-      GenerateSummaryForExpectedBarcodes(dt, whitelistFile=whitelistFile, outputFile=metricsFile, barcodeData=barcodeData)
-    }
+	
+	cellbarcodeWhitelist <- read.table(saveOriginalCellBarcodeFile, header = FALSE, col.names = c('cellbarcode'))
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'), cellbarcodeWhitelist = cellbarcodeWhitelist$cellbarcode)
+} else {
+	stop('No passing cels were found in the count matrix')
 }
 
 ```
 
-## Print Session Info
+# Final Calls
+
+The output is a data frame, with the calls from each caller, and a consensus call.  See AppendCellHashing to append the results to a seurat object as metadata.
+
+```{r}
+
+knitr::kable(head(df, n = 10))
+
+```
+
+# Print Session Info
 
 ```{r SessionInfo}
 
