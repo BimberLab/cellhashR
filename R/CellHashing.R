@@ -2,7 +2,7 @@
 #' @include Visualization.R
 
 utils::globalVariables(
-  names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification'),
+  names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'ConsensusCall'),
   package = 'cellhashR',
   add = TRUE
 )
@@ -105,11 +105,12 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
 #'
 #' @param barcodeMatrix The filtered matrix of hashing count data
 #' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux and multiseq
-#' @param htodemux.positive.quantile
+#' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
+#' @param htodemux.positive.quantile The positive.quantile passed to HTODemux
 #' @description The primary methods to generating cell hashing calls from a filtered matrix of count data
 #' @return A data frame of results.
 #' @export
-GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'multiseq'), htodemux.positive.quantile = 0.95) {
+GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'multiseq'), cellbarcodeWhitelist = NULL, htodemux.positive.quantile = 0.95) {
   callList <- list()
   for (method in methods) {
     if (method == 'htodemux') {
@@ -125,7 +126,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
     }
   }
 
-  return(ProcessEnsemblHtoCalls(callList, barcodeMatrix))
+  return(ProcessEnsemblHtoCalls(callList, barcodeMatrix, cellbarcodeWhitelist))
 }
 
 #' @title ProcessEnsemblHtoCalls
@@ -135,7 +136,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
 #' @param barcodeMatrix The barcode count matrix
 #' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
 #' @importFrom dplyr %>% group_by summarise
-ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist = NA) {
+ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist = NULL) {
   if (length(callList) == 0){
     print('No algorithms produced calls, aborting')
     return()
@@ -155,16 +156,29 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
   dataClassificationGlobal <- allCalls[c('cellbarcode', 'method', 'classification.global')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification.global, values_fill = 'Negative')
 
   # Because cell barcodes might have been filtered from the original whitelist (i.e. total counts), re-add:
-  if (!is.na(cellbarcodeWhitelist)) {
+  if (!is.null(cellbarcodeWhitelist)) {
     toAdd <- cellbarcodeWhitelist[!(cellbarcodeWhitelist %in% unique(allCalls$cellbarcode))]
     if (length(toAdd) > 0) {
       print(paste0('Re-adding ', length(toAdd), ' cell barcodes to call list'))
-      toAdd <- merge(data.frame(cellbarcode = toAdd), dataClassification[FALSE,], by = 'cellbarcode', all.x = TRUE)
-      dataClassification <- rbind(dataClassification, toAdd)
-      dataClassification[is.na(dataClassification)] <- 'No Counts'
 
-      toAdd <- merge(data.frame(cellbarcode = toAdd), dataClassificationGlobal[FALSE,], by = 'cellbarcode', all.x = TRUE)
-      dataClassificationGlobal <- rbind(dataClassificationGlobal, toAdd)
+      for (method in methods) {
+        if (method %in% names(dataClassification)) {
+          dataClassification[[method]] <- naturalsort::naturalfactor(dataClassification[[method]], levels = c(levels(dataClassification[[method]]), 'No Counts'))
+        }
+
+        if (method %in% names(dataClassificationGlobal)) {
+          dataClassificationGlobal[[method]] <- naturalsort::naturalfactor(dataClassificationGlobal[[method]], levels = c(levels(dataClassificationGlobal[[method]]), 'No Counts'))
+        }
+      }
+
+      merged <- merge(data.frame(cellbarcode = toAdd), dataClassification[FALSE,], by = c('cellbarcode'), all.x = TRUE)
+      merged[is.na(merged)] <- 'No Counts'
+      dataClassification <- rbind(dataClassification, merged)
+
+
+      merged <- merge(data.frame(cellbarcode = toAdd), dataClassificationGlobal[FALSE,], by = c('cellbarcode'), all.x = TRUE)
+      merged[is.na(merged)] <- 'No Counts'
+      dataClassificationGlobal <- rbind(dataClassificationGlobal, merged)
       dataClassificationGlobal[is.na(dataClassificationGlobal)] <- 'No Counts'
     }
   }
@@ -304,7 +318,7 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
       panel.grid  = element_blank()
     )
 
-  print(P1 + P2 + plot_annotation(label = 'Final Calls'))
+  print(P1 + P2 + plot_annotation(title = 'Final Calls'))
 
   return(dataClassification)
 }
@@ -328,12 +342,11 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
   return(ret)
 }
 
-#' @title GetExampleMarkdown
+#' title GetExampleMarkdown
 #'
-#' @description Save a template R markdown file, showing usage of this package
-#' @param dest The destination filepath, where the file will be saved
-#' @export
-GetExampleMarkdown <- function(dest) {
-  source <- file.path(R_PACKAGE_DIR, paste0('inst/rmd/cellhashR.rmd'))
-  file.copy(source, dest, overwrite = TRUE)
-}
+#' description Save a template R markdown file, showing usage of this package
+#' param dest The destination filepath, where the file will be saved
+#GetExampleMarkdown <- function(dest) {
+#  source <- file.path(R_PACKAGE_DIR, paste0('inst/rmd/cellhashR.rmd'))
+#  file.copy(source, dest, overwrite = TRUE)
+#}

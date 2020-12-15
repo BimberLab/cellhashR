@@ -26,8 +26,6 @@ PlotNormalizationQC(barcodeData)
 # Generate the final cell hashing calls
 dt <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'))
 
-# Create an example markdown template:
-GetExampleMarkdown(dest = 'exampleHashing.rmd')
 
 ```
 

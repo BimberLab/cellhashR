@@ -103,15 +103,8 @@ if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
 barcodeData <- readRDS(file = 'barcodeData.rds')
 cl <- readRDS(file = 'callList.rds')
 
-df <- cellhashR:::ProcessEnsemblHtoCalls(cl, barcodeData)
+df <- cellhashR:::ProcessEnsemblHtoCalls(cl, barcodeData, cellbarcodeWhitelist = c('a', 'b','c'))
 	
-
-
-  
-```
-
-
-```{r}
 
 
 

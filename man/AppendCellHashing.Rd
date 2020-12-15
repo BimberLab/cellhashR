@@ -12,8 +12,6 @@ AppendCellHashing(seuratObj, barcodeCallFile, barcodePrefix = NULL)
 \item{barcodeCallFile}{The tsv containing cell hashing calls}
 
 \item{barcodePrefix}{A prefix to be applied before the cell barcodes}
-
-\item{seuratObj, }{A Seurat object.}
 }
 \value{
 A modified Seurat object.

@@ -4,7 +4,7 @@
 \alias{ProcessEnsemblHtoCalls}
 \title{ProcessEnsemblHtoCalls}
 \usage{
-ProcessEnsemblHtoCalls(callList, barcodeMatrix, cellbarcodeWhitelist = NA)
+ProcessEnsemblHtoCalls(callList, barcodeMatrix, cellbarcodeWhitelist = NULL)
 }
 \arguments{
 \item{callList}{A list of dataframes, produced by callers}

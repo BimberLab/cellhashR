@@ -28,7 +28,6 @@ Imports:
     utils,
     stats,
     RColorBrewer,
-    kableExtra,
     reshape2,
     rmdformats
 Suggests:
