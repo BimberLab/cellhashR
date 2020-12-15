@@ -3,7 +3,7 @@ context("scRNAseq")
 tests <- list(
 		'282-1' = list(
         input = '../testdata/cellHashing/282-1-HTO_cellHashingRawCounts.txt',
-        htos = paste0('HTO', c(2:3, 8, 10, 12)),
+        htos = paste0('HTO-', c(2:3, 8, 10, 12)),
         gexBarcodeFile = '../testdata/cellHashing/282-1-whitelist.txt',
         CalledCells = 6296,
         Singlet = 4207,
@@ -15,7 +15,7 @@ tests <- list(
     ),
 		'283' = list(
         input = '../testdata/cellHashing/283-cellbarcodeToHTO.calls.citeSeqCounts.txt',
-        htos = paste0('HTO', c(2:6)),
+        htos = paste0('HTO-', c(2:6)),
         gexBarcodeFile = '../testdata/cellHashing/283-validCellIndexes.csv',
         CalledCells = 4759,
         Singlet = 3365,
@@ -27,7 +27,7 @@ tests <- list(
     ),
     '438-21' = list(
       input = '../testdata/438-21-GEX/umi_count',
-      htos = paste0('MS-', c(11, 12),
+      htos = paste0('MS-', c(11, 12)),
       CalledCells = 6296,
       Singlet = 4207,
       MultiSeq = 5860,
@@ -38,7 +38,7 @@ tests <- list(
     ),
     '438-24' = list(
       input = '../testdata/438-24-GEX/umi_count',
-      htos = paste0('MS-', c(11, 12),
+      htos = paste0('MS-', c(11, 12)),
       CalledCells = 6296,
       Singlet = 4207,
       MultiSeq = 5860,
@@ -49,7 +49,7 @@ tests <- list(
     ),
     '449-1' = list(
       input = '../testdata/449-1-GEX/umi_count',
-      htos = paste0('MS-', c(2:16),
+      htos = paste0('MS-', c(2:16)),
       CalledCells = 6296,
       Singlet = 4207,
       MultiSeq = 5860,
@@ -60,7 +60,7 @@ tests <- list(
     ),
     '457-1' = list(
       input = '../testdata/457-1-GEX/umi_count',
-      htos = paste0('MS-', c(1:3, 5:8),
+      htos = paste0('MS-', c(1:3, 5:8)),
       CalledCells = 6296,
       Singlet = 4207,
       MultiSeq = 5860,
@@ -71,7 +71,7 @@ tests <- list(
     ),
     '471-1' = list(
       input = '../testdata/471-1-GEX/umi_count',
-      htos = paste0('MS-', c(1, 2),
+      htos = paste0('MS-', c(1, 2)),
       CalledCells = 6296,
       Singlet = 4207,
       MultiSeq = 5860,
@@ -82,7 +82,7 @@ tests <- list(
     ),
     '471-2' = list(
       input = '../testdata/471-2-GEX/umi_count',
-      htos = paste0('MS-', c(3, 4),
+      htos = paste0('MS-', c(3, 4)),
       CalledCells = 6296,
       Singlet = 4207,
       MultiSeq = 5860,
@@ -93,7 +93,7 @@ tests <- list(
     ),
     '483-3' = list(
       input = '../testdata/483-3-GEX/umi_count',
-      htos = paste0('MS-', c(2:4, 6:8, 10:13),
+      htos = paste0('MS-', c(2:4, 6:8, 10:13)),
       CalledCells = 6296,
       Singlet = 4207,
       MultiSeq = 5860,
