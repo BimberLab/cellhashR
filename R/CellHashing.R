@@ -137,6 +137,8 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
 #' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
 #' @importFrom dplyr %>% group_by summarise
 ProcessEnsemblHtoCalls <- function(callList, cellbarcodeWhitelist = NULL) {
+  print('Generating consensus calls')
+
   if (length(callList) == 0){
     print('No algorithms produced calls, aborting')
     return()
