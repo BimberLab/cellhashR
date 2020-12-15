@@ -1,5 +1,11 @@
 #' @include Utils.R
 
+utils::globalVariables(
+	names = c('Classification'),
+	package = 'cellhashR',
+	add = TRUE
+)
+
 SummarizeHashingCalls <- function(seuratObj, label, htoClassificationField = 'classification', globalClassificationField = 'classification.global', doHeatmap = T, doTSNE = T, assay = 'HTO') {
 	#report outcome
 	df <- data.frame(prop.table(table(Barcode = seuratObj[[htoClassificationField]])))

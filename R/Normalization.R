@@ -1,7 +1,7 @@
 #' @include Utils.R
 
 utils::globalVariables(
-	names = c('NormCount', 'Saturation'),
+	names = c('NormCount', 'Saturation', 'Cluster', 'AvgExpression'),
 	package = 'cellhashR',
 	add = TRUE
 )
@@ -31,6 +31,10 @@ NormalizeRelative <- function(mat) {
 	return(prop.table(mat, 2))
 }
 
+#' @title PlotNormalizationQC
+#'
+#' @param barcodeData The count matrix
+#' @description Generates QC plots related to normalization
 #' @export
 PlotNormalizationQC <- function(barcodeData) {
 	toQC <- list(

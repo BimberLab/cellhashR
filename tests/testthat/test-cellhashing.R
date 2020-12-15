@@ -124,7 +124,7 @@ test_that("Cell hashing works", {
 
 					#Subset to keep reasonable
 					if (ncol(barcodeData) > 8000) {
-							print('Subsetting barcodeData')
+							print('Subsetting barcodeData to 8000 cells')
 							barcodeData <- barcodeData[1:8000]
 					}
 
