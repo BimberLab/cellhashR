@@ -155,22 +155,12 @@ test_that("Cell hashing works", {
 				actualHtosMatrix <- sort(unname(cellhashR:::SimplifyHtoNames(rownames(barcodeData))))
 				expect_equal(expectedHtos, actualHtosMatrix)
 
-				# expect_equal(test[['CalledCells']], sum(df$HTO_Classification != 'Discordant'))
-				# expect_equal(test[['Singlet']], sum(df$HTO_Classification == 'Singlet'))
-				# expect_equal(test[['Seurat']], sum(df$Seurat))
-				# expect_equal(test[['MultiSeq']], sum(df$MultiSeq))
-				# expect_equal(test[['Discordant']], sum(df$HTO == 'Discordant'))
-				# expect_equal(test[['Discordant']], sum(df$HTO_Classification == 'Discordant'))
-				#
-				# d <- read.table(callsFile, header = T, sep = '\t')
-				# expect_equal(test[['TotalRows']], nrow(d))
-				# unlink(callsFile)
-				#
-				# if (!is.null(summaryFile)) {
-				#     d <- read.table(summaryFile, header = T, sep = '\t')
-				#     expect_equal(21, nrow(d))
-				#     unlink(summaryFile)
-				# }
+				# expect_equal(test[['CalledCells']], sum(df$consensuscall != 'Discordant'))
+				# expect_equal(test[['Singlet']], sum(df$consensuscall.global == 'Singlet'))
+				# expect_equal(test[['Seurat']], sum(df$htodemux) != 'Negative')
+				# expect_equal(test[['MultiSeq']], sum(df$multiseq) != 'Negative')
+				# expect_equal(test[['Discordant']], sum(df$consensuscall == 'Discordant'))
+				# expect_equal(test[['Discordant']], sum(df$consensuscall.global == 'Discordant'))
     }
 })
 

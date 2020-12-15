@@ -53,6 +53,10 @@ HTODemux <- function(
 	verbose = TRUE,
 	plotDist = FALSE
 ) {
+	if (verbose) {
+		print('Starting HTODemux')
+	}
+
 	#initial clustering
 	data <- GetAssayData(object = object, assay = assay)
 	counts <- GetAssayData(

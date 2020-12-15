@@ -2,7 +2,7 @@
 #' @include Visualization.R
 
 utils::globalVariables(
-  names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'ConsensusCall'),
+  names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall'),
   package = 'cellhashR',
   add = TRUE
 )
@@ -40,7 +40,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
   }
   barcodeCallTable <- unique(barcodeCallTable)
 
-  barcodeCallTable <- barcodeCallTable[barcodeCallTable$ConsensusCall != 'Negative',]
+  barcodeCallTable <- barcodeCallTable[barcodeCallTable$consensuscall != 'Negative',]
   if (nrow(barcodeCallTable)==0) stop("Something is wrong, table became 0 rows")
 
   print(paste0('Non-negative cell barcodes in cell hashing calls: ', nrow(barcodeCallTable)))
@@ -49,7 +49,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
   if (!('HTO' %in% names(seuratObj@meta.data))) {
     print('Adding HTO columns to seurat object')
     seuratObj$HTO <- c(NA)
-    seuratObj$ConsensusCall.global <- c(NA)
+    seuratObj$consensuscall.global <- c(NA)
   }
 
   datasetSelect <- seuratObj$BarcodePrefix == barcodePrefix
@@ -77,12 +77,12 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
     stop('Length of data select and df do not match!')
   }
 
-  df$ConsensusCall <- as.character(df$ConsensusCall)
-  df$ConsensusCall.global <- as.character(df$ConsensusCall.global)
+  df$consensuscall <- as.character(df$consensuscall)
+  df$consensuscall.global <- as.character(df$consensuscall.global)
 
-  df$ConsensusCall[is.na(df$ConsensusCall)] <- 'ND'
-  df$ConsensusCall.global[is.na(df$ConsensusCall.global)] <- 'ND'
-  print(paste0('Total barcodes added: ', nrow(df[!is.na(df$ConsensusCall),])))
+  df$consensuscall[is.na(df$consensuscall)] <- 'ND'
+  df$consensuscall.global[is.na(df$consensuscall.global)] <- 'ND'
+  print(paste0('Total barcodes added: ', nrow(df[!is.na(df$consensuscall),])))
 
   # Check barcodes match before merge
   if (sum(df$cellbarcode != colnames(seuratObj)[seuratObj$BarcodePrefix == barcodePrefix]) > 0) {
@@ -90,13 +90,13 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
   }
 
   HTO <- as.character(seuratObj$HTO)
-  ConsensusCall.global <- as.character(seuratObj$ConsensusCall.global)
+  consensuscall.global <- as.character(seuratObj$consensuscall.global)
 
   HTO[datasetSelect] <- df$HTO
-  ConsensusCall.global[datasetSelect] <- df$ConsensusCall.global
+  consensuscall.global[datasetSelect] <- df$consensuscall.global
 
-  seuratObj$ConsensusCall <- as.factor(ConsensusCall)
-  seuratObj$ConsensusCall.global <- as.factor(ConsensusCall.global)
+  seuratObj$consensuscall <- as.factor(consensuscall)
+  seuratObj$consensuscall.global <- as.factor(consensuscall.global)
 
   return(seuratObj)
 }
@@ -208,11 +208,11 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
   }
 
   # Concordance across all callers:
-  dataClassification$ConsensusCall <- apply(dataClassification[,methods], 1, MakeConsensusCall)
-  dataClassificationGlobal$ConsensusCall <- apply(dataClassificationGlobal[,methods], 1, MakeConsensusCall)
+  dataClassification$consensuscall <- apply(dataClassification[,methods], 1, MakeConsensusCall)
+  dataClassificationGlobal$consensuscall <- apply(dataClassificationGlobal[,methods], 1, MakeConsensusCall)
 
   #Summary plots:
-  summary <- dataClassification[c('cellbarcode', 'ConsensusCall')]
+  summary <- dataClassification[c('cellbarcode', 'consensuscall')]
   summary$method <- 'consensus'
   names(summary) <- c('cellbarcode', 'classification', 'method')
   summary <- rbind(allCalls[c('cellbarcode', 'classification', 'method')], summary)
@@ -224,7 +224,7 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
     )
 
-  summary <- dataClassificationGlobal[c('cellbarcode', 'ConsensusCall')]
+  summary <- dataClassificationGlobal[c('cellbarcode', 'consensuscall')]
   summary$method <- 'consensus'
   names(summary) <- c('cellbarcode', 'classification.global', 'method')
   summary <- rbind(allCalls[c('cellbarcode', 'classification.global', 'method')], summary)
@@ -236,13 +236,13 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
     )
 
-  print(P2 + P1)
+  print(P2 + P1 + plot_layout(widths = c(1, 2)))
 
-  print(paste0('Total concordant: ', sum(dataClassification$ConsensusCall != 'Discordant')))
-  print(paste0('Total discordant (barcode call): ', sum(dataClassification$ConsensusCall == 'Discordant')))
-  print(paste0('Total discordant (global classification): ', sum(dataClassificationGlobal$ConsensusCall != 'Discordant')))
+  print(paste0('Total concordant: ', sum(dataClassification$consensuscall != 'Discordant')))
+  print(paste0('Total discordant (barcode call): ', sum(dataClassification$consensuscall == 'Discordant')))
+  print(paste0('Total discordant (global classification): ', sum(dataClassificationGlobal$consensuscall == 'Discordant')))
 
-  discord <- dataClassification[dataClassification$ConsensusCall == 'Discordant',]
+  discord <- dataClassification[dataClassification$consensuscall == 'Discordant',]
   if (nrow(discord) > 0) {
     combos <- .GetAllCombinations(methods)
 
@@ -251,14 +251,14 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
       method2 <- as.character(combos$method2[j])
 
       data <- dataClassification[c(method1, method2)]
-      data$ConsensusCall <- apply(data[,c(method1, method2)], 1, MakeConsensusCall)
+      data$consensuscall <- apply(data[,c(method1, method2)], 1, MakeConsensusCall)
       data$DisagreeWithNeg <- data[method1] != data[method2]
       data <- data[data$DisagreeWithNeg,]
       if (nrow(data) == 0) {
         next
       }
 
-      discord <- data[data$ConsensusCall == 'Discordant',] %>% dplyr::group_by_at(c(method1, method2)) %>% summarise(Count = dplyr::n())
+      discord <- data[data$consensuscall == 'Discordant',] %>% dplyr::group_by_at(c(method1, method2)) %>% summarise(Count = dplyr::n())
       P1 <- ggplot(discord, aes_string(x = method1, y = method2, fill = 'Count')) +
         geom_tile() +
         geom_text(aes(label = Count)) +
@@ -286,17 +286,17 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
     }
   }
 
-  toAdd <- dataClassificationGlobal[c('cellbarcode', 'ConsensusCall')]
-  names(toAdd) <- c('cellbarcode', 'ConsensusCall.global')
+  toAdd <- dataClassificationGlobal[c('cellbarcode', 'consensuscall')]
+  names(toAdd) <- c('cellbarcode', 'consensuscall.global')
 
   dataClassification <- merge(dataClassification, toAdd, by = 'cellbarcode', all.x = T)
 
   #final outcome
-  df <- data.frame(prop.table(table(Barcode = dataClassification$ConsensusCall)))
+  df <- data.frame(prop.table(table(Barcode = dataClassification$consensuscall)))
   P1 <- ggplot(df, aes(x = '', y = Freq, fill = Barcode)) +
     geom_bar(width = 1, color = "black", stat = "identity") +
     coord_polar("y", start=0) +
-    scale_fill_manual(values = GetPlotColors(length(unique(dataClassification$ConsensusCall)))) +
+    scale_fill_manual(values = GetPlotColors(length(unique(dataClassification$consensuscall)))) +
     theme_minimal() +
     theme(
       axis.text.x=element_blank(),
@@ -305,11 +305,11 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
       panel.grid  = element_blank()
     )
 
-  df <- data.frame(table(Classification = dataClassification$ConsensusCall.global))
+  df <- data.frame(table(Classification = dataClassification$consensuscall.global))
   P2 <- ggplot(df, aes(x = '', y = Freq, fill = Classification)) +
     geom_bar(width = 1, color = "black", stat = "identity") +
     coord_polar("y", start=0) +
-    scale_fill_manual(values = GetPlotColors(length(unique(dataClassification$ConsensusCall.global)))) +
+    scale_fill_manual(values = GetPlotColors(length(unique(dataClassification$consensuscall.global)))) +
     theme_minimal() +
     theme(
       axis.text.x=element_blank(),
@@ -342,11 +342,30 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
   return(ret)
 }
 
-#' title GetExampleMarkdown
+#' @title GetExampleMarkdown
 #'
-#' description Save a template R markdown file, showing usage of this package
-#' param dest The destination filepath, where the file will be saved
-#GetExampleMarkdown <- function(dest) {
-#  source <- file.path(R_PACKAGE_DIR, paste0('inst/rmd/cellhashR.rmd'))
-#  file.copy(source, dest, overwrite = TRUE)
-#}
+#' @description Save a template R markdown file, showing usage of this package
+#' @param dest The destination filepath, where the file will be saved
+#' @export
+GetExampleMarkdown <- function(dest) {
+  source <- system.file("rmd/cellhashR.Rmd", package = "cellhashR")
+  file.copy(source, dest, overwrite = TRUE)
+}
+
+#' @title GetExampleMarkdown
+#'
+#' @description Save a template R markdown file, showing usage of this package
+#' @param rawCountData The input barcode file or umi_count folder
+#' @param reportFile The file to which the HTML report will be written
+#' @param callFile The file to which the table of calls will be written
+#' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
+#' @param barcodeWhitelist A vector of barcode names to retain.
+#' @param cellbarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), or the string 'matrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
+#' @export
+CallAndGenerateReport <- function(rawCountData, outFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'matrix') {
+  rmd <- system.file("rmd/cellhashR.Rmd", package = "cellhashR")
+
+
+  file.copy(source, dest, overwrite = TRUE)
+}
+

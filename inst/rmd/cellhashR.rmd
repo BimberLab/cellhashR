@@ -14,7 +14,6 @@ output:
 ```{r setup}
 
 library(cellhashR)
-library(ggplot2)
 
 knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error=TRUE)
 
@@ -88,20 +87,11 @@ The actual hashing calls are generated below. One or more calling algorithms can
 ```{r GenerateCalls, fig.width=12}
 
 if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
-	dt <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'))
+	# Note: if you provide a vector of expected barcodes (such as all barcodes with passing gene expresison data), the plots will include these in the summary. This is useful to evaluate whether cells were dropped due to lack of cell hashing counts, as opposed to uncallable for other reasons.
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'))
 } else {
 	stop('No passing cels were found in the count matrix')
 }
-
-```
-
-```{r fig.width=10}
-
-barcodeData <- readRDS(file = 'barcodeData.rds')
-cl <- readRDS(file = 'callList.rds')
-
-df <- cellhashR:::ProcessEnsemblHtoCalls(cl, barcodeData, cellbarcodeWhitelist = c('a', 'b','c'))
-	
 
 ```
 
@@ -111,7 +101,7 @@ The output is a data frame, with the calls from each caller, and a consensus cal
 
 ```{r}
 
-print(head(df))
+knitr::kable(head(df, n = 10))
 
 ```
 

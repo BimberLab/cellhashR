@@ -12,6 +12,7 @@ An R package designed to demultiplex cell hashing data.
 
 ### <a name="example">Example Usage</a>
 
+[Click here to download an example R Markdown report](examples/cellhashR.html)
 ```
 
 # Example 1: parse CITE-seq-Count output, printing QC
