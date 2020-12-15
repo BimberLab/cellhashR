@@ -10,7 +10,8 @@ ProcessCountMatrix(
   barcodeWhitelist = NULL,
   barcodeBlacklist = c("no_match", "total_reads", "unmapped"),
   doPlot = TRUE,
-  simplifyBarcodeNames = TRUE
+  simplifyBarcodeNames = TRUE,
+  saveOriginalCellBarcodeFile = NULL
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ ProcessCountMatrix(
 \item{doPlot}{If true, QC plots will be generated}
 
 \item{simplifyBarcodeNames}{If true, the sequence tag portion will be removed from the barcode names (i.e. HTO-1-ATGTGTGA -> HTO-1)}
+
+\item{saveOriginalCellBarcodeFile}{An optional file path, where the set of original cell barcodes, prior to filtering, will be written. The primary use-case is if the count matrix was generated using a cell whitelist (like cells with passing gene expression). Preserving this list allows downstream reporting.}
 }
 \value{
 The updated count matrix

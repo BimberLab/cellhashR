@@ -9,12 +9,13 @@
 #' @param barcodeBlacklist A vector of barcodes names to discard.
 #' @param doPlot If true, QC plots will be generated
 #' @param simplifyBarcodeNames If true, the sequence tag portion will be removed from the barcode names (i.e. HTO-1-ATGTGTGA -> HTO-1)
+#' @param saveOriginalCellBarcodeFile An optional file path, where the set of original cell barcodes, prior to filtering, will be written. The primary use-case is if the count matrix was generated using a cell whitelist (like cells with passing gene expression). Preserving this list allows downstream reporting.
 #' @import ggplot2
 #' @import patchwork
 #' @import utils
 #' @return The updated count matrix
 #' @export
-ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), doPlot = TRUE, simplifyBarcodeNames = TRUE) {
+ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), doPlot = TRUE, simplifyBarcodeNames = TRUE, saveOriginalCellBarcodeFile = NULL) {
 	if (is.na(rawCountData)){
 		stop("No file set: change rawCountData")
 	}
@@ -41,6 +42,11 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 	print(paste0('Initial cell barcodes in hashing data: ', ncol(barcodeData)))
 	if (simplifyBarcodeNames) {
 		rownames(barcodeData) <- SimplifyHtoNames(rownames(barcodeData))
+	}
+
+	if (!is.null(saveOriginalCellBarcodeFile)) {
+		toWrite <- data.frame(cellbarcode = colnames(barcodeData))
+		write.table(toWrite, file = saveOriginalCellBarcodeFile, quote = FALSE, row.names = FALSE, col.names = FALSE)
 	}
 
 	# Print QC of counts by cell and barcode:

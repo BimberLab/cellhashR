@@ -253,6 +253,7 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
       data <- dataClassification[c(method1, method2)]
       data$consensuscall <- apply(data[,c(method1, method2)], 1, MakeConsensusCall)
       data$DisagreeWithNeg <- data[method1] != data[method2]
+print(typeof(data$DisagreeWithNeg))
       data <- data[data$DisagreeWithNeg,]
       if (nrow(data) == 0) {
         next
@@ -349,23 +350,23 @@ ProcessEnsemblHtoCalls <- function(callList, barcodeMatrix, cellbarcodeWhitelist
 #' @export
 GetExampleMarkdown <- function(dest) {
   source <- system.file("rmd/cellhashR.Rmd", package = "cellhashR")
-  file.copy(source, dest, overwrite = TRUE)
+  invisible(file.copy(source, dest, overwrite = TRUE))
 }
 
-#' @title GetExampleMarkdown
+#' @title CallAndGenerateReport
 #'
-#' @description Save a template R markdown file, showing usage of this package
+#' @description Runs the default processing pipeline
 #' @param rawCountData The input barcode file or umi_count folder
 #' @param reportFile The file to which the HTML report will be written
 #' @param callFile The file to which the table of calls will be written
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
 #' @param barcodeWhitelist A vector of barcode names to retain.
 #' @param cellbarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), or the string 'matrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
-#' @export
-CallAndGenerateReport <- function(rawCountData, outFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'matrix') {
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'matrix') {
   rmd <- system.file("rmd/cellhashR.Rmd", package = "cellhashR")
 
+  rmarkdown::render(output_file = reportFile, input = rmd)
 
-  file.copy(source, dest, overwrite = TRUE)
+  return(reportFile)
 }
 
