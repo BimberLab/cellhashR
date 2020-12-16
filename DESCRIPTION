@@ -30,7 +30,8 @@ Imports:
     RColorBrewer,
     reshape2,
     rmarkdown,
-    rmdformats
+    rmdformats,
+    ggforce
 Suggests:
     devtools,
     testthat (>= 2.1.0)
