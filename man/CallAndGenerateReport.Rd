@@ -8,6 +8,7 @@ CallAndGenerateReport(
   rawCountData,
   reportFile,
   callFile,
+  minCountPerCell = 5,
   barcodeWhitelist = NULL,
   cellbarcodeWhitelist = "matrix"
 )
@@ -19,11 +20,11 @@ CallAndGenerateReport(
 
 \item{callFile}{The file to which the table of calls will be written}
 
+\item{minCountPerCell}{Cells (columns) will be dropped if their total count is less than this value.}
+
 \item{barcodeWhitelist}{A vector of barcode names to retain.}
 
 \item{cellbarcodeWhitelist}{Either a vector of expected barcodes (such as all cells with passing gene expression data), or the string 'matrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.}
-
-\item{minCountPerCell}{Cells (columns) will be dropped if their total count is less than this value.}
 }
 \description{
 Runs the default processing pipeline
