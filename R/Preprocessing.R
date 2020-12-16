@@ -182,8 +182,8 @@ PrintRowQc <- function(barcodeMatrix) {
 			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = rel(0.5))
 		)
 
-	print(P1 / P2 + plot_layout(guides = "collect"))
-
+	print(P1)
+	print(P2)
 }
 
 GenerateByRowSummary <- function(barcodeMatrix) {
@@ -266,7 +266,8 @@ PrintColumnQc <- function(barcodeMatrix) {
 		xlab('Count') + ylab('Total Cells') +
 		egg::theme_presentation(base_size = 18)
 	
-	print(P1 / P2 + plot_layout(guides = "collect"))
+	print(P1)
+	print(P2)
 
 
 	#normalize columns, print top barcode fraction:

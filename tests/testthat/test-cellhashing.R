@@ -123,7 +123,10 @@ test_that("Workflow works", {
 	countData <- Seurat::Read10X(test$input, gene.column=1, strip.suffix = TRUE)
 	countData <- countData[,1:2500]
 	
-	subsetCountDir = './subsetCounts/'
+	subsetCountDir = normalizePath('./subsetCounts/', mustWork = FALSE)
+	if (dir.exists(subsetCountDir)) {
+		unlink(subsetCountDir, recursive = TRUE)
+	}
 	DropletUtils::write10xCounts(path = subsetCountDir, countData)
 	
 	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1')

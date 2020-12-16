@@ -89,6 +89,7 @@ if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
 	cellbarcodeWhitelist <- read.table(saveOriginalCellBarcodeFile, header = FALSE, col.names = c('cellbarcode'))
 	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist$cellbarcode)
 	write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
+	unlink(saveOriginalCellBarcodeFile)
 } else {
 	stop('No passing cels were found in the count matrix')
 }

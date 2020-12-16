@@ -58,12 +58,13 @@ PlotNormalizationQC <- function(barcodeData) {
 		df$Barcode <- SimplifyHtoNames(as.character(df$Barcode))
 	}
 
-	totalPages <- GetTotalPlotPages(totalValues = length(unique(df$Barcode)), perPage = 3)
+	maxPerPlot <- 3
+	totalPages <- GetTotalPlotPages(totalValues = length(unique(df$Barcode)), perPage = maxPerPlot)
 	for (i in 1:totalPages) {
 		print(ggplot2::ggplot(df, aes(x = NormCount, color = Barcode)) +
 			egg::theme_presentation(base_size = 14) +
 			geom_density(size = 1) + labs(y = 'Density', x = 'Value') + ggtitle('Normalized Data') +
-			ggforce::facet_wrap_paginate(Barcode ~ Normalization, scales = 'free', ncol = length(unique(df$Normalization)), strip.position = 'top', labeller = labeller(.multi_line = FALSE), page = i)
+			ggforce::facet_wrap_paginate(Barcode ~ Normalization, scales = 'free', ncol = length(unique(df$Normalization)), nrow = maxPerPlot, strip.position = 'top', labeller = labeller(.multi_line = FALSE), page = i)
 		)
 	}
 

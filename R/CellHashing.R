@@ -383,7 +383,18 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhi
   reportFile <- normalizePath(reportFile, mustWork = F)
   callFile <- normalizePath(callFile, mustWork = F)
 
-  rmarkdown::render(output_file = reportFile, input = rmd, params = paramList)
+  # Use suppressWarnings() to avoid 'MathJax doesn't work with self_contained' warning:
+  suppressWarnings(rmarkdown::render(output_file = reportFile, input = rmd, params = paramList))
 
   return(reportFile)
+}
+
+#' @title SummarizeCellsByClassification
+#'
+#' @description Create summary plots to contrast cells based on call-status. This is designed to help inform why specific cells were not called.
+#' @param barcodeMatrix The filtered matrix of hashing count data
+#' @param barcodeMatrix The filtered matrix of hashing count data
+#' @export
+SummarizeCellsByClassification <- function(calls, barcodeMatrix) {
+
 }
