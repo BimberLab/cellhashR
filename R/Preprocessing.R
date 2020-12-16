@@ -276,12 +276,22 @@ PrintColumnQc <- function(barcodeMatrix) {
 	})
 
 	df <- data.frame(Barcode1 = topValue)
+	if (any(is.na(topValue)) | any(is.null(topValue))) {
+		saveRDS(normalizedBarcodes, file = 'normalizedBarcodes.rds')
+		stop('had null values')
+	}
+
+	if (any(!is.finite(topValue))) {
+		saveRDS(normalizedBarcodes, file = 'normalizedBarcodes.rds')
+		stop('had non-finite values')
+	}
+
 	P1 <- ggplot(df, aes(x = Barcode1)) +
 		geom_histogram(binwidth = 0.05) +
 		egg::theme_presentation() +
-		xlim(-0.2, 1.2) +
 		xlab('Fraction') +
 		ylab('# Cells') + ggtitle('Top Barcode Fraction Per Cell')
+		#xlim(-0.2, 1.2)
 
 	P1 <- P1 + plot_annotation(caption = paste0('Total cells where top barcode is >0.75 of counts: ', sum(topValue > 0.75), ' of ', length(topValue))) & theme(plot.caption = element_text(size = 14))
 
