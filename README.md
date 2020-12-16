@@ -17,10 +17,10 @@ An R package designed to demultiplex cell hashing data.
 Below are the primary functions of cellhashR needed to QC and score hashing data:
 ```r
 # Example 1: parse CITE-seq-Count output, printing QC
-barcodeData <- ProcessCountMatrix(rawCountData = 'myCountDir', minCountPerCell = 5)
+barcodeData <- ProcessCountMatrix(rawCountData = 'myCountDir/umi_count', minCountPerCell = 5)
 
 # Example 2: parse CITE-seq-Count output, providing a barcode whitelist. 
-barcodeData <- ProcessCountMatrix(rawCountData = 'myCountDir', minCountPerCell = 5, barcodeWhitelist = c('HTO-1', 'HTO-2', 'HTO-3', 'HTO-4', 'HTO-6'))
+barcodeData <- ProcessCountMatrix(rawCountData = 'myCountDir/umi_count', minCountPerCell = 5, barcodeWhitelist = c('HTO-1', 'HTO-2', 'HTO-3', 'HTO-4', 'HTO-6'))
 
 # Create QC plots of barcode normalization
 PlotNormalizationQC(barcodeData)
@@ -29,10 +29,16 @@ PlotNormalizationQC(barcodeData)
 dt <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'))
 ```
 
-Or save a template RMarkdown file outlining the default workflow, which can be run interactively or headlessly as part of a pipeline:
+Or export/save a template RMarkdown file outlining the default workflow, which can be run interactively or headlessly as part of a pipeline:
  
 ```r
 GetExampleMarkdown(dest = 'cellhashR_template.rmd')
+```
+
+Finally, the workflow can be executed using this wrapper around the Rmarkdown, producing a TSV of calls and HTML QC report:
+ 
+```r
+CallAndGenerateReport(rawCountData = 'myCountDir/umi_count', reportFile = 'report.html', callFile = 'calls.txt', barcodeWhitelist = c('HTO-1', 'HTO-2', 'HTO-3'), title = 'Cell Hashing For Experiment 1')
 ```
 ### <a name="installation">Installation</a>
 

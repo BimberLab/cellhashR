@@ -357,14 +357,33 @@ GetExampleMarkdown <- function(dest) {
 #' @param rawCountData The input barcode file or umi_count folder
 #' @param reportFile The file to which the HTML report will be written
 #' @param callFile The file to which the table of calls will be written
-#' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
 #' @param barcodeWhitelist A vector of barcode names to retain.
-#' @param cellbarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), or the string 'matrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, minCountPerCell = 5, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'matrix') {
-  rmd <- system.file("rmd/cellhashR.Rmd", package = "cellhashR")
+#' @param cellBarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
+#' @param methods The set of methods to use for calling. See GenerateCellHashingCalls for options.
+#' @param citeSeqCountDir This is the root folder of the Cite-seq-Count output, containing umi_count and read_count folders. If provided, this will be used to generate a library saturation plot
+#' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
+#' @param title A title for the HTML report
+#' @export
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), citeSeqCountDir = NULL, minCountPerCell = 5, title = NULL) {
+  rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
+  if (!file.exists(rmd)) {
+    stop(paste0('Unable to find file: ', rmd))
+  }
 
-  rmarkdown::render(output_file = reportFile, input = rmd)
+  paramList <- list()
+  if (!is.null(title)) {
+    paramList[['doc_title']] <- title
+  }
+
+  rawCountData <- normalizePath(rawCountData)
+  if (!is.null(citeSeqCountDir)) {
+    citeSeqCountDir <- normalizePath(citeSeqCountDir)
+  }
+
+  reportFile <- normalizePath(reportFile, mustWork = F)
+  callFile <- normalizePath(callFile, mustWork = F)
+
+  rmarkdown::render(output_file = reportFile, input = rmd, params = paramList)
 
   return(reportFile)
 }
-
