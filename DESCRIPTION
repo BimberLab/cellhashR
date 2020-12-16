@@ -4,7 +4,7 @@ Title: A Package for Demultiplexing Cell Hashing Data
 Version: 0.0.1
 Author: Bimber Lab
 Maintainer: The package maintainer <bimber@ohsu.edu>
-Description: The goal of this package is to provide tools for QC and demultiplexing of cell hashing data
+Description: The goal of this package is to provide tools for QC and demultiplexing of cell hashing data.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
@@ -29,6 +29,7 @@ Imports:
     stats,
     RColorBrewer,
     reshape2,
+    rmarkdown
     rmdformats
 Suggests:
     devtools,

@@ -276,18 +276,8 @@ PrintColumnQc <- function(barcodeMatrix) {
 	})
 
 	df <- data.frame(Barcode1 = topValue)
-	if (any(is.na(topValue)) | any(is.null(topValue))) {
-		saveRDS(normalizedBarcodes, file = 'normalizedBarcodes.rds')
-		stop('had null values')
-	}
-
-	if (any(!is.finite(topValue))) {
-		saveRDS(normalizedBarcodes, file = 'normalizedBarcodes.rds')
-		stop('had non-finite values')
-	}
-
 	P1 <- ggplot(df, aes(x = Barcode1)) +
-		geom_bar(binwidth = 0.05) +
+		geom_histogram(binwidth = 0.05) +
 		egg::theme_presentation() +
 		xlab('Fraction') +
 		ylab('# Cells') + ggtitle('Top Barcode Fraction Per Cell') +
