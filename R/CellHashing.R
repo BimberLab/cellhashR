@@ -340,7 +340,7 @@ ProcessEnsemblHtoCalls <- function(callList, cellbarcodeWhitelist = NULL) {
 #' @param dest The destination filepath, where the file will be saved
 #' @export
 GetExampleMarkdown <- function(dest) {
-  source <- system.file("rmd/cellhashR.Rmd", package = "cellhashR")
+  source <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
   if (!file.exists(source)) {
     stop(paste0('Unable to find file: ', source))
   }
