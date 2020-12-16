@@ -341,7 +341,11 @@ ProcessEnsemblHtoCalls <- function(callList, cellbarcodeWhitelist = NULL) {
 #' @export
 GetExampleMarkdown <- function(dest) {
   source <- system.file("rmd/cellhashR.Rmd", package = "cellhashR")
-  invisible(file.copy(source, dest, overwrite = TRUE))
+  success <- file.copy(source, dest, overwrite = TRUE)
+
+  if (!success) {
+    stop(paste0('Unable to copy file to: ', dest))
+  }
 }
 
 #' @title CallAndGenerateReport

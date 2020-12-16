@@ -106,6 +106,7 @@ tests <- list(
 
 test_that("RMarkdown Copy works", {
 	fn <- paste0(getwd(), '/foo.rmd')
+	print(paste0('saving file to: ', fn))
 	GetExampleMarkdown(dest = fn)
 	expect_true(file.exists(fn))
 	unlink(fn)
