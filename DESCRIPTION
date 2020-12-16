@@ -31,7 +31,8 @@ Imports:
     reshape2,
     rmarkdown,
     rmdformats,
-    ggforce
+    ggforce,
+    DropletUtils
 Suggests:
     devtools,
     testthat (>= 2.1.0)
