@@ -36,6 +36,8 @@ Imports:
 Suggests:
     devtools,
     testthat (>= 2.1.0)
+Remotes:
+    bioc::release/DropletUtils
 RoxygenNote: 7.1.1
 URL: https://github.com/BimberLab/cellhashR
 BugReports: https://github.com/BimberLab/cellhashR/issues
