@@ -7,6 +7,8 @@
 SummarizeCellsByClassification(calls, barcodeMatrix)
 }
 \arguments{
+\item{calls}{The data frame of calls, produced by GenerateCellHashingCalls}
+
 \item{barcodeMatrix}{The filtered matrix of hashing count data}
 }
 \description{

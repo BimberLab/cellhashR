@@ -26,7 +26,12 @@ barcodeData <- ProcessCountMatrix(rawCountData = 'myCountDir/umi_count', minCoun
 PlotNormalizationQC(barcodeData)
 
 # Generate the final cell hashing calls
-dt <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'))
+calls <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'))
+
+# Inspect negative cells:
+SummarizeCellsByClassification(calls = calls, barcodeMatrix = barcodeData)
+
+
 ```
 
 Or export/save a template RMarkdown file outlining the default workflow, which can be run interactively or headlessly as part of a pipeline:

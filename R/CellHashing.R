@@ -383,8 +383,14 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhi
   reportFile <- normalizePath(reportFile, mustWork = F)
   callFile <- normalizePath(callFile, mustWork = F)
 
+  outDir <- dirname(reportFile)
+
+  #TODO
+  print(reportFile)
+  print(outDir)
+
   # Use suppressWarnings() to avoid 'MathJax doesn't work with self_contained' warning:
-  suppressWarnings(rmarkdown::render(output_file = reportFile, input = rmd, params = paramList))
+  suppressWarnings(rmarkdown::render(output_file = reportFile, input = rmd, params = paramList, output_dir = outDir))
 
   return(reportFile)
 }
@@ -392,9 +398,66 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhi
 #' @title SummarizeCellsByClassification
 #'
 #' @description Create summary plots to contrast cells based on call-status. This is designed to help inform why specific cells were not called.
-#' @param barcodeMatrix The filtered matrix of hashing count data
+#' @param calls The data frame of calls, produced by GenerateCellHashingCalls
 #' @param barcodeMatrix The filtered matrix of hashing count data
 #' @export
 SummarizeCellsByClassification <- function(calls, barcodeMatrix) {
+  df <- data.frame(cellbarcode = colnames(barcodeMatrix), totalReadsPerCell = colSums(barcodeMatrix))
+  df$topFraction <- apply(sweep(barcodeMatrix, 2, colSums(barcodeMatrix),`/`), 2, function(x){
+    max(x)
+  })
 
+  df <- merge(calls, df, by = 'cellbarcode', all.x = F)
+  df$topFraction[is.na(df$topFraction)] <- 0
+  df$totalReadsPerCell[is.na(df$totalReadsPerCell)] <- 0
+
+  P1 <- ggplot(df, aes(x = consensuscall.global, y = totalReadsPerCell, color = consensuscall)) +
+    geom_boxplot() +
+    geom_jitter() +
+    xlab('') +
+    ylab('Counts/Cell') + labs(color = 'Call') +
+    egg::theme_presentation(base_size = 14) +
+    theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+    )
+
+  P2 <- ggplot(df, aes(x = consensuscall.global, y = topFraction, color = consensuscall)) +
+    geom_boxplot() +
+    geom_jitter() +
+    xlab('') +
+    ylab('Top Barcode Fraction') + labs(color = 'Call') +
+    egg::theme_presentation(base_size = 14) +
+    theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+    )
+
+  print(P1 + P2 + plot_layout(guides = 'collect'))
+
+  df2 <- df[df$consensuscall.global %in% c('Singlet', 'Doublet', 'Negative'),]
+  out <- grDevices::boxplot.stats(df2$totalReadsPerCell)$out
+  out <- out[out > mean(df2$totalReadsPerCell[df2$totalReadsPerCell > 0])]
+  df2 <- df2[df2$totalReadsPerCell < min(out),]
+
+  P1 <- ggplot(df2, aes(x = totalReadsPerCell, color = consensuscall)) +
+    geom_density() +
+    xlab('Counts/Cell') + labs(color = 'Call') +
+    egg::theme_presentation(base_size = 14) +
+    facet_wrap(. ~ consensuscall.global, ncol = 1)
+
+  print(P1)
+
+
+  df2$Category <- 'All'
+
+  df3 <- df2[df2$consensuscall.global == 'Negative',]
+  df3$Category <- 'Negatives'
+  df3 <- rbind(df2, df3)
+
+  P2 <- ggplot(df3, aes(x = totalReadsPerCell, y = topFraction, color = consensuscall)) +
+    geom_point() +
+    xlab('Counts/Cell') + ylab('Top Barcode Fraction') + labs(color = 'Call') +
+    egg::theme_presentation(base_size = 14) +
+    facet_grid(. ~ Category)
+
+  print(P2)
 }

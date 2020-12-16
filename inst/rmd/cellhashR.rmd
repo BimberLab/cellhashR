@@ -47,6 +47,13 @@ for (v in requiredVars) {
 	}
 }
 
+# If cellbarcodeWhitelist == inputMatrix, save/restore the set of cellbarcodes for reporting:
+saveOriginalCellBarcodeFile <- NULL
+if (!is.null(cellbarcodeWhitelist)) {
+	if (cellbarcodeWhitelist == 'inputMatrix') {
+		saveOriginalCellBarcodeFile <- 'originalBarcodes.txt'
+	}
+}
 
 ```
 
@@ -58,7 +65,6 @@ if (!is.null(citeSeqCountDir)) {
   saturation <- cellhashR:::PlotLibrarySaturation(citeSeqCountDir)
 }
 
-saveOriginalCellBarcodeFile <- 'originalBarcodes.txt'
 barcodeData <- ProcessCountMatrix(rawCountData = rawCountData, minCountPerCell = minCountPerCell, barcodeWhitelist = barcodeWhitelist, saveOriginalCellBarcodeFile = saveOriginalCellBarcodeFile)
 if (nrow(barcodeData) == 0) {
   stop('No passing barcodes')
@@ -85,11 +91,18 @@ PlotNormalizationQC(barcodeData)
 ```{r GenerateCalls, fig.width=12}
 
 if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
-	
-	cellbarcodeWhitelist <- read.table(saveOriginalCellBarcodeFile, header = FALSE, col.names = c('cellbarcode'))
-	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist$cellbarcode)
+
+	if (!is.null(saveOriginalCellBarcodeFile)) {
+	  cellbarcodeWhitelist <- read.table(saveOriginalCellBarcodeFile, header = FALSE, col.names = c('cellbarcode'))
+	  cellbarcodeWhitelist <- cellbarcodeWhitelist$cellbarcode
+  }
+
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist)
 	write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
-	unlink(saveOriginalCellBarcodeFile)
+
+	if (!is.null(saveOriginalCellBarcodeFile)) {
+	  unlink(saveOriginalCellBarcodeFile)
+  }
 } else {
 	stop('No passing cels were found in the count matrix')
 }
@@ -101,6 +114,14 @@ if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
 ```{r}
 
 knitr::kable(head(df, n = 10))
+
+```
+
+# Summary of Negative Cells
+
+```{r}
+
+SummarizeCellsByClassification(calls = df, barcodeMatrix = barcodeData)
 
 ```
 
