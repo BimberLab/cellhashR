@@ -383,8 +383,6 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhi
   reportFile <- normalizePath(reportFile, mustWork = F)
   callFile <- normalizePath(callFile, mustWork = F)
 
-  outDir <- dirname(reportFile)
-
   #TODO
   print('output folders:')
   print(reportFile)
@@ -392,7 +390,7 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhi
   print(getwd())
 
   # Use suppressWarnings() to avoid 'MathJax doesn't work with self_contained' warning:
-  suppressWarnings(rmarkdown::render(output_file = reportFile, input = rmd, params = paramList, output_dir = outDir))
+  suppressWarnings(rmarkdown::render(output_file = reportFile, input = rmd, params = paramList))
 
   return(reportFile)
 }
