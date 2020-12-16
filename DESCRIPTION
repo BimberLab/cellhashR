@@ -29,7 +29,7 @@ Imports:
     stats,
     RColorBrewer,
     reshape2,
-    rmarkdown
+    rmarkdown,
     rmdformats
 Suggests:
     devtools,

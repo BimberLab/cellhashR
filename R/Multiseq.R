@@ -195,18 +195,25 @@ ClassifyCells <- function(data, q) {
 	## Generate Thresholds: Gaussian KDE with bad barcode detection, outlier trimming
 	## local maxima estimation with bad barcode detection, threshold definition and adjustment
 	n_cells <- nrow(x = data)
+	if (n_cells == 0) {
+		print('No cells passed to ClassifyCells')
+	}
 	bc_calls <- vector(mode = "list", length = n_cells)
 	n_bc_calls <- numeric(length = n_cells)
 	for (i in 1:ncol(x = data)) {
 		model <- NULL
 		tryCatch(expr = {
+			#TODO: remove
 			if (length(data[, i]) == 0) {
 				print('Zero length data for approxfun!')
+				print(dim(data))
+				print(colnames(data))
+				print(i)
 			}
 			model <- approxfun(x = bkde(x = data[, i], kernel = "normal"))
 		}, error = function(e) {
-			print(paste0("Unable to fit model for ", rownames(x = data)[i], ", for ", q, "..."))
-			saveRDS(data[, i], file = paste0('./', rownames(x = data)[i], '.fail.approxfun.rds'))
+			print(paste0("Unable to fit model for ", colnames(x = data)[, i], ", for ", q, "..."))
+			saveRDS(data[, i], file = paste0('./', colnames(x = data)[, i], '.fail.approxfun.rds'))
 		})
 
 		# This is changed relative to seurat
@@ -256,6 +263,7 @@ ClassifyCells <- function(data, q) {
 
 	for (i in 1:n_cells) {
 		if (is.na(n_bc_calls[i]) || is.null(n_bc_calls[i]) || !is.finite(n_bc_calls[i])){
+			print('bad values in multseq:')
 			print(head(n_bc_calls))
 			stop(paste0('bad value: ', n_bc_calls[i], ' ', i))
 		}

@@ -6,3 +6,4 @@
 ^cellhashR.*\.tar\.gz$
 ^cellhashR.*\.zip$
 ^\.github$
+.dockerignore
