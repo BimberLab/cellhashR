@@ -200,6 +200,9 @@ ClassifyCells <- function(data, q) {
 	for (i in 1:ncol(x = data)) {
 		model <- NULL
 		tryCatch(expr = {
+			if (length(data[, i]) == 0) {
+				print('Zero length data for approxfun!')
+			}
 			model <- approxfun(x = bkde(x = data[, i], kernel = "normal"))
 		}, error = function(e) {
 			print(paste0("Unable to fit model for ", rownames(x = data)[i], ", for ", q, "..."))

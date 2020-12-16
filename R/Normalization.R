@@ -101,15 +101,22 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 		stop('error clara init.clusters is na')
 	}
 
-	Idents(object = seuratObj, cells = names(x = init.clusters$clustering), drop = TRUE) <- as.character(init.clusters$clustering)
-	print('clara')
-	print(typeof(init.clusters$clustering))
-	print(typeof(Idents(seuratObj)))
-	print(unique(init.clusters$clustering))
-	print(length(init.clusters$clustering))
-	print(head(Idents(seuratObj)))
+	Idents(object = seuratObj, cells = names(x = init.clusters$clustering), drop = TRUE) <- init.clusters$clustering
+
+	#TODO
+	if (length(unique(init.clusters$cluster)) != ncenters) {
+		print('clara')
+		print(typeof(init.clusters$clustering))
+		print(typeof(Idents(seuratObj)))
+		print(unique(init.clusters$clustering))
+		print(length(init.clusters$clustering))
+		print(head(Idents(seuratObj)))
+	}
 
 	seuratObj$cluster.clara <- as.character(Idents(seuratObj))
+
+	#TODO
+	print(unique(seuratObj$cluster.clara))
 	P <- DimPlot(seuratObj, reduction = 'hto_tsne', group.by = 'cluster.clara', label = TRUE)
 	P <- P + ggtitle(paste0('Clusters: ', norm, ' (clara)'))
 
@@ -120,7 +127,8 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 	init.clusters <- stats::kmeans(
 		x = t(x = barcodeMatrix),
 		centers = ncenters,
-		nstart = 100
+		nstart = 100,
+		iter.max = 30
 	)
 
 	#TODO
@@ -130,15 +138,20 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 	}
 
 	Idents(object = seuratObj, cells = names(x = init.clusters$cluster), drop = TRUE) <- as.character(init.clusters$cluster)
-	print('kmeans')
-	print(typeof(init.clusters$cluster))
-	print(typeof(Idents(seuratObj)))
-	print(unique(init.clusters$cluster))
-	print(length(init.clusters$cluster))
-	print(head(Idents(seuratObj)))
+
+	#TODO
+	if (length(unique(init.clusters$cluster)) != ncenters) {
+		print('kmeans')
+		print(typeof(init.clusters$cluster))
+		print(typeof(Idents(seuratObj)))
+		print(unique(init.clusters$cluster))
+		print(length(init.clusters$cluster))
+	}
 
 	seuratObj$cluster.kmeans <- as.character(Idents(seuratObj))
 
+	#TODO
+	print(unique(seuratObj$cluster.kmeans))
 	P <- DimPlot(seuratObj, group.by = 'cluster.kmeans', label = TRUE)
 	P <- P + ggtitle(paste0('Clusters: ', norm, ' (kmeans)'))
 	P2 <- .CreateClusterTilePlot(seuratObj, assay = norm)
