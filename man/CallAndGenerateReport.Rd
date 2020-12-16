@@ -25,6 +25,8 @@ CallAndGenerateReport(
 
 \item{barcodeWhitelist}{A vector of barcode names to retain.}
 
+\item{cellbarcodeWhitelist}{Either a vector of expected barcodes (such as all cells with passing gene expression data), or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.}
+
 \item{methods}{The set of methods to use for calling. See GenerateCellHashingCalls for options.}
 
 \item{citeSeqCountDir}{This is the root folder of the Cite-seq-Count output, containing umi_count and read_count folders. If provided, this will be used to generate a library saturation plot}
@@ -32,8 +34,6 @@ CallAndGenerateReport(
 \item{minCountPerCell}{Cells (columns) will be dropped if their total count is less than this value.}
 
 \item{title}{A title for the HTML report}
-
-\item{cellBarcodeWhitelist}{Either a vector of expected barcodes (such as all cells with passing gene expression data), or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.}
 }
 \description{
 Runs the default processing pipeline

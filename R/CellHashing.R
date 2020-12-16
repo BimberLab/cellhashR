@@ -2,7 +2,7 @@
 #' @include Visualization.R
 
 utils::globalVariables(
-  names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall'),
+  names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall', 'consensuscall.global', 'topFraction', 'totalReadsPerCell'),
   package = 'cellhashR',
   add = TRUE
 )
@@ -358,7 +358,7 @@ GetExampleMarkdown <- function(dest) {
 #' @param reportFile The file to which the HTML report will be written
 #' @param callFile The file to which the table of calls will be written
 #' @param barcodeWhitelist A vector of barcode names to retain.
-#' @param cellBarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
+#' @param cellbarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
 #' @param methods The set of methods to use for calling. See GenerateCellHashingCalls for options.
 #' @param citeSeqCountDir This is the root folder of the Cite-seq-Count output, containing umi_count and read_count folders. If provided, this will be used to generate a library saturation plot
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
@@ -386,8 +386,10 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhi
   outDir <- dirname(reportFile)
 
   #TODO
+  print('output folders:')
   print(reportFile)
   print(outDir)
+  print(getwd())
 
   # Use suppressWarnings() to avoid 'MathJax doesn't work with self_contained' warning:
   suppressWarnings(rmarkdown::render(output_file = reportFile, input = rmd, params = paramList, output_dir = outDir))
