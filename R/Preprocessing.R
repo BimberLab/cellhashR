@@ -290,8 +290,8 @@ PrintColumnQc <- function(barcodeMatrix) {
 		geom_histogram(binwidth = 0.05) +
 		egg::theme_presentation() +
 		xlab('Fraction') +
-		ylab('# Cells') + ggtitle('Top Barcode Fraction Per Cell')
-		#xlim(-0.2, 1.2)
+		ylab('# Cells') + ggtitle('Top Barcode Fraction Per Cell') +
+		xlim(-0.25, 1.25)
 
 	P1 <- P1 + plot_annotation(caption = paste0('Total cells where top barcode is >0.75 of counts: ', sum(topValue > 0.75), ' of ', length(topValue))) & theme(plot.caption = element_text(size = 14))
 
