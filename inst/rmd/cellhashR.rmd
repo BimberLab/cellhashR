@@ -17,7 +17,7 @@ output:
 
 library(cellhashR)
 
-knitr::opts_chunk$set(message=FALSE, warning=TRUE, echo=TRUE, error=TRUE)
+knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error=TRUE)
 
 ```
 
