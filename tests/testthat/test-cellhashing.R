@@ -114,8 +114,8 @@ test_that("RMarkdown Copy works", {
 })
 
 test_that("Workflow works", {
-	html <- './test.html'
-	output <- './test.txt'
+	html <- paste0(getwd(), '/test.html')
+	output <- paste0(getwd(), '/test.txt')
 	
 	test <- tests[['438-21']]
 	
