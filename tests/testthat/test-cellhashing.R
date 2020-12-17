@@ -27,6 +27,7 @@ tests <- list(
     ),
     '438-21' = list(
       input = '../testdata/438-21-GEX/umi_count',
+      citeSeqCountDir = '../testdata/438-21-GEX/',
       htos = paste0('MS-', c(11, 12)),
       CalledCells = 6296,
       Singlet = 4207,
@@ -106,13 +107,38 @@ tests <- list(
 
 test_that("RMarkdown Copy works", {
 	fn <- paste0(getwd(), '/foo.rmd')
+	print(paste0('saving file to: ', fn))
 	GetExampleMarkdown(dest = fn)
 	expect_true(file.exists(fn))
 	unlink(fn)
 })
 
+test_that("Workflow works", {
+	html <- paste0(getwd(), '/test.html')
+	output <- paste0(getwd(), '/test.txt')
+	
+	test <- tests[['438-21']]
+	
+	#Subset rows to run quicker:
+	countData <- Seurat::Read10X(test$input, gene.column=1, strip.suffix = TRUE)
+	countData <- countData[,1:2500]
+	
+	subsetCountDir = normalizePath('./subsetCounts/', mustWork = FALSE)
+	DropletUtils::write10xCounts(path = subsetCountDir, countData, overwrite = TRUE)
+	
+	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1')
+
+	df <- read.table(output, sep = '\t', header = TRUE)
+	expect_equal(nrow(df), 2500)
+	expect_equal(sum(df$consensuscall == 'MS-12'), 1124)
+	
+	unlink(html)
+	unlink(output)
+	unlink(subsetCountDir, recursive = TRUE)
+})
+
 test_that("Saturation plot works", {
-  saturation <- PlotLibrarySaturation('../testdata/438-21-GEX')
+  saturation <- PlotLibrarySaturation('../testdata/438-21-GEX/')
 	expect_equal(0.36, saturation)
 })
 
@@ -134,7 +160,7 @@ test_that("Cell hashing works", {
 
 					#Subset to keep reasonable
 					if (ncol(barcodeData) > 5000) {
-							print('Subsetting barcodeData to 8000 cells')             
+							print('Subsetting barcodeData to 5000 cells')             
 							barcodeData <- barcodeData[,1:5000]
 					}
 

@@ -58,11 +58,15 @@ PlotNormalizationQC <- function(barcodeData) {
 		df$Barcode <- SimplifyHtoNames(as.character(df$Barcode))
 	}
 
-	print(ggplot2::ggplot(df, aes(x = NormCount, color = Barcode)) +
-		egg::theme_presentation(base_size = 14) +
-		geom_density(size = 1) + labs(y = 'Density', x = 'Value') + ggtitle('Normalized Data') +
-		facet_wrap(Barcode ~ Normalization, scales = 'free', ncol = length(unique(df$Normalization)), strip.position = 'top', labeller = labeller(.multi_line = FALSE))
-	)
+	maxPerPlot <- 3
+	totalPages <- GetTotalPlotPages(totalValues = length(unique(df$Barcode)), perPage = maxPerPlot)
+	for (i in 1:totalPages) {
+		print(ggplot2::ggplot(df, aes(x = NormCount, color = Barcode)) +
+			egg::theme_presentation(base_size = 14) +
+			geom_density(size = 1) + labs(y = 'Density', x = 'Value') + ggtitle('Normalized Data') +
+			ggforce::facet_wrap_paginate(Barcode ~ Normalization, scales = 'free', ncol = length(unique(df$Normalization)), nrow = maxPerPlot, strip.position = 'top', labeller = labeller(.multi_line = FALSE), page = i)
+		)
+	}
 
 	for (norm in names(toQC)) {
 		PerformHashingClustering(toQC[[norm]], norm = norm)
@@ -81,8 +85,8 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 
 		.PlotClusters(barcodeMatrix, seuratObj, norm)
 	}, error = function(e){
-		print(e)
 		print('Error generating tSNE, skipping')
+		print(e)
 	})
 }
 
@@ -94,11 +98,16 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 		k = ncenters,
 		samples = 100
 	)
-	Idents(object = seuratObj, cells = names(x = init.clusters$clustering), drop = TRUE) <- as.character(init.clusters$clustering)
-	seuratObj$cluster.clara <- as.character(Idents(seuratObj))
+
+	if (sum(names(init.clusters$clustering) != colnames(seuratObj)) > 0) {
+		stop('Expected cluster names to match cells for clara!')
+	}
+
+	seuratObj$cluster.clara <- as.factor(init.clusters$clustering)
 	P <- DimPlot(seuratObj, reduction = 'hto_tsne', group.by = 'cluster.clara', label = TRUE)
 	P <- P + ggtitle(paste0('Clusters: ', norm, ' (clara)'))
 
+	Idents(seuratObj) <- 'cluster.clara'
 	P2 <- .CreateClusterTilePlot(seuratObj, assay = norm)
 	print(P | P2)
 
@@ -106,13 +115,18 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 	init.clusters <- stats::kmeans(
 		x = t(x = barcodeMatrix),
 		centers = ncenters,
-		nstart = 100
+		nstart = 100,
+		iter.max = 30
 	)
-	Idents(object = seuratObj, cells = names(x = init.clusters$cluster), drop = TRUE) <- as.character(init.clusters$cluster)
-	seuratObj$cluster.kmeans <- as.character(Idents(seuratObj))
 
+	if (sum(names(init.clusters$cluster) != colnames(seuratObj)) > 0) {
+		stop('Expected cluster names to match cells for kmeans!')
+	}
+
+	seuratObj$cluster.kmeans <- as.factor(init.clusters$cluster)
 	P <- DimPlot(seuratObj, group.by = 'cluster.kmeans', label = TRUE)
 	P <- P + ggtitle(paste0('Clusters: ', norm, ' (kmeans)'))
+	Idents(seuratObj) <- 'cluster.kmeans'
 	P2 <- .CreateClusterTilePlot(seuratObj, assay = norm)
 	print(P | P2)
 }

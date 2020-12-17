@@ -2,7 +2,7 @@
 #' @include Visualization.R
 
 utils::globalVariables(
-  names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall'),
+  names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall', 'consensuscall.global', 'topFraction', 'totalReadsPerCell'),
   package = 'cellhashR',
   add = TRUE
 )
@@ -340,8 +340,15 @@ ProcessEnsemblHtoCalls <- function(callList, cellbarcodeWhitelist = NULL) {
 #' @param dest The destination filepath, where the file will be saved
 #' @export
 GetExampleMarkdown <- function(dest) {
-  source <- system.file("rmd/cellhashR.Rmd", package = "cellhashR")
-  invisible(file.copy(source, dest, overwrite = TRUE))
+  source <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
+  if (!file.exists(source)) {
+    stop(paste0('Unable to find file: ', source))
+  }
+  success <- file.copy(source, dest, overwrite = TRUE)
+
+  if (!success) {
+    stop(paste0('Unable to copy file to: ', dest))
+  }
 }
 
 #' @title CallAndGenerateReport
@@ -350,14 +357,101 @@ GetExampleMarkdown <- function(dest) {
 #' @param rawCountData The input barcode file or umi_count folder
 #' @param reportFile The file to which the HTML report will be written
 #' @param callFile The file to which the table of calls will be written
-#' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
 #' @param barcodeWhitelist A vector of barcode names to retain.
-#' @param cellbarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), or the string 'matrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, minCountPerCell = 5, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'matrix') {
-  rmd <- system.file("rmd/cellhashR.Rmd", package = "cellhashR")
+#' @param cellbarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
+#' @param methods The set of methods to use for calling. See GenerateCellHashingCalls for options.
+#' @param citeSeqCountDir This is the root folder of the Cite-seq-Count output, containing umi_count and read_count folders. If provided, this will be used to generate a library saturation plot
+#' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
+#' @param title A title for the HTML report
+#' @export
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), citeSeqCountDir = NULL, minCountPerCell = 5, title = NULL) {
+  rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
+  if (!file.exists(rmd)) {
+    stop(paste0('Unable to find file: ', rmd))
+  }
 
-  rmarkdown::render(output_file = reportFile, input = rmd)
+  paramList <- list()
+  if (!is.null(title)) {
+    paramList[['doc_title']] <- title
+  }
+
+  rawCountData <- normalizePath(rawCountData)
+  if (!is.null(citeSeqCountDir)) {
+    citeSeqCountDir <- normalizePath(citeSeqCountDir)
+  }
+
+  reportFile <- normalizePath(reportFile, mustWork = F)
+  callFile <- normalizePath(callFile, mustWork = F)
+
+  # Use suppressWarnings() to avoid 'MathJax doesn't work with self_contained' warning:
+  suppressWarnings(rmarkdown::render(output_file = reportFile, input = rmd, params = paramList))
 
   return(reportFile)
 }
 
+#' @title SummarizeCellsByClassification
+#'
+#' @description Create summary plots to contrast cells based on call-status. This is designed to help inform why specific cells were not called.
+#' @param calls The data frame of calls, produced by GenerateCellHashingCalls
+#' @param barcodeMatrix The filtered matrix of hashing count data
+#' @export
+SummarizeCellsByClassification <- function(calls, barcodeMatrix) {
+  df <- data.frame(cellbarcode = colnames(barcodeMatrix), totalReadsPerCell = colSums(barcodeMatrix))
+  df$topFraction <- apply(sweep(barcodeMatrix, 2, colSums(barcodeMatrix),`/`), 2, function(x){
+    max(x)
+  })
+
+  df <- merge(calls, df, by = 'cellbarcode', all.x = F)
+  df$topFraction[is.na(df$topFraction)] <- 0
+  df$totalReadsPerCell[is.na(df$totalReadsPerCell)] <- 0
+
+  P1 <- ggplot(df, aes(x = consensuscall.global, y = totalReadsPerCell, color = consensuscall)) +
+    geom_boxplot() +
+    geom_jitter() +
+    xlab('') +
+    ylab('Counts/Cell') + labs(color = 'Call') +
+    egg::theme_presentation(base_size = 14) +
+    theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+    )
+
+  P2 <- ggplot(df, aes(x = consensuscall.global, y = topFraction, color = consensuscall)) +
+    geom_boxplot() +
+    geom_jitter() +
+    xlab('') +
+    ylab('Top Barcode Fraction') + labs(color = 'Call') +
+    egg::theme_presentation(base_size = 14) +
+    theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+    )
+
+  print(P1 + P2 + plot_layout(guides = 'collect'))
+
+  df2 <- df[df$consensuscall.global %in% c('Singlet', 'Doublet', 'Negative'),]
+  out <- grDevices::boxplot.stats(df2$totalReadsPerCell)$out
+  out <- out[out > mean(df2$totalReadsPerCell[df2$totalReadsPerCell > 0])]
+  df2 <- df2[df2$totalReadsPerCell < min(out),]
+
+  P1 <- ggplot(df2, aes(x = totalReadsPerCell, color = consensuscall)) +
+    geom_density() +
+    xlab('Counts/Cell') + labs(color = 'Call') +
+    egg::theme_presentation(base_size = 14) +
+    facet_wrap(. ~ consensuscall.global, ncol = 1)
+
+  print(P1)
+
+
+  df2$Category <- 'All'
+
+  df3 <- df2[df2$consensuscall.global == 'Negative',]
+  df3$Category <- 'Negatives'
+  df3 <- rbind(df2, df3)
+
+  P2 <- ggplot(df3, aes(x = totalReadsPerCell, y = topFraction, color = consensuscall)) +
+    geom_point() +
+    xlab('Counts/Cell') + ylab('Top Barcode Fraction') + labs(color = 'Call') +
+    egg::theme_presentation(base_size = 14) +
+    facet_grid(. ~ Category)
+
+  print(P2)
+}
