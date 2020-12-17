@@ -19,8 +19,6 @@ library(cellhashR)
 
 knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error=TRUE)
 
-knitr::opts_knit$set(root.dir = '/Projects/cellhashR')
-
 ```
 
 ```{r setupVariables, include=FALSE}

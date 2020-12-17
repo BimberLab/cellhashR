@@ -344,6 +344,8 @@ GetExampleMarkdown <- function(dest) {
   if (!file.exists(source)) {
     stop(paste0('Unable to find file: ', source))
   }
+
+  dest <- normalizePath(dest, mustWork = F)
   success <- file.copy(source, dest, overwrite = TRUE)
 
   if (!success) {
