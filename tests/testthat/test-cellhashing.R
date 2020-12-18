@@ -116,7 +116,8 @@ test_that("RMarkdown Copy works", {
 test_that("Workflow works", {
 	html <- paste0(getwd(), '/test.html')
 	output <- paste0(getwd(), '/test.txt')
-	
+	metricsFile <- paste0(getwd(), '/metrics.txt')
+
 	test <- tests[['438-21']]
 	
 	#Subset rows to run quicker:
@@ -125,8 +126,6 @@ test_that("Workflow works", {
 	
 	subsetCountDir = normalizePath('./subsetCounts/', mustWork = FALSE)
 	DropletUtils::write10xCounts(path = subsetCountDir, countData, overwrite = TRUE)
-
-	metricsFile <- './metrics.txt'
 
 	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile)
 
@@ -172,9 +171,10 @@ test_that("Cell hashing works", {
           # This is giving memory errors on github runners:
           PlotNormalizationQC(barcodeData)
 
-          df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'))
+					metricsFile <- 'metrics.txt'
+          df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'), metricsFile = metricsFile)
 
-					return(list(barcodeData = barcodeData, df = df))
+					return(list(barcodeData = barcodeData, df = df, metricsFile = metricsFile))
 				}
 
 				print(paste0('Running test: ', testName))
@@ -189,10 +189,17 @@ test_that("Cell hashing works", {
 				l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile)
 				barcodeData <- l$barcodeData
         df <- l$df
+				metricsFile <- l$metricsFile
 
 				expectedHtos <- sort(test$htos)
 				actualHtosMatrix <- sort(unname(cellhashR:::SimplifyHtoNames(rownames(barcodeData))))
 				expect_equal(expectedHtos, actualHtosMatrix)
+
+				expect_true(file.exists(metricsFile))
+				metrics <- read.table(metricsFile, sep = '\t', header = FALSE)
+				print('metrics')
+				print(nrow(metrics))
+				expect_equal(nrow(metrics), 14)
 
 				# expect_equal(test[['CalledCells']], sum(df$consensuscall != 'Discordant'))
 				# expect_equal(test[['Singlet']], sum(df$consensuscall.global == 'Singlet'))
