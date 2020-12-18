@@ -135,7 +135,7 @@ test_that("Workflow works", {
 
 	expect_true(file.exists(metricsFile))
 	metrics <- read.table(metricsFile, sep = '\t', header = FALSE)
-	expect_equal(nrow(metrics), 14)
+	expect_equal(nrow(metrics), 16)
 
 	unlink(html)
 	unlink(output)
@@ -199,8 +199,9 @@ test_that("Cell hashing works", {
 				expect_equal(expectedHtos, actualHtosMatrix)
 
 				expect_true(file.exists(metricsFile))
-				metrics <- read.table(metricsFile, sep = '\t', header = FALSE)
-				expect_equal(nrow(metrics), 11)
+				metrics <- read.table(metricsFile, sep = '\t', header = FALSE, col.names = c('MetricName', 'MetricValue'))
+print(paste0(metrics$MetricName, collapse = ';'))
+				expect_equal(nrow(metrics), 13)
 				unlink(metricsFile)
 
 				# expect_equal(test[['CalledCells']], sum(df$consensuscall != 'Discordant'))
