@@ -7,9 +7,10 @@ tests <- list(
         gexBarcodeFile = '../testdata/cellHashing/282-1-whitelist.txt',
         CalledCells = 6296,
         Singlet = 4207,
-        MultiSeq = 5860,
+				Doublet = 1,
+        MultiSeqCalled = 5860,
         Discordant = 1704,
-        Seurat = 3623,
+        SeuratCalled = 3623,
         TotalRows = 8000,
         DoRowFilter = T
     ),
@@ -19,9 +20,10 @@ tests <- list(
         gexBarcodeFile = '../testdata/cellHashing/283-validCellIndexes.csv',
         CalledCells = 4759,
         Singlet = 3365,
-        MultiSeq = 4786,
+				Doublet = 2,
+        MultiSeqCalled = 4786,
         Discordant = 1268,
-        Seurat = 3459,
+        SeuratCalled = 3459,
         TotalRows = 6027,
         DoRowFilter = T
     ),
@@ -31,9 +33,10 @@ tests <- list(
       htos = paste0('MS-', c(11, 12)),
       CalledCells = 6296,
       Singlet = 4207,
-      MultiSeq = 5860,
+			Doublet = 3,
+      MultiSeqCalled = 5860,
       Discordant = 1704,
-      Seurat = 3623,
+      SeuratCalled = 3623,
       TotalRows = 8000,
       DoRowFilter = T
     ),
@@ -42,9 +45,10 @@ tests <- list(
       htos = paste0('MS-', c(11, 12)),
       CalledCells = 6296,
       Singlet = 4207,
-      MultiSeq = 5860,
+			Doublet = 4,
+      MultiSeqCalled = 5860,
       Discordant = 1704,
-      Seurat = 3623,
+      SeuratCalled = 3623,
       TotalRows = 8000,
       DoRowFilter = T
     ),
@@ -53,9 +57,10 @@ tests <- list(
       htos = paste0('MS-', c(2:16)),
       CalledCells = 6296,
       Singlet = 4207,
-      MultiSeq = 5860,
+			Doublet = 5,
+      MultiSeqCalled = 5860,
       Discordant = 1704,
-      Seurat = 3623,
+      SeuratCalled = 3623,
       TotalRows = 8000,
       DoRowFilter = T
     ),
@@ -64,9 +69,10 @@ tests <- list(
       htos = paste0('MS-', c(1:3, 5:8)),
       CalledCells = 6296,
       Singlet = 4207,
-      MultiSeq = 5860,
+			Doublet = 6,
+      MultiSeqCalled = 5860,
       Discordant = 1704,
-      Seurat = 3623,
+      SeuratCalled = 3623,
       TotalRows = 8000,
       DoRowFilter = T
     ),
@@ -75,9 +81,10 @@ tests <- list(
       htos = paste0('MS-', c(1, 2)),
       CalledCells = 6296,
       Singlet = 4207,
-      MultiSeq = 5860,
+			Doublet = 7,
+      MultiSeqCalled = 5860,
       Discordant = 1704,
-      Seurat = 3623,
+      SeuratCalled = 3623,
       TotalRows = 8000,
       DoRowFilter = T
     ),
@@ -86,9 +93,10 @@ tests <- list(
       htos = paste0('MS-', c(3, 4)),
       CalledCells = 6296,
       Singlet = 4207,
-      MultiSeq = 5860,
+			Doublet = 8,
+      MultiSeqCalled = 5860,
       Discordant = 1704,
-      Seurat = 3623,
+      SeuratCalled = 3623,
       TotalRows = 8000,
       DoRowFilter = T
     ),
@@ -97,9 +105,10 @@ tests <- list(
       htos = paste0('MS-', c(2:4, 6:8, 10:13)),
       CalledCells = 6296,
       Singlet = 4207,
-      MultiSeq = 5860,
+			Doublet = 9,
+      MultiSeqCalled = 5860,
       Discordant = 1704,
-      Seurat = 3623,
+      SeuratCalled = 3623,
       TotalRows = 8000,
       DoRowFilter = T
     )
@@ -203,12 +212,14 @@ test_that("Cell hashing works", {
 				expect_equal(nrow(metrics), 13)
 				unlink(metricsFile)
 
-				# expect_equal(test[['CalledCells']], sum(df$consensuscall != 'Discordant'))
-				# expect_equal(test[['Singlet']], sum(df$consensuscall.global == 'Singlet'))
-				# expect_equal(test[['Seurat']], sum(df$htodemux) != 'Negative')
-				# expect_equal(test[['MultiSeq']], sum(df$multiseq) != 'Negative')
-				# expect_equal(test[['Discordant']], sum(df$consensuscall == 'Discordant'))
-				# expect_equal(test[['Discordant']], sum(df$consensuscall.global == 'Discordant'))
+				print(paste0('evaluating test: ', testName))
+				expect_equal(test[['CalledCells']], sum(df$consensuscall != 'Discordant'))
+				expect_equal(test[['Singlet']], sum(df$consensuscall.global == 'Singlet'))
+				expect_equal(test[['Doublet']], sum(df$consensuscall.global == 'Doublet'))
+				expect_equal(test[['SeuratCalled']], sum(df$htodemux) != 'Negative')
+				expect_equal(test[['MultiSeqCalled']], sum(df$multiseq) != 'Negative')
+				expect_equal(test[['Discordant']], sum(df$consensuscall == 'Discordant'))
+				expect_equal(test[['Discordant']], sum(df$consensuscall.global == 'Discordant'))
     }
 })
 
