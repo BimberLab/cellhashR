@@ -172,6 +172,9 @@ test_that("Cell hashing works", {
           PlotNormalizationQC(barcodeData)
 
 					metricsFile <- 'metrics.txt'
+					if (file.exists(metricsFile)) {
+						unlink(metricsFile)
+					}
           df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'), metricsFile = metricsFile)
 
 					return(list(barcodeData = barcodeData, df = df, metricsFile = metricsFile))
@@ -197,9 +200,8 @@ test_that("Cell hashing works", {
 
 				expect_true(file.exists(metricsFile))
 				metrics <- read.table(metricsFile, sep = '\t', header = FALSE)
-				print('metrics')
-				print(nrow(metrics))
-				expect_equal(nrow(metrics), 14)
+				expect_equal(nrow(metrics), 11)
+				unlink(metricsFile)
 
 				# expect_equal(test[['CalledCells']], sum(df$consensuscall != 'Discordant'))
 				# expect_equal(test[['Singlet']], sum(df$consensuscall.global == 'Singlet'))
