@@ -7,7 +7,7 @@
 ProcessEnsemblHtoCalls(
   callList,
   cellbarcodeWhitelist = NULL,
-  metricsFile = metricsFile
+  metricsFile = NULL
 )
 }
 \arguments{

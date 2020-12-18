@@ -9,7 +9,7 @@ GenerateCellHashingCalls(
   methods = c("htodemux", "multiseq"),
   cellbarcodeWhitelist = NULL,
   htodemux.positive.quantile = 0.95,
-  metricsFile = metricsFile
+  metricsFile = NULL
 )
 }
 \arguments{

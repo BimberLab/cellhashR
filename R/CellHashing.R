@@ -111,7 +111,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
 #' @description The primary methods to generating cell hashing calls from a filtered matrix of count data
 #' @return A data frame of results.
 #' @export
-GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'multiseq'), cellbarcodeWhitelist = NULL, htodemux.positive.quantile = 0.95, metricsFile = metricsFile) {
+GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'multiseq'), cellbarcodeWhitelist = NULL, htodemux.positive.quantile = 0.95, metricsFile = NULL) {
   callList <- list()
   for (method in methods) {
     if (method == 'htodemux') {
@@ -138,7 +138,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
 #' @param metricsFile If provided, summary metrics will be written to this file.
 #' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
 #' @importFrom dplyr %>% group_by summarise
-ProcessEnsemblHtoCalls <- function(callList, cellbarcodeWhitelist = NULL, metricsFile = metricsFile) {
+ProcessEnsemblHtoCalls <- function(callList, cellbarcodeWhitelist = NULL, metricsFile = NULL) {
   print('Generating consensus calls')
 
   if (length(callList) == 0){
