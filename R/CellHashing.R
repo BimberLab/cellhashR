@@ -130,14 +130,8 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
   return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile))
 }
 
-#' @title ProcessEnsemblHtoCalls
-#'
 #' @import ggplot2
 #' @import patchwork
-#' @param callList A list of data frames, produced by callers
-#' @param expectedMethods The set of methods that should have been used for calling.
-#' @param metricsFile If provided, summary metrics will be written to this file.
-#' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
 #' @importFrom dplyr %>% group_by summarise
 .ProcessEnsemblHtoCalls <- function(callList, expectedMethods, cellbarcodeWhitelist = NULL, metricsFile = NULL) {
   print('Generating consensus calls')
