@@ -107,10 +107,11 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
 #' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux and multiseq
 #' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
 #' @param htodemux.positive.quantile The positive.quantile passed to HTODemux
+#' @param metricsFile If provided, summary metrics will be written to this file.
 #' @description The primary methods to generating cell hashing calls from a filtered matrix of count data
 #' @return A data frame of results.
 #' @export
-GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'multiseq'), cellbarcodeWhitelist = NULL, htodemux.positive.quantile = 0.95) {
+GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'multiseq'), cellbarcodeWhitelist = NULL, htodemux.positive.quantile = 0.95, metricsFile = metricsFile) {
   callList <- list()
   for (method in methods) {
     if (method == 'htodemux') {
@@ -126,7 +127,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
     }
   }
 
-  return(ProcessEnsemblHtoCalls(callList, cellbarcodeWhitelist))
+  return(ProcessEnsemblHtoCalls(callList, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile))
 }
 
 #' @title ProcessEnsemblHtoCalls
@@ -134,9 +135,10 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
 #' @import ggplot2
 #' @import patchwork
 #' @param callList A list of data frames, produced by callers
+#' @param metricsFile If provided, summary metrics will be written to this file.
 #' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
 #' @importFrom dplyr %>% group_by summarise
-ProcessEnsemblHtoCalls <- function(callList, cellbarcodeWhitelist = NULL) {
+ProcessEnsemblHtoCalls <- function(callList, cellbarcodeWhitelist = NULL, metricsFile = metricsFile) {
   print('Generating consensus calls')
 
   if (length(callList) == 0){
@@ -165,6 +167,7 @@ ProcessEnsemblHtoCalls <- function(callList, cellbarcodeWhitelist = NULL) {
       if (length(toAdd) > 0) {
         print(paste0('Re-adding ', length(toAdd), ' cell barcodes to call list for: ', method))
         allCalls <- rbind(allCalls, data.frame(cellbarcode = toAdd, method = method, classification = 'Low Counts', classification.global = 'Low Counts'))
+        .LogMetric(metricsFile, 'CellBarcodesFilteredForCounts', length(toAdd))
       }
     }
 
@@ -182,6 +185,12 @@ ProcessEnsemblHtoCalls <- function(callList, cellbarcodeWhitelist = NULL) {
 
     if (!(method %in% names(dataClassificationGlobal))) {
       dataClassificationGlobal[method] <- 'Not Called'
+    }
+
+    if (!is.null(metricsFile)) {
+      .LogMetric(metricsFile, paste0('Singlet.', method), sum(dataClassificationGlobal[[method]] == 'Singlet'))
+      .LogMetric(metricsFile, paste0('Doublet.', method), sum(dataClassificationGlobal[[method]] == 'Doublet'))
+      .LogMetric(metricsFile, paste0('Negative.', method), sum(dataClassificationGlobal[[method]] == 'Negative'))
     }
   }
 
@@ -233,6 +242,13 @@ ProcessEnsemblHtoCalls <- function(callList, cellbarcodeWhitelist = NULL) {
   print(paste0('Total concordant: ', sum(dataClassification$consensuscall != 'Discordant')))
   print(paste0('Total discordant (barcode call): ', sum(dataClassification$consensuscall == 'Discordant')))
   print(paste0('Total discordant (global classification): ', sum(dataClassificationGlobal$consensuscall == 'Discordant')))
+
+  if (!is.null(metricsFile)) {
+    .LogMetric(metricsFile, 'TotalSinglet', sum(dataClassificationGlobal$consensuscall == 'Singlet'))
+    .LogMetric(metricsFile, 'TotalDoublet', sum(dataClassificationGlobal$consensuscall == 'Doublet'))
+    .LogMetric(metricsFile, 'TotalNegative', sum(dataClassificationGlobal$consensuscall == 'Negative'))
+    .LogMetric(metricsFile, 'TotalDiscordant', sum(dataClassificationGlobal$consensuscall == 'Discordant'))
+  }
 
   discord <- dataClassification[dataClassification$consensuscall == 'Discordant',]
   if (nrow(discord) > 0) {
@@ -364,9 +380,10 @@ GetExampleMarkdown <- function(dest) {
 #' @param methods The set of methods to use for calling. See GenerateCellHashingCalls for options.
 #' @param citeSeqCountDir This is the root folder of the Cite-seq-Count output, containing umi_count and read_count folders. If provided, this will be used to generate a library saturation plot
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
+#' @param metricsFile If provided, summary metrics will be written to this file.
 #' @param title A title for the HTML report
 #' @export
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), citeSeqCountDir = NULL, minCountPerCell = 5, title = NULL) {
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), citeSeqCountDir = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL) {
   rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
   if (!file.exists(rmd)) {
     stop(paste0('Unable to find file: ', rmd))

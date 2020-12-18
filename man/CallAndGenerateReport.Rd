@@ -13,7 +13,8 @@ CallAndGenerateReport(
   methods = c("multiseq", "htodemux"),
   citeSeqCountDir = NULL,
   minCountPerCell = 5,
-  title = NULL
+  title = NULL,
+  metricsFile = NULL
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ CallAndGenerateReport(
 \item{minCountPerCell}{Cells (columns) will be dropped if their total count is less than this value.}
 
 \item{title}{A title for the HTML report}
+
+\item{metricsFile}{If provided, summary metrics will be written to this file.}
 }
 \description{
 Runs the default processing pipeline

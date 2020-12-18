@@ -125,16 +125,23 @@ test_that("Workflow works", {
 	
 	subsetCountDir = normalizePath('./subsetCounts/', mustWork = FALSE)
 	DropletUtils::write10xCounts(path = subsetCountDir, countData, overwrite = TRUE)
-	
-	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1')
+
+	metricsFile <- './metrics.txt'
+	file.create(metricsFile)
+
+	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile)
 
 	df <- read.table(output, sep = '\t', header = TRUE)
 	expect_equal(nrow(df), 2500)
 	expect_equal(sum(df$consensuscall == 'MS-12'), 1124)
-	
+
+	metrics <- read.table(metricsFile, sep = '\t', header = FALSE)
+	expect_equal(nrow(metrics), 14)
+
 	unlink(html)
 	unlink(output)
 	unlink(subsetCountDir, recursive = TRUE)
+	unlink(metricsFile)
 })
 
 test_that("Saturation plot works", {

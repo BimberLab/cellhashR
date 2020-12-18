@@ -3,16 +3,27 @@
 # cellhashR
 An R package designed to demultiplex cell hashing data.
 
-
 ## Table of Contents
+* [Overview](#overview)
 * [Example Usage](#example)
 * [Installation](#installation)
 * [Development Guidelines](#developers)
 
 
-### <a name="example">Example Usage</a>
+###<a name = "overview">Overview</a>
 
-[Click here to download an example R Markdown report](https://htmlpreview.github.io/?https://github.com/BimberLab/cellhashR/blob/master/examples/cellhashR.html)
+Cell hashing is a method that allows sample multiplexing or super-loading within single-cell RNA-seq platforms, such as 10x genomics, originally developed at New York Genome Center in collaboration with the Satija lab. [See here for more detail on the technique](https://cite-seq.com/cell-hashing/). The general idea is that cells are labeled with a staining reagent (such as an antibody) tagged with a short nucleotide barcode. Other staining methods have been published, such as the lipid-based Multi-Seq [https://www.ncbi.nlm.nih.gov/pubmed/31209384](https://www.ncbi.nlm.nih.gov/pubmed/31209384).  In all methods, the hashtag oligo/barcode is sequenced in parallel with cellular mRNA, creating a separate cell hashing library. After sequencing, the cell barcode and hashing index are parsed using tools like Cite-seq-Count [https://github.com/Hoohm/CITE-seq-Count](https://github.com/Hoohm/CITE-seq-Count), creating a count matrix with the total hash tag counts per cell. 
+
+Once the count matrix is created, an algorithm must be used to demultiplex cells and assign them to hash tags (i.e. sample). This is where cellhashR comes in. This package provides several functions:
+- Quality control reports for the cell hashing library, covering read counts and normalization. Think [FASTQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/), except for cell hashing data.
+- A single interface to run one or more demutiplexing algorithms. Multiple algorithms have been published to demultiplex and classify cells, including [deMULTIplex](https://github.com/chris-mcginnis-ucsf/MULTI-seq) and [HTODemux from Seurat](https://satijalab.org/seurat/v3.1/hashing_vignette.html). Each has pros and cons, and will perform better or worse under certain conditions. If you select multiple algorithms (our default workflow), cellhashR will score cells using the consensus call from the set. Various QC summaries are produced during this process as well, if debugging is needed.
+- The workflow produces a unified table with the results of each caller and the consensus call. Final QC plots and summaries are created. 
+
+Each step of the workflow can either be run interactively in R (through the terminal or RStudio), or it can be executed as a pipeline that runs all commands and creates the call table and an HTML report. 
+
+[Click here to download an example HTML report](https://htmlpreview.github.io/?https://github.com/BimberLab/cellhashR/blob/master/examples/cellhashR.html)
+
+### <a name="example">Example Usage</a>
 
 Below are the primary functions of cellhashR needed to QC and score hashing data:
 ```r
