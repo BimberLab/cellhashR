@@ -216,8 +216,8 @@ test_that("Cell hashing works", {
 				expect_equal(test[['CalledCells']], sum(df$consensuscall != 'Discordant'))
 				expect_equal(test[['Singlet']], sum(df$consensuscall.global == 'Singlet'))
 				expect_equal(test[['Doublet']], sum(df$consensuscall.global == 'Doublet'))
-				expect_equal(test[['SeuratCalled']], sum(df$htodemux) != 'Negative')
-				expect_equal(test[['MultiSeqCalled']], sum(df$multiseq) != 'Negative')
+				expect_equal(test[['SeuratCalled']], sum(df$htodemux != 'Negative'))
+				expect_equal(test[['MultiSeqCalled']], sum(df$multiseq != 'Negative'))
 				expect_equal(test[['Discordant']], sum(df$consensuscall == 'Discordant'))
 				expect_equal(test[['Discordant']], sum(df$consensuscall.global == 'Discordant'))
     }
