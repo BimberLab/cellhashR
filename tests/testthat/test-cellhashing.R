@@ -127,7 +127,6 @@ test_that("Workflow works", {
 	DropletUtils::write10xCounts(path = subsetCountDir, countData, overwrite = TRUE)
 
 	metricsFile <- './metrics.txt'
-	file.create(metricsFile)
 
 	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile)
 
@@ -135,6 +134,7 @@ test_that("Workflow works", {
 	expect_equal(nrow(df), 2500)
 	expect_equal(sum(df$consensuscall == 'MS-12'), 1124)
 
+	expect_true(file.exists(metricsFile))
 	metrics <- read.table(metricsFile, sep = '\t', header = FALSE)
 	expect_equal(nrow(metrics), 14)
 

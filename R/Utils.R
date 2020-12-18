@@ -78,6 +78,7 @@ SimplifyHtoNames <- function(x) {
 
 .LogMetric <- function(metricsFile, metricName, metricValue, append = TRUE) {
 	if (!is.null(metricsFile)) {
+		print(paste0('writing metric to: ', metricsFile))
 		write(paste0(metricName, '\t', metricValue), file = metricsFile, append = append)
 	}
 }
