@@ -153,8 +153,6 @@ test_that("Cell hashing works", {
     for (testName in names(tests)) {
         DoTest <- function(test, callsFile, summaryFile) {
           barcodeFile <- test$input
-          whitelistFile <- test$gexBarcodeFile
-
 					barcodeData <- ProcessCountMatrix(rawCountData = barcodeFile, barcodeWhitelist = test$htos)
 					
 					if (nrow(barcodeData) == 0) {
