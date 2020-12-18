@@ -1,16 +1,18 @@
 context("scRNAseq")
 
+options(testthat.progress.max_fails = 10000)
+
 tests <- list(
 		'282-1' = list(
         input = '../testdata/cellHashing/282-1-HTO_cellHashingRawCounts.txt',
         htos = paste0('HTO-', c(2:3, 8, 10, 12)),
         gexBarcodeFile = '../testdata/cellHashing/282-1-whitelist.txt',
-        CalledCells = 6296,
-        Singlet = 4207,
-				Doublet = 1,
-        MultiSeqCalled = 5860,
-        Discordant = 1704,
-        SeuratCalled = 3623,
+        CalledCells = 3491,
+        Singlet = 2943,
+				Doublet = 947,
+        MultiSeqCalled = 4010,
+        Discordant = 1509,
+        SeuratCalled = 3179,
         TotalRows = 8000,
         DoRowFilter = T
     ),
@@ -18,8 +20,8 @@ tests <- list(
         input = '../testdata/cellHashing/283-cellbarcodeToHTO.calls.citeSeqCounts.txt',
         htos = paste0('HTO-', c(2:6)),
         gexBarcodeFile = '../testdata/cellHashing/283-validCellIndexes.csv',
-        CalledCells = 4759,
-        Singlet = 3365,
+        CalledCells = 3715,
+        Singlet = 2468,
 				Doublet = 2,
         MultiSeqCalled = 4786,
         Discordant = 1268,
