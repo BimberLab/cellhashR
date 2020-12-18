@@ -1,7 +1,5 @@
 context("scRNAseq")
 
-options(testthat.progress.max_fails = 10000)
-
 tests <- list(
 		'282-1' = list(
         input = '../testdata/cellHashing/282-1-HTO_cellHashingRawCounts.txt',
@@ -11,7 +9,7 @@ tests <- list(
         Singlet = 2943,
 				Doublet = 947,
         MultiSeqCalled = 4010,
-        Discordant = 1509,
+        Discordant = 779,
         SeuratCalled = 3179,
         TotalRows = 8000,
         DoRowFilter = T
@@ -22,10 +20,10 @@ tests <- list(
         gexBarcodeFile = '../testdata/cellHashing/283-validCellIndexes.csv',
         CalledCells = 3715,
         Singlet = 2468,
-				Doublet = 2,
-        MultiSeqCalled = 4786,
-        Discordant = 1268,
-        SeuratCalled = 3459,
+				Doublet = 723,
+        MultiSeqCalled = 3223,
+        Discordant = 1285,
+        SeuratCalled = 4116,
         TotalRows = 6027,
         DoRowFilter = T
     ),
@@ -207,21 +205,21 @@ test_that("Cell hashing works", {
 
 				expectedHtos <- sort(test$htos)
 				actualHtosMatrix <- sort(unname(cellhashR:::SimplifyHtoNames(rownames(barcodeData))))
-				expect_equal(expectedHtos, actualHtosMatrix)
+				expect_equal(expected = expectedHtos, object = actualHtosMatrix)
 
 				expect_true(file.exists(metricsFile))
 				metrics <- read.table(metricsFile, sep = '\t', header = FALSE, col.names = c('MetricName', 'MetricValue'))
-				expect_equal(nrow(metrics), 13)
+				expect_equal(object = nrow(metrics), expected = 13)
 				unlink(metricsFile)
 
 				print(paste0('evaluating test: ', testName))
-				expect_equal(test[['CalledCells']], sum(df$consensuscall != 'Discordant'))
-				expect_equal(test[['Singlet']], sum(df$consensuscall.global == 'Singlet'))
-				expect_equal(test[['Doublet']], sum(df$consensuscall.global == 'Doublet'))
-				expect_equal(test[['SeuratCalled']], sum(df$htodemux != 'Negative'))
-				expect_equal(test[['MultiSeqCalled']], sum(df$multiseq != 'Negative'))
-				expect_equal(test[['Discordant']], sum(df$consensuscall == 'Discordant'))
-				expect_equal(test[['Discordant']], sum(df$consensuscall.global == 'Discordant'))
+				expect_equal(expected = test[['CalledCells']], object = sum(df$consensuscall != 'Discordant'))
+				expect_equal(expected = test[['Singlet']], object = sum(df$consensuscall.global == 'Singlet'))
+				expect_equal(expected = test[['Doublet']], object = sum(df$consensuscall.global == 'Doublet'))
+				expect_equal(expected = test[['SeuratCalled']], object = sum(df$htodemux != 'Negative'))
+				expect_equal(expected = test[['MultiSeqCalled']], object = sum(df$multiseq != 'Negative'))
+				expect_equal(expected = test[['Discordant']], object = sum(df$consensuscall == 'Discordant'))
+				expect_equal(expected = test[['Discordant']], object = sum(df$consensuscall.global == 'Discordant'))
     }
 })
 
