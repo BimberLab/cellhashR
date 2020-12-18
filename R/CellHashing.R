@@ -248,6 +248,7 @@ ProcessEnsemblHtoCalls <- function(callList, cellbarcodeWhitelist = NULL, metric
     .LogMetric(metricsFile, 'TotalDoublet', sum(dataClassificationGlobal$consensuscall == 'Doublet'))
     .LogMetric(metricsFile, 'TotalNegative', sum(dataClassificationGlobal$consensuscall == 'Negative'))
     .LogMetric(metricsFile, 'TotalDiscordant', sum(dataClassificationGlobal$consensuscall == 'Discordant'))
+    .LogMetric(metricsFile, 'TotalLowCounts', sum(dataClassificationGlobal$consensuscall == 'Low Counts'))
   }
 
   discord <- dataClassification[dataClassification$consensuscall == 'Discordant',]

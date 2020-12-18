@@ -316,12 +316,12 @@ PlotLibrarySaturation <- function(citeseqCountDir, metricsFile = NULL) {
 	umiData <- colSums(umiData)
 
 	saturation <- 1 - (umiData / countData)
-	.LogMetric(metricsFile, 'HashingLibrarySaturation', saturation)
 
 	df <- data.frame(CountsPerCell = countData, Saturation = saturation)
 	df <- df %>% arrange(CountsPerCell)
 
 	overall <- 1 - round((sum(umiData) / sum(countData)), 2)
+	.LogMetric(metricsFile, 'HashingLibrarySaturation', overall)
 
 	print(ggplot(df, aes(x = CountsPerCell, y = Saturation)) +
 		labs(x = 'Counts/Cell', y = '% Saturation') + egg::theme_presentation(base_size = 18) +

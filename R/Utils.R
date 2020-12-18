@@ -80,6 +80,6 @@ SimplifyHtoNames <- function(x) {
 	if (!is.null(metricsFile)) {
 		print(paste0('writing metric to: ', metricsFile))
 		print(getwd())
-		write(paste0(metricName, '\t', metricValue), file = metricsFile, append = append)
+		write(x = paste0(metricName, '\t', metricValue), file = metricsFile, append = append)
 	}
 }
