@@ -213,13 +213,13 @@ test_that("Cell hashing works", {
 				unlink(metricsFile)
 
 				print(paste0('evaluating test: ', testName))
-				expect_equal(expected = test[['CalledCells']], object = sum(df$consensuscall != 'Discordant'))
-				expect_equal(expected = test[['Singlet']], object = sum(df$consensuscall.global == 'Singlet'))
-				expect_equal(expected = test[['Doublet']], object = sum(df$consensuscall.global == 'Doublet'))
-				expect_equal(expected = test[['SeuratCalled']], object = sum(df$htodemux != 'Negative'))
-				expect_equal(expected = test[['MultiSeqCalled']], object = sum(df$multiseq != 'Negative'))
-				expect_equal(expected = test[['Discordant']], object = sum(df$consensuscall == 'Discordant'))
-				expect_equal(expected = test[['Discordant']], object = sum(df$consensuscall.global == 'Discordant'))
+				expect_equal(expected = test[['CalledCells']], object = sum(df$consensuscall != 'Discordant'), info = testName)
+				expect_equal(expected = test[['Singlet']], object = sum(df$consensuscall.global == 'Singlet'), info = testName)
+				expect_equal(expected = test[['Doublet']], object = sum(df$consensuscall.global == 'Doublet'), info = testName)
+				expect_equal(expected = test[['SeuratCalled']], object = sum(df$htodemux != 'Negative'), info = testName)
+				expect_equal(expected = test[['MultiSeqCalled']], object = sum(df$multiseq != 'Negative'), info = testName)
+				expect_equal(expected = test[['Discordant']], object = sum(df$consensuscall == 'Discordant'), info = testName)
+				expect_equal(expected = test[['Discordant']], object = sum(df$consensuscall.global == 'Discordant'), info = testName)
     }
 })
 
