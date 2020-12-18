@@ -54,7 +54,7 @@ if (!is.null(cellbarcodeWhitelist)) {
 }
 
 # Truncate metricsFile if provided:
-if (!s.null(metricsFile)) {
+if (!is.null(metricsFile)) {
   file.create(metricsFile)
 }
 
