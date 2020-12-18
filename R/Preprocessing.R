@@ -10,12 +10,13 @@
 #' @param doPlot If true, QC plots will be generated
 #' @param simplifyBarcodeNames If true, the sequence tag portion will be removed from the barcode names (i.e. HTO-1-ATGTGTGA -> HTO-1)
 #' @param saveOriginalCellBarcodeFile An optional file path, where the set of original cell barcodes, prior to filtering, will be written. The primary use-case is if the count matrix was generated using a cell whitelist (like cells with passing gene expression). Preserving this list allows downstream reporting.
+#' @param metricsFile If provided, summary metrics will be written to this file.
 #' @import ggplot2
 #' @import patchwork
 #' @import utils
 #' @return The updated count matrix
 #' @export
-ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), doPlot = TRUE, simplifyBarcodeNames = TRUE, saveOriginalCellBarcodeFile = NULL) {
+ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), doPlot = TRUE, simplifyBarcodeNames = TRUE, saveOriginalCellBarcodeFile = NULL, metricsFile = NULL) {
 	if (is.na(rawCountData)){
 		stop("No file set: change rawCountData")
 	}
@@ -40,6 +41,8 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 	}
 
 	print(paste0('Initial cell barcodes in hashing data: ', ncol(barcodeData)))
+	.LogMetric(metricsFile, 'InitialCellBarcodes', ncol(barcodeData))
+
 	if (simplifyBarcodeNames) {
 		rownames(barcodeData) <- SimplifyHtoNames(rownames(barcodeData))
 	}
@@ -67,6 +70,7 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 	if (!is.null(minCountPerCell)) {
 		barcodeData <- DoCellFiltering(barcodeData, minCountPerCell = minCountPerCell)
 	}
+	.LogMetric(metricsFile, 'PassingCellBarcodes', ncol(barcodeData))
 
 	if (doPlot) {
 		PrintColumnQc(barcodeData)
@@ -299,9 +303,10 @@ utils::globalVariables(
 #'
 #' @description Create a plot of the library saturation per cell
 #' @param citeseqCountDir, The root of the Cite-seq-Count output folder, which should contain umi_count and read_count folders.
+#' @param metricsFile If provided, summary metrics will be written to this file.
 #' @return The overall saturation for this library
 #' @export
-PlotLibrarySaturation <- function(citeseqCountDir) {
+PlotLibrarySaturation <- function(citeseqCountDir, metricsFile = NULL) {
 	countData <- Seurat::Read10X(paste0(citeseqCountDir, '/read_count'), gene.column=1, strip.suffix = TRUE)
 	countData <- countData[rownames(countData) != 'unmapped',]
 	countData <- colSums(countData)
@@ -316,6 +321,7 @@ PlotLibrarySaturation <- function(citeseqCountDir) {
 	df <- df %>% arrange(CountsPerCell)
 
 	overall <- 1 - round((sum(umiData) / sum(countData)), 2)
+	.LogMetric(metricsFile, 'HashingLibrarySaturation', overall)
 
 	print(ggplot(df, aes(x = CountsPerCell, y = Saturation)) +
 		labs(x = 'Counts/Cell', y = '% Saturation') + egg::theme_presentation(base_size = 18) +

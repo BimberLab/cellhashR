@@ -116,7 +116,8 @@ test_that("RMarkdown Copy works", {
 test_that("Workflow works", {
 	html <- paste0(getwd(), '/test.html')
 	output <- paste0(getwd(), '/test.txt')
-	
+	metricsFile <- paste0(getwd(), '/metrics.txt')
+
 	test <- tests[['438-21']]
 	
 	#Subset rows to run quicker:
@@ -125,16 +126,21 @@ test_that("Workflow works", {
 	
 	subsetCountDir = normalizePath('./subsetCounts/', mustWork = FALSE)
 	DropletUtils::write10xCounts(path = subsetCountDir, countData, overwrite = TRUE)
-	
-	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1')
+
+	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile)
 
 	df <- read.table(output, sep = '\t', header = TRUE)
 	expect_equal(nrow(df), 2500)
 	expect_equal(sum(df$consensuscall == 'MS-12'), 1124)
-	
+
+	expect_true(file.exists(metricsFile))
+	metrics <- read.table(metricsFile, sep = '\t', header = FALSE)
+	expect_equal(nrow(metrics), 16)
+
 	unlink(html)
 	unlink(output)
 	unlink(subsetCountDir, recursive = TRUE)
+	unlink(metricsFile)
 })
 
 test_that("Saturation plot works", {
@@ -146,8 +152,6 @@ test_that("Cell hashing works", {
     for (testName in names(tests)) {
         DoTest <- function(test, callsFile, summaryFile) {
           barcodeFile <- test$input
-          whitelistFile <- test$gexBarcodeFile
-
 					barcodeData <- ProcessCountMatrix(rawCountData = barcodeFile, barcodeWhitelist = test$htos)
 					
 					if (nrow(barcodeData) == 0) {
@@ -167,9 +171,13 @@ test_that("Cell hashing works", {
           # This is giving memory errors on github runners:
           PlotNormalizationQC(barcodeData)
 
-          df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'))
+					metricsFile <- 'metrics.txt'
+					if (file.exists(metricsFile)) {
+						unlink(metricsFile)
+					}
+          df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'), metricsFile = metricsFile)
 
-					return(list(barcodeData = barcodeData, df = df))
+					return(list(barcodeData = barcodeData, df = df, metricsFile = metricsFile))
 				}
 
 				print(paste0('Running test: ', testName))
@@ -184,10 +192,16 @@ test_that("Cell hashing works", {
 				l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile)
 				barcodeData <- l$barcodeData
         df <- l$df
+				metricsFile <- l$metricsFile
 
 				expectedHtos <- sort(test$htos)
 				actualHtosMatrix <- sort(unname(cellhashR:::SimplifyHtoNames(rownames(barcodeData))))
 				expect_equal(expectedHtos, actualHtosMatrix)
+
+				expect_true(file.exists(metricsFile))
+				metrics <- read.table(metricsFile, sep = '\t', header = FALSE, col.names = c('MetricName', 'MetricValue'))
+				expect_equal(nrow(metrics), 13)
+				unlink(metricsFile)
 
 				# expect_equal(test[['CalledCells']], sum(df$consensuscall != 'Discordant'))
 				# expect_equal(test[['Singlet']], sum(df$consensuscall.global == 'Singlet'))

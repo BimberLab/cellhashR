@@ -34,7 +34,7 @@ if (!file.exists(rawCountData)) {
   stop(paste0('Could not find rawCountData: ', rawCountData))
 }
 
-optionalVars <- c('barcodeWhitelist', 'cellbarcodeWhitelist', 'citeSeqCountDir', 'minCountPerCell')
+optionalVars <- c('barcodeWhitelist', 'cellbarcodeWhitelist', 'citeSeqCountDir', 'minCountPerCell', 'metricsFile')
 for (v in requiredVars) {
 	if (!exists(v)) {
 		if (v == 'minCountPerCell') {
@@ -53,6 +53,11 @@ if (!is.null(cellbarcodeWhitelist)) {
 	}
 }
 
+# Truncate metricsFile if provided:
+if (!is.null(metricsFile)) {
+  file.create(metricsFile)
+}
+
 ```
 
 # Data Loading / QC
@@ -60,10 +65,10 @@ if (!is.null(cellbarcodeWhitelist)) {
 ```{r QC, fig.width=12}
 
 if (!is.null(citeSeqCountDir)) {
-  saturation <- cellhashR:::PlotLibrarySaturation(citeSeqCountDir)
+  saturation <- PlotLibrarySaturation(citeSeqCountDir, metricsFile = metricsFile)
 }
 
-barcodeData <- ProcessCountMatrix(rawCountData = rawCountData, minCountPerCell = minCountPerCell, barcodeWhitelist = barcodeWhitelist, saveOriginalCellBarcodeFile = saveOriginalCellBarcodeFile)
+barcodeData <- ProcessCountMatrix(rawCountData = rawCountData, minCountPerCell = minCountPerCell, barcodeWhitelist = barcodeWhitelist, saveOriginalCellBarcodeFile = saveOriginalCellBarcodeFile, metricsFile = metricsFile)
 if (nrow(barcodeData) == 0) {
   stop('No passing barcodes')
 }
@@ -95,7 +100,7 @@ if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
 	  cellbarcodeWhitelist <- cellbarcodeWhitelist$cellbarcode
   }
 
-	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist)
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile)
 	write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
 
 	if (!is.null(saveOriginalCellBarcodeFile)) {
