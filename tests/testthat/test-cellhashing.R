@@ -6,7 +6,7 @@ tests <- list(
         htos = paste0('HTO-', c(2:3, 8, 10, 12)),
         gexBarcodeFile = '../testdata/cellHashing/282-1-whitelist.txt',
         CalledCells = 3491,
-        Singlet = 2943,
+        Singlet = 2213,
 				Doublet = 947,
         MultiSeqCalled = 4010,
         Discordant = 1509,
@@ -17,10 +17,10 @@ tests <- list(
         htos = paste0('HTO-', c(2:6)),
         gexBarcodeFile = '../testdata/cellHashing/283-validCellIndexes.csv',
         CalledCells = 3715,
-        Singlet = 2468,
+        Singlet = 2362,
 				Doublet = 723,
         MultiSeqCalled = 3223,
-        Discordant = 1179,
+        Discordant = 1285,
         SeuratCalled = 4116
     ),
     '438-21' = list(
