@@ -186,7 +186,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       .LogMetric(metricsFile, paste0('Singlet.', method), sum(dataClassificationGlobal[[method]] == 'Singlet'))
       .LogMetric(metricsFile, paste0('Doublet.', method), sum(dataClassificationGlobal[[method]] == 'Doublet'))
       .LogMetric(metricsFile, paste0('Negative.', method), sum(dataClassificationGlobal[[method]] == 'Negative'))
-      .LogMetric(metricsFile, paste0('Negative.', method), sum(dataClassificationGlobal[[method]] == 'Not Called'))
+      .LogMetric(metricsFile, paste0('NotCalled.', method), sum(dataClassificationGlobal[[method]] == 'Not Called'))
     }
   }
 
@@ -196,7 +196,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       return(x[1])
     }
 
-    x <- x[x != 'Negative']
+    x <- x[!(x %in% c('Negative', 'Not Called'))]
     if (length(x) == 1) {
       return(x[1])
     }
