@@ -218,6 +218,12 @@ test_that("Cell hashing works", {
 				expect_equal(expected = test[['Doublet']], object = sum(df$consensuscall.global == 'Doublet'), info = testName)
 				expect_equal(expected = test[['SeuratCalled']], object = sum(df$htodemux != 'Negative'), info = testName)
 				expect_equal(expected = test[['MultiSeqCalled']], object = sum(df$multiseq != 'Negative'), info = testName)
+
+				expect_equal(expected = sum(df$consensuscall.global == 'Discordant'), object = sum(df$consensuscall == 'Discordant'), info = testName)
+				if (sum(df$consensuscall.global == 'Discordant') != sum(df$consensuscall == 'Discordant')) {
+					print(df[sum(df$consensuscall == 'Discordant') != sum(df$consensuscall.global == 'Discordant'),])
+				}
+
 				expect_equal(expected = test[['Discordant']], object = sum(df$consensuscall == 'Discordant'), info = testName)
 				expect_equal(expected = test[['Discordant']], object = sum(df$consensuscall.global == 'Discordant'), info = testName)
     }
