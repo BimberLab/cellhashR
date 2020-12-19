@@ -9,7 +9,7 @@ tests <- list(
         Singlet = 2943,
 				Doublet = 947,
         MultiSeqCalled = 4010,
-        Discordant = 779, #1509
+        Discordant = 1509,
         SeuratCalled = 3179
     ),
 		'283' = list(
@@ -20,7 +20,7 @@ tests <- list(
         Singlet = 2468,
 				Doublet = 723,
         MultiSeqCalled = 3223,
-        Discordant = 1285, #1179
+        Discordant = 1179,
         SeuratCalled = 4116
     ),
     '438-21' = list(

@@ -209,7 +209,8 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
   dataClassificationGlobal$consensuscall <- apply(dataClassificationGlobal[,methods], 1, MakeConsensusCall)
 
   # It's possible for the global call to be singlet, but the barcodes to differ. Dont allow this:
-  dataClassificationGlobal$consensuscall[(dataClassificationGlobal$cellbarcode %in% dataClassification$cellbarcode[dataClassification$consensuscall == 'Discordant'])]
+  discordantBarcodes <- dataClassification$cellbarcode[dataClassification$consensuscall == 'Discordant']
+  dataClassificationGlobal$consensuscall[dataClassificationGlobal$cellbarcode %in% discordantBarcodes] <- 'Discordant'
 
   #Summary plots:
   summary <- dataClassification[c('cellbarcode', 'consensuscall')]
@@ -240,7 +241,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
 
   print(paste0('Total concordant: ', sum(dataClassification$consensuscall != 'Discordant')))
 
-  pct <- round(100 * sum(dataClassification$consensuscall == 'Discordant') / nrow(dataClassification$consensuscall), 1)
+  pct <- round(100 * sum(dataClassification$consensuscall == 'Discordant') / nrow(dataClassification), 2)
   print(paste0('Total discordant: ', sum(dataClassification$consensuscall == 'Discordant'), ' (', pct, '%)'))
 
   if (!is.null(metricsFile)) {
