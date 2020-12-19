@@ -9,10 +9,8 @@ tests <- list(
         Singlet = 2943,
 				Doublet = 947,
         MultiSeqCalled = 4010,
-        Discordant = 779,
-        SeuratCalled = 3179,
-        TotalRows = 8000,
-        DoRowFilter = T
+        Discordant = 779, #1509
+        SeuratCalled = 3179
     ),
 		'283' = list(
         input = '../testdata/cellHashing/283-cellbarcodeToHTO.calls.citeSeqCounts.txt',
@@ -22,10 +20,8 @@ tests <- list(
         Singlet = 2468,
 				Doublet = 723,
         MultiSeqCalled = 3223,
-        Discordant = 1285,
-        SeuratCalled = 4116,
-        TotalRows = 6027,
-        DoRowFilter = T
+        Discordant = 1285, #1179
+        SeuratCalled = 4116
     ),
     '438-21' = list(
       input = '../testdata/438-21-GEX/umi_count',
@@ -36,9 +32,7 @@ tests <- list(
 			Doublet = 366,
       MultiSeqCalled = 4504,
       Discordant = 167,
-      SeuratCalled = 4096,
-      TotalRows = 8000,
-      DoRowFilter = T
+      SeuratCalled = 4096
     ),
     '438-24' = list(
       input = '../testdata/438-24-GEX/umi_count',
@@ -48,9 +42,7 @@ tests <- list(
 			Doublet = 251,
       MultiSeqCalled = 4547,
       Discordant = 376,
-      SeuratCalled = 3038,
-      TotalRows = 8000,
-      DoRowFilter = T
+      SeuratCalled = 3038
     ),
     '449-1' = list(
       input = '../testdata/449-1-GEX/umi_count',
@@ -60,9 +52,7 @@ tests <- list(
 			Doublet = 102,
       MultiSeqCalled = 1081,
       Discordant = 706,
-      SeuratCalled = 1103,
-      TotalRows = 8000,
-      DoRowFilter = T
+      SeuratCalled = 1103
     ),
     '457-1' = list(
       input = '../testdata/457-1-GEX/umi_count',
@@ -72,9 +62,7 @@ tests <- list(
 			Doublet = 330,
       MultiSeqCalled = 2383,
       Discordant = 621,
-      SeuratCalled = 2432,
-      TotalRows = 8000,
-      DoRowFilter = T
+      SeuratCalled = 2432
     ),
     '471-1' = list(
       input = '../testdata/471-1-GEX/umi_count',
@@ -84,9 +72,7 @@ tests <- list(
 			Doublet = 580,
       MultiSeqCalled = 5000,
       Discordant = 1052,
-      SeuratCalled = 3948,
-      TotalRows = 8000,
-      DoRowFilter = T
+      SeuratCalled = 3948
     ),
     '471-2' = list(
       input = '../testdata/471-2-GEX/umi_count',
@@ -96,9 +82,7 @@ tests <- list(
 			Doublet = 553,
       MultiSeqCalled = 38,
       Discordant = 34,
-      SeuratCalled = 2672,
-      TotalRows = 8000,
-      DoRowFilter = T
+      SeuratCalled = 2672
     ),
     '483-3' = list(
       input = '../testdata/483-3-GEX/umi_count',
@@ -108,9 +92,7 @@ tests <- list(
 			Doublet = 10,
       MultiSeqCalled = 156,
       Discordant = 110,
-      SeuratCalled = 165,
-      TotalRows = 8000,
-      DoRowFilter = T
+      SeuratCalled = 165
     )
 )
 
@@ -220,10 +202,6 @@ test_that("Cell hashing works", {
 				expect_equal(expected = test[['MultiSeqCalled']], object = sum(df$multiseq != 'Negative'), info = testName)
 
 				expect_equal(expected = sum(df$consensuscall.global == 'Discordant'), object = sum(df$consensuscall == 'Discordant'), info = testName)
-				if (sum(df$consensuscall.global == 'Discordant') != sum(df$consensuscall == 'Discordant')) {
-					print(df[sum(df$consensuscall == 'Discordant') != sum(df$consensuscall.global == 'Discordant'),])
-				}
-
 				expect_equal(expected = test[['Discordant']], object = sum(df$consensuscall == 'Discordant'), info = testName)
 				expect_equal(expected = test[['Discordant']], object = sum(df$consensuscall.global == 'Discordant'), info = testName)
     }

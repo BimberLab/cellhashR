@@ -208,6 +208,9 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
   dataClassification$consensuscall <- apply(dataClassification[,methods], 1, MakeConsensusCall)
   dataClassificationGlobal$consensuscall <- apply(dataClassificationGlobal[,methods], 1, MakeConsensusCall)
 
+  # It's possible for the global call to be singlet, but the barcodes to differ. Dont allow this:
+  dataClassificationGlobal$consensuscall[(dataClassificationGlobal$cellbarcode %in% dataClassification$cellbarcode[dataClassification$consensuscall == 'Discordant'])]
+
   #Summary plots:
   summary <- dataClassification[c('cellbarcode', 'consensuscall')]
   summary$method <- 'consensus'
@@ -236,14 +239,15 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
   print(P2 + P1 + plot_layout(widths = c(1, 2)))
 
   print(paste0('Total concordant: ', sum(dataClassification$consensuscall != 'Discordant')))
-  print(paste0('Total discordant (barcode call): ', sum(dataClassification$consensuscall == 'Discordant')))
-  print(paste0('Total discordant (global classification): ', sum(dataClassificationGlobal$consensuscall == 'Discordant')))
+
+  pct <- round(100 * sum(dataClassification$consensuscall == 'Discordant') / nrow(dataClassification$consensuscall), 1)
+  print(paste0('Total discordant: ', sum(dataClassification$consensuscall == 'Discordant'), ' (', pct, '%)'))
 
   if (!is.null(metricsFile)) {
     .LogMetric(metricsFile, 'TotalSinglet', sum(dataClassificationGlobal$consensuscall == 'Singlet'))
     .LogMetric(metricsFile, 'TotalDoublet', sum(dataClassificationGlobal$consensuscall == 'Doublet'))
     .LogMetric(metricsFile, 'TotalNegative', sum(dataClassificationGlobal$consensuscall == 'Negative'))
-    .LogMetric(metricsFile, 'TotalDiscordant', sum(dataClassificationGlobal$consensuscall == 'Discordant'))
+    .LogMetric(metricsFile, 'TotalDiscordant', sum(dataClassification$consensuscall == 'Discordant'))
     .LogMetric(metricsFile, 'TotalLowCounts', sum(dataClassificationGlobal$consensuscall == 'Low Counts'))
   }
 
