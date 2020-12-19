@@ -10,7 +10,7 @@ An R package designed to demultiplex cell hashing data.
 * [Development Guidelines](#developers)
 
 
-###<a name = "overview">Overview</a>
+### <a name = "overview">Overview</a>
 
 Cell hashing is a method that allows sample multiplexing or super-loading within single-cell RNA-seq platforms, such as 10x genomics, originally developed at New York Genome Center in collaboration with the Satija lab. [See here for more detail on the technique](https://cite-seq.com/cell-hashing/). The general idea is that cells are labeled with a staining reagent (such as an antibody) tagged with a short nucleotide barcode. Other staining methods have been published, such as the lipid-based Multi-Seq [https://www.ncbi.nlm.nih.gov/pubmed/31209384](https://www.ncbi.nlm.nih.gov/pubmed/31209384).  In all methods, the hashtag oligo/barcode is sequenced in parallel with cellular mRNA, creating a separate cell hashing library. After sequencing, the cell barcode and hashing index are parsed using tools like Cite-seq-Count [https://github.com/Hoohm/CITE-seq-Count](https://github.com/Hoohm/CITE-seq-Count), creating a count matrix with the total hash tag counts per cell. 
 
