@@ -9,7 +9,7 @@ tests <- list(
         Singlet = 2943,
 				Doublet = 947,
         MultiSeqCalled = 4010,
-        Discordant = 1509,
+        Discordant = 779,
         SeuratCalled = 3179,
         TotalRows = 8000,
         DoRowFilter = T
@@ -22,7 +22,7 @@ tests <- list(
         Singlet = 2468,
 				Doublet = 723,
         MultiSeqCalled = 3223,
-        Discordant = 1179,
+        Discordant = 1285,
         SeuratCalled = 4116,
         TotalRows = 6027,
         DoRowFilter = T
@@ -43,7 +43,7 @@ tests <- list(
     '438-24' = list(
       input = '../testdata/438-24-GEX/umi_count',
       htos = paste0('MS-', c(11, 12)),
-      CalledCells = 6296,
+      CalledCells = 4624,
       Singlet = 3920,
 			Doublet = 251,
       MultiSeqCalled = 4547,
@@ -79,11 +79,11 @@ tests <- list(
     '471-1' = list(
       input = '../testdata/471-1-GEX/umi_count',
       htos = paste0('MS-', c(1, 2)),
-      CalledCells = 1052,
-      Singlet = 0,
-			Doublet = 0,
+      CalledCells = 3948,
+      Singlet = 3368,
+			Doublet = 580,
       MultiSeqCalled = 5000,
-      Discordant = 3948,
+      Discordant = 1052,
       SeuratCalled = 3948,
       TotalRows = 8000,
       DoRowFilter = T
@@ -103,12 +103,12 @@ tests <- list(
     '483-3' = list(
       input = '../testdata/483-3-GEX/umi_count',
       htos = paste0('MS-', c(2:4, 6:8, 10:13)),
-      CalledCells = 45,
-      Singlet = 4207,
-			Doublet = 9,
-      MultiSeqCalled = 5860,
-      Discordant = 1704,
-      SeuratCalled = 3623,
+      CalledCells = 56,
+      Singlet = 45,
+			Doublet = 10,
+      MultiSeqCalled = 156,
+      Discordant = 110,
+      SeuratCalled = 165,
       TotalRows = 8000,
       DoRowFilter = T
     )
