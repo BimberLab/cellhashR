@@ -44,8 +44,8 @@ BugReports: https://github.com/BimberLab/cellhashR/issues
 Collate: 
     'Utils.R'
     'Visualization.R'
-    'CellHashing.R'
+    'Seurat_HTO_Demux.R'
     'Normalization.R'
     'Multiseq.R'
+    'CellHashing.R'
     'Preprocessing.R'
-    'Seurat_HTO_Demux.R'

@@ -137,14 +137,14 @@ PrintRowQc <- function(barcodeMatrix) {
 		geom_bar(stat = 'identity') +
 		ggtitle('Mean Counts/Cell') +
 		ylab('Mean Counts/Cell') +
-		egg::theme_presentation() +
+		egg::theme_presentation(base_size = 14) +
 		theme(
 		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
 		)
 
 	P2 <- ggplot(df, aes(x = Barcode, y = mean_nonzero)) +
 		geom_bar(stat = 'identity') +
-		egg::theme_presentation() +
+		egg::theme_presentation(base_size = 14) +
 		ylab('Mean Counts/Cell (log1p)') +
 		scale_y_continuous(trans = scales::log1p_trans()) +
 		theme(
