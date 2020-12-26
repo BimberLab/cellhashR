@@ -1,5 +1,7 @@
 #' @include Utils.R
 #' @include Visualization.R
+#' @include Multiseq.R
+#' @include Seurat_HTO_Demux.R
 
 utils::globalVariables(
   names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall', 'consensuscall.global', 'topFraction', 'totalReadsPerCell'),
