@@ -22,6 +22,7 @@ utils::globalVariables(
 #' @param barcodePrefix A prefix to be applied before the cell barcodes
 #' @description Appends cell hashing calls to a seurat object
 #' @return A modified Seurat object.
+#' @export
 #' @importFrom dplyr arrange
 AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) {
   initialCells <- ncol(seuratObj)
@@ -126,6 +127,8 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
+    } else {
+      stop(paste0('Unknown method: ', method))
     }
   }
 
