@@ -2,7 +2,7 @@
 % Please edit documentation in R/CellHashing.R
 \name{SummarizeCellsByClassification}
 \alias{SummarizeCellsByClassification}
-\title{SummarizeCellsByClassification}
+\title{Summarize Cells By Classification}
 \usage{
 SummarizeCellsByClassification(calls, barcodeMatrix)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/Normalization.R
 \name{PlotNormalizationQC}
 \alias{PlotNormalizationQC}
-\title{PlotNormalizationQC}
+\title{Plot Normalization QC}
 \usage{
 PlotNormalizationQC(barcodeData)
 }

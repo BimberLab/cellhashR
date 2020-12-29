@@ -2,7 +2,7 @@
 % Please edit documentation in R/CellHashing.R
 \name{GenerateCellHashingCalls}
 \alias{GenerateCellHashingCalls}
-\title{GenerateCellHashingCalls}
+\title{Generate Cell Hashing Calls}
 \usage{
 GenerateCellHashingCalls(
   barcodeMatrix,

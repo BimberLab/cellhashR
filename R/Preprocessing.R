@@ -1,6 +1,6 @@
 #' @include Utils.R
 
-#' @title ProcessCiteSeqCount
+#' @title Process CiteSeq Count Matrix
 #'
 #' @description The primary entrypoint for parsing and QC of the cell hashing count matrix.
 #' @param rawCountData, The input barcode file or umi_count folder
@@ -299,7 +299,7 @@ utils::globalVariables(
 	add = TRUE
 )
 
-#' @title PlotLibrarySaturation
+#' @title Plot Library Saturation
 #'
 #' @description Create a plot of the library saturation per cell
 #' @param citeseqCountDir, The root of the Cite-seq-Count output folder, which should contain umi_count and read_count folders.
