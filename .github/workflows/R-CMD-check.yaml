@@ -18,7 +18,7 @@ jobs:
       matrix:
         config:
           - {os: ubuntu-20.04, r: 'devel', bioc: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest", cont: "bioconductor/bioconductor_docker:devel"}
-          - {os: ubuntu-20.04, r: 'release', bioc: '3.12', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest", cont: "bioconductor/bioconductor_docker:RELEASE_3_12"}
+          - {os: ubuntu-20.04, r: 'release', bioc: '3.12', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest", cont: "bioconductor/bioconductor_docker:RELEASE_3_12", pkgdown: "true"}
           - {os: windows-latest, r: 'release', bioc: '3.12'}
 
     env:
@@ -64,6 +64,7 @@ jobs:
       - name: Install dependencies
         run: |
           remotes::install_deps(dependencies = TRUE, upgrade = "always")
+          install.packages("pkgdown")
           remotes::install_cran("rcmdcheck")
         shell: Rscript {0}
 
@@ -92,3 +93,14 @@ jobs:
         with:
           name: ${{ runner.os }}-r${{ matrix.config.r }}-results
           path: check
+
+      - name: Install package
+        if: github.ref == 'refs/heads/master' && matrix.config.pkgdown == 'true'
+        run: R CMD INSTALL .
+
+      - name: Deploy package
+        if: github.ref == 'refs/heads/master' && matrix.config.pkgdown == 'true'
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          Rscript -e 'pkgdown::deploy_to_branch(new_process = FALSE, clean = TRUE)'

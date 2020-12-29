@@ -2,7 +2,7 @@
 % Please edit documentation in R/CellHashing.R
 \name{AppendCellHashing}
 \alias{AppendCellHashing}
-\title{AppendCellHashing}
+\title{Append Cell Hashing to a Seurat Object}
 \usage{
 AppendCellHashing(seuratObj, barcodeCallFile, barcodePrefix = NULL)
 }
