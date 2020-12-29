@@ -1,7 +1,7 @@
 ![R Build and Checks](https://github.com/BimberLab/cellhashR/workflows/R%20Build%20and%20Checks/badge.svg)
 
 # cellhashR
-An R package designed to demultiplex cell hashing data.
+An R package designed to demultiplex cell hashing data. [Please see our documentation for more detail](https://bimberlab.github.io/cellhashR/).
 
 ## Table of Contents
 * [Overview](#overview)
@@ -74,7 +74,7 @@ docker pull ghcr.io/bimberlab/cellhashR:latest
 
 ### <a name="developers">Development Guidelines</a>
 
-* New development should occur on a branch, and go through a Pull Request before merging into Dev.  [See here for information on the pull request workflow](https://guides.github.com/introduction/flow/).  Ideally PRs would be reviewed by another person.  For the PR, please review the set of changed files carefully to make sure you are only merging the changes you intend.   
+* New development should occur on a branch, and go through a Pull Request before merging into the master branch.  [See here for information on the pull request workflow](https://guides.github.com/introduction/flow/).  Ideally PRs would be reviewed by another person.  For the PR, please review the set of changed files carefully to make sure you are only merging the changes you intend.   
 
 * New functions should have [Roxygen2 documentation](https://kbroman.org/pkg_primer/pages/docs.html).
 
@@ -82,7 +82,7 @@ docker pull ghcr.io/bimberlab/cellhashR:latest
 
 * It is a good idea to run 'R CMD check' locally to make sure your changes will pass.  [See here for more information](http://r-pkgs.had.co.nz/check.html)
 
-* Code should only be merged after the build and tests pass.  The Dev branch should always be stable.
+* Code should only be merged after the build and tests pass.  The master branch should always be stable.
 
 * New features should ideally have at least a basic test (see [R testthat](http://r-pkgs.had.co.nz/tests.html)).  There is existing test data in ./tests/testdata.  This can be expanded, but please be conscious about file size and try to reuse data across tests if appropriate.
 
