@@ -71,7 +71,7 @@
 <div id="cellhashr" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#cellhashr" class="anchor"></a>cellhashR</h1></div>
-<p>An R package designed to demultiplex cell hashing data.</p>
+<p>An R package designed to demultiplex cell hashing data. <a href="https://bimberlab.github.io/cellhashR/">Please see our documentation for more detail</a>.</p>
 <div id="table-of-contents" class="section level2">
 <h2 class="hasAnchor">
 <a href="#table-of-contents" class="anchor"></a>Table of Contents</h2>
@@ -140,11 +140,11 @@ devtools::install_github(repo = 'bimberlab/cellhashR', ref = 'master', dependenc
 <a href="#development-guidelines" class="anchor"></a><a name="developers">Development Guidelines</a>
 </h3>
 <ul>
-<li><p>New development should occur on a branch, and go through a Pull Request before merging into Dev. <a href="https://guides.github.com/introduction/flow/">See here for information on the pull request workflow</a>. Ideally PRs would be reviewed by another person. For the PR, please review the set of changed files carefully to make sure you are only merging the changes you intend.</p></li>
+<li><p>New development should occur on a branch, and go through a Pull Request before merging into the master branch. <a href="https://guides.github.com/introduction/flow/">See here for information on the pull request workflow</a>. Ideally PRs would be reviewed by another person. For the PR, please review the set of changed files carefully to make sure you are only merging the changes you intend.</p></li>
 <li><p>New functions should have <a href="https://kbroman.org/pkg_primer/pages/docs.html">Roxygen2 documentation</a>.</p></li>
 <li><p>As part of each PR, you should run ‘devtools::document()’ to update documentation and include these changes with your commits.</p></li>
 <li><p>It is a good idea to run ‘R CMD check’ locally to make sure your changes will pass. <a href="http://r-pkgs.had.co.nz/check.html">See here for more information</a></p></li>
-<li><p>Code should only be merged after the build and tests pass. The Dev branch should always be stable.</p></li>
+<li><p>Code should only be merged after the build and tests pass. The master branch should always be stable.</p></li>
 <li><p>New features should ideally have at least a basic test (see <a href="http://r-pkgs.had.co.nz/tests.html">R testthat</a>). There is existing test data in ./tests/testdata. This can be expanded, but please be conscious about file size and try to reuse data across tests if appropriate.</p></li>
 </ul>
 </div>
