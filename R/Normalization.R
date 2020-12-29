@@ -31,7 +31,7 @@ NormalizeRelative <- function(mat) {
 	return(prop.table(mat, 2))
 }
 
-#' @title PlotNormalizationQC
+#' @title Plot Normalization QC
 #'
 #' @param barcodeData The count matrix
 #' @description Generates QC plots related to normalization

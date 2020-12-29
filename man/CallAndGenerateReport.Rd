@@ -2,7 +2,7 @@
 % Please edit documentation in R/CellHashing.R
 \name{CallAndGenerateReport}
 \alias{CallAndGenerateReport}
-\title{CallAndGenerateReport}
+\title{Call Cell Hashing And Generate Report}
 \usage{
 CallAndGenerateReport(
   rawCountData,

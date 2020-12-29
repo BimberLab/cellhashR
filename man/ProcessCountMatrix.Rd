@@ -2,7 +2,7 @@
 % Please edit documentation in R/Preprocessing.R
 \name{ProcessCountMatrix}
 \alias{ProcessCountMatrix}
-\title{ProcessCiteSeqCount}
+\title{Process CiteSeq Count Matrix}
 \usage{
 ProcessCountMatrix(
   rawCountData = NA,
