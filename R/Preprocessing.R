@@ -300,7 +300,6 @@ PrintColumnQc <- function(barcodeMatrix) {
 
 	#plot the relative counts for a barcode
 	cellNormalizedBarcodes <- as.data.frame(prop.table(as.matrix(barcodeMatrix), margin = 2))
-	rownames(cellNormalizedBarcodes) <- simplifyHtoNames(rownames(cellNormalizedBarcodes))
 	cellNormalizedBarcodes.pivot <- tidyr::pivot_longer(as.data.frame(t(cellNormalizedBarcodes)),
 	cols = colnames(t(cellNormalizedBarcodes)),
 	names_to = "barcode",
@@ -361,7 +360,6 @@ PrintColumnQc <- function(barcodeMatrix) {
 	
 	#MA-plot
 	df <- data.frame(t(barcodeMatrix))
-	colnames(df) <- simplifyHtoNames(rownames(barcodeMatrix))
 	if (ncol(df) == 2){
 	  M = log2(df[,1]) - log2(df[,2])
 	  A = (log2(df[,1]) + log2(df[,2]))/2
