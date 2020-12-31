@@ -10,7 +10,7 @@ utils::globalVariables(
 #' @title Load and Plot CiteSeq Count Data
 #'
 #' @description Load and create QC plots for CITE-seq data
-#' @param barcodeMatrix The count matrix
+#' @param rawCountData, The input barcode file or umi_count folder
 #' @export
 LoadCiteSeqCountData <- function(rawCountData = NA) {
   barcodeMatrix <- .LoadCountMatrix(rawCountData = rawCountData)

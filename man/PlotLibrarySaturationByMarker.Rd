@@ -4,7 +4,7 @@
 \alias{PlotLibrarySaturationByMarker}
 \title{Plot Library Saturation By Marker}
 \usage{
-PlotLibrarySaturationByMarker(citeseqCountDir, metricsFile = NULL)
+PlotLibrarySaturationByMarker(citeseqCountDir)
 }
 \arguments{
 \item{citeseqCountDir, }{The root of the Cite-seq-Count output folder, which should contain umi_count and read_count folders.}

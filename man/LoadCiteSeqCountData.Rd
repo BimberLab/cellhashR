@@ -7,7 +7,7 @@
 LoadCiteSeqCountData(rawCountData = NA)
 }
 \arguments{
-\item{barcodeMatrix}{The count matrix}
+\item{rawCountData, }{The input barcode file or umi_count folder}
 }
 \description{
 Load and create QC plots for CITE-seq data

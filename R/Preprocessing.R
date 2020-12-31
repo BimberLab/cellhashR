@@ -347,7 +347,7 @@ PlotLibrarySaturation <- function(citeseqCountDir, metricsFile = NULL) {
 #' @description Create a plot of the library saturation per cell, separated by marker
 #' @param citeseqCountDir, The root of the Cite-seq-Count output folder, which should contain umi_count and read_count folders.
 #' @export
-PlotLibrarySaturationByMarker <- function(citeseqCountDir, metricsFile = NULL) {
+PlotLibrarySaturationByMarker <- function(citeseqCountDir) {
 	countData <- Seurat::Read10X(paste0(citeseqCountDir, '/read_count'), gene.column=1, strip.suffix = TRUE)
 	countData <- countData[rownames(countData) != 'unmapped',]
 
