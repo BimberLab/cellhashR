@@ -1,3 +1,11 @@
+#' @include Utils.R
+#' @include Preprocessing.R
+
+utils::globalVariables(
+  names = c('Marker', 'TotalCount'),
+  package = 'cellhashR',
+  add = TRUE
+)
 
 #' @title Load and Plot CiteSeq Count Data
 #'
