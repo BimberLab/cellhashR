@@ -31,16 +31,16 @@ Imports:
     reshape2,
     rmarkdown,
     rmdformats,
-    ggforce,
-    DropletUtils
+    ggforce
 Suggests:
     devtools,
-    testthat (>= 2.1.0)
-Remotes:
-    bioc::release/DropletUtils
+    testthat (>= 2.1.0),
+    DropletUtils
 RoxygenNote: 7.1.1
 URL: https://github.com/BimberLab/cellhashR
 BugReports: https://github.com/BimberLab/cellhashR/issues
+Remotes:
+    bioc::release/DropletUtils
 Collate: 
     'Utils.R'
     'Visualization.R'
@@ -49,3 +49,4 @@ Collate:
     'Multiseq.R'
     'CellHashing.R'
     'Preprocessing.R'
+    'CiteSeq.R'
