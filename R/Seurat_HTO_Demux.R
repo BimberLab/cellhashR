@@ -13,7 +13,7 @@ GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95)
 	tryCatch({
 		seuratObj <- DoHtoDemux(seuratObj, positive.quantile = positive.quantile)
 
-		return(data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'htodemux', classification= seuratObj$classification.htodemux, classification.global = seuratObj$classification.global.htodemux, stringsAsFactors = FALSE))
+		return(data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'htodemux', classification = seuratObj$classification.htodemux, classification.global = seuratObj$classification.global.htodemux, stringsAsFactors = FALSE))
 	}, error = function(e){
 		print('Error generating seurat htodemux calls, aborting')
 		print(e)
