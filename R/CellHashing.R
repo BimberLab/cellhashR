@@ -1,5 +1,7 @@
 #' @include Utils.R
 #' @include Visualization.R
+#' @include Multiseq.R
+#' @include Seurat_HTO_Demux.R
 
 utils::globalVariables(
   names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall', 'consensuscall.global', 'topFraction', 'totalReadsPerCell'),
@@ -13,7 +15,7 @@ utils::globalVariables(
   add = TRUE
 )
 
-#' @title AppendCellHashing
+#' @title Append Cell Hashing to a Seurat Object
 #'
 #' @param seuratObj The seurat object
 #' @param barcodeCallFile The tsv containing cell hashing calls
@@ -101,7 +103,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
   return(seuratObj)
 }
 
-#' @title GenerateCellHashingCalls
+#' @title Generate Cell Hashing Calls
 #'
 #' @param barcodeMatrix The filtered matrix of hashing count data
 #' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux and multiseq
@@ -352,7 +354,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
   return(ret)
 }
 
-#' @title GetExampleMarkdown
+#' @title Get Example Markdown
 #'
 #' @description Save a template R markdown file, showing usage of this package
 #' @param dest The destination filepath, where the file will be saved
@@ -371,7 +373,7 @@ GetExampleMarkdown <- function(dest) {
   }
 }
 
-#' @title CallAndGenerateReport
+#' @title Call Cell Hashing And Generate Report
 #'
 #' @description Runs the default processing pipeline
 #' @param rawCountData The input barcode file or umi_count folder
@@ -384,6 +386,7 @@ GetExampleMarkdown <- function(dest) {
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
 #' @param metricsFile If provided, summary metrics will be written to this file.
 #' @param title A title for the HTML report
+#' @importFrom rmdformats html_clean
 #' @export
 CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), citeSeqCountDir = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL) {
   rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
@@ -411,7 +414,7 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhi
   return(reportFile)
 }
 
-#' @title SummarizeCellsByClassification
+#' @title Summarize Cells By Classification
 #'
 #' @description Create summary plots to contrast cells based on call-status. This is designed to help inform why specific cells were not called.
 #' @param calls The data frame of calls, produced by GenerateCellHashingCalls

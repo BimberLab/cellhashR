@@ -2,7 +2,7 @@
 % Please edit documentation in R/Preprocessing.R
 \name{PlotLibrarySaturation}
 \alias{PlotLibrarySaturation}
-\title{PlotLibrarySaturation}
+\title{Plot Library Saturation}
 \usage{
 PlotLibrarySaturation(citeseqCountDir, metricsFile = NULL)
 }

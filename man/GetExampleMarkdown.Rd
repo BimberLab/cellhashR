@@ -2,7 +2,7 @@
 % Please edit documentation in R/CellHashing.R
 \name{GetExampleMarkdown}
 \alias{GetExampleMarkdown}
-\title{GetExampleMarkdown}
+\title{Get Example Markdown}
 \usage{
 GetExampleMarkdown(dest)
 }

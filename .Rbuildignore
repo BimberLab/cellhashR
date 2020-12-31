@@ -7,3 +7,6 @@
 ^cellhashR.*\.zip$
 ^\.github$
 .dockerignore
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
