@@ -17,35 +17,10 @@
 #' @return The updated count matrix
 #' @export
 ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), doPlot = TRUE, simplifyBarcodeNames = TRUE, saveOriginalCellBarcodeFile = NULL, metricsFile = NULL) {
-	if (is.na(rawCountData)){
-		stop("No file set: change rawCountData")
-	}
-
-	if (is.na(barcodeBlacklist) || is.null(barcodeBlacklist)) {
-		barcodeBlacklist <- character()
-	}
-
-	if (!file.exists(rawCountData)){
-		stop(paste0("File does not exist: ", rawCountData))
-	}
-
-	if (dir.exists(rawCountData)) {
-		barcodeData <- Seurat::Read10X(rawCountData, gene.column=1, strip.suffix = TRUE)
-		barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% barcodeBlacklist)), , drop = F]
-		barcodeData <- as.matrix(barcodeData)
-	} else {
-		# older CITE-seq-Count versions created a CSV file, so support this:
-		barcodeData <- utils::read.table(rawCountData, sep = ',', header = T, row.names = 1)
-		barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% barcodeBlacklist)),]
-		barcodeData <- as.matrix(barcodeData)
-	}
+	barcodeData <- .LoadCountMatrix(rawCountData = rawCountData, barcodeBlacklist = barcodeBlacklist, simplifyBarcodeNames = simplifyBarcodeNames)
 
 	print(paste0('Initial cell barcodes in hashing data: ', ncol(barcodeData)))
 	.LogMetric(metricsFile, 'InitialCellBarcodes', ncol(barcodeData))
-
-	if (simplifyBarcodeNames) {
-		rownames(barcodeData) <- SimplifyHtoNames(rownames(barcodeData))
-	}
 
 	if (!is.null(saveOriginalCellBarcodeFile)) {
 		toWrite <- data.frame(cellbarcode = colnames(barcodeData))
@@ -74,6 +49,37 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 
 	if (doPlot) {
 		PrintColumnQc(barcodeData)
+	}
+
+	return(barcodeData)
+}
+
+.LoadCountMatrix <- function(rawCountData = NA, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), simplifyBarcodeNames = TRUE) {
+	if (is.na(rawCountData)){
+		stop("No file set: change rawCountData")
+	}
+
+	if (is.na(barcodeBlacklist) || is.null(barcodeBlacklist)) {
+		barcodeBlacklist <- character()
+	}
+
+	if (!file.exists(rawCountData)){
+		stop(paste0("File does not exist: ", rawCountData))
+	}
+
+	if (dir.exists(rawCountData)) {
+		barcodeData <- Seurat::Read10X(rawCountData, gene.column=1, strip.suffix = TRUE)
+		barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% barcodeBlacklist)), , drop = F]
+		barcodeData <- as.matrix(barcodeData)
+	} else {
+		# older CITE-seq-Count versions created a CSV file, so support this:
+		barcodeData <- utils::read.table(rawCountData, sep = ',', header = T, row.names = 1)
+		barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% barcodeBlacklist)),]
+		barcodeData <- as.matrix(barcodeData)
+	}
+
+	if (simplifyBarcodeNames) {
+		rownames(barcodeData) <- SimplifyHtoNames(rownames(barcodeData))
 	}
 
 	return(barcodeData)
@@ -334,4 +340,53 @@ PlotLibrarySaturation <- function(citeseqCountDir, metricsFile = NULL) {
 	)
 
 	return(overall)
+}
+
+#' @title Plot Library Saturation By Marker
+#'
+#' @description Create a plot of the library saturation per cell, separated by marker
+#' @param citeseqCountDir, The root of the Cite-seq-Count output folder, which should contain umi_count and read_count folders.
+#' @export
+PlotLibrarySaturationByMarker <- function(citeseqCountDir, metricsFile = NULL) {
+	countData <- Seurat::Read10X(paste0(citeseqCountDir, '/read_count'), gene.column=1, strip.suffix = TRUE)
+	countData <- countData[rownames(countData) != 'unmapped',]
+
+	umiData <- Seurat::Read10X(paste0(citeseqCountDir, '/umi_count'), gene.column=1, strip.suffix = TRUE)
+	umiData <- umiData[rownames(umiData) != 'unmapped',]
+
+	saturation <- 1 - (umiData / countData)
+
+	umiData <- reshape2::melt(t(as.matrix(umiData)))
+	names(umiData) <- c('CellBarcode', 'Barcode', 'Value')
+	umiData$Type <- 'UMI Count'
+
+	saturation <- reshape2::melt(t(as.matrix(saturation)))
+	names(saturation) <- c('CellBarcode', 'Barcode', 'Value')
+	saturation$Type <- 'Saturation'
+
+	umiData$Barcode <- SimplifyHtoNames(umiData$Barcode)
+	saturation$Barcode <- SimplifyHtoNames(saturation$Barcode)
+	saturation <- saturation[is.finite(saturation$Value),]
+
+	P1 <- ggplot(umiData[umiData$Value > 0,], aes(x = Barcode, y = Value)) +
+		labs(y = 'UMI Counts/Cell', x = '') +
+		ggtitle('UMI Counts/Cell By Marker') +
+		egg::theme_presentation(base_size = 14) +
+		geom_boxplot() +
+		scale_y_continuous(trans = scales::log2_trans()) +
+		theme(
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+		)
+
+	P2 <- ggplot(saturation, aes(x = Barcode, y = Value)) +
+		labs(y = 'Saturation', x = '') +
+		egg::theme_presentation(base_size = 14) +
+		ggtitle('Saturation/Cell By Marker') +
+		geom_boxplot() +
+		theme(
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+		)
+
+	print(P1)
+	print(P2)
 }

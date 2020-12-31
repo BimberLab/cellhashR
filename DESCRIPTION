@@ -48,4 +48,5 @@ Collate:
     'Normalization.R'
     'Multiseq.R'
     'CellHashing.R'
+    'CiteSeq.R'
     'Preprocessing.R'
