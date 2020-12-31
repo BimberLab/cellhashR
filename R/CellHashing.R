@@ -389,6 +389,7 @@ GetExampleMarkdown <- function(dest) {
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
 #' @param metricsFile If provided, summary metrics will be written to this file.
 #' @param title A title for the HTML report
+#' @importFrom rmdformats html_clean
 #' @export
 CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), citeSeqCountDir = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL) {
   rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
