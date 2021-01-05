@@ -44,6 +44,7 @@ Remotes:
 Collate: 
     'Utils.R'
     'Visualization.R'
+    'SeqND_Demux.R'
     'Seurat_HTO_Demux.R'
     'Normalization.R'
     'Multiseq.R'

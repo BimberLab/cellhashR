@@ -2,6 +2,7 @@
 #' @include Visualization.R
 #' @include Multiseq.R
 #' @include Seurat_HTO_Demux.R
+#' @include SeqND_Demux.R
 
 utils::globalVariables(
   names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall', 'consensuscall.global', 'topFraction', 'totalReadsPerCell'),
@@ -127,6 +128,11 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
+    } else if (method == 'seqnd'){
+      calls <- GenerateCellHashCallsSeqND(barcodeMatrix)
+      if (!is.null(calls)) {
+        callList[[method]] <- calls
+      }
     } else {
       stop(paste0('Unknown method: ', method))
     }
@@ -168,11 +174,6 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
         print(paste0('Re-adding ', length(toAdd), ' cell barcodes to call list for: ', method))
         allCalls <- rbind(allCalls, data.frame(cellbarcode = toAdd, method = method, classification = 'Low Counts', classification.global = 'Low Counts'))
         .LogMetric(metricsFile, 'TotalLowCounts', length(toAdd))
-      }
-    } else if (method == 'seqnd'){
-      calls <- GenerateCellHashCallsSeqND(barcodeMatrix)
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
       }
     }
 
