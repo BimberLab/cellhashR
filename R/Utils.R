@@ -82,7 +82,9 @@ SimplifyHtoNames <- function(x) {
 	}
 }
 
-.AssignCallsToMatrix <- function(object, discrete, suffix) {
+.AssignCallsToMatrix <- function(object, discrete, suffix, assay = 'HTO') {
+	data <- GetAssayData(object = object, assay = assay)
+
 	npositive <- colSums(x = discrete)
 	classification.global <- npositive
 	classification.global[npositive == 0] <- "Negative"

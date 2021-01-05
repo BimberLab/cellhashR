@@ -1,4 +1,5 @@
 #' @include Utils.R
+#' @include Normalization.R
 #' @include Visualization.R
 
 utils::globalVariables(
@@ -52,7 +53,7 @@ GenerateCellHashCallsSeqND <- function(barcodeMatrix, assay = "HTO", min_quantil
   #filter barcodes for low average expression (at least average 1 read per cell)
   barcodeMatrix <- barcodeMatrix[rowMeans(barcodeMatrix) > min_average_reads,]
   seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
-  seuratObj[[assay]]@data <- prop.table(barcodeMatrix, margin=2)
+  seuratObj[[assay]]@data <- NormalizeRelative(barcodeMatrix)
   
   seuratObj <- SeqNDDemux(seuratObj = seuratObj, min_quantile = min_quantile, assay = assay)
 
@@ -98,7 +99,7 @@ SeqNDDemux <- function(seuratObj, assay, min_quantile = 0.01, plotcolor =  "#00B
   })
 
 	# now assign cells to HTO based on discretized values
-  seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'seqnd')
+  seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'seqnd', assay = assay)
 
   return(seuratObj)
 }

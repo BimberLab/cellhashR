@@ -173,7 +173,7 @@ HTODemux <- function(
 	}
 
 	# now assign cells to HTO based on discretized values
-	object <- .AssignCallsToMatrix(object, discrete, suffix = 'htodemux')
+	object <- .AssignCallsToMatrix(object, discrete, suffix = 'htodemux', assay = assay)
 
 	return(object)
 }
