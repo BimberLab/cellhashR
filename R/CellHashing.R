@@ -169,6 +169,11 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
         allCalls <- rbind(allCalls, data.frame(cellbarcode = toAdd, method = method, classification = 'Low Counts', classification.global = 'Low Counts'))
         .LogMetric(metricsFile, 'TotalLowCounts', length(toAdd))
       }
+    } else if (method == 'seqnd'){
+      calls <- GenerateCellHashCallsSeqND(barcodeMatrix)
+      if (!is.null(calls)) {
+        callList[[method]] <- calls
+      }
     }
 
     allCalls$classification <- naturalsort::naturalfactor(allCalls$classification)

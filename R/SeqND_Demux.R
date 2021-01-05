@@ -1,3 +1,5 @@
+#' @include Utils.R
+#' @include Visualization.R
 
 #Fits a beta distribution to a subset of barcodeMatrix
 get_model <- function(barcodeMatrix, breakpoint,  dist_type) {
@@ -40,29 +42,32 @@ get_right_dist_beta <- function(barcodeMatrix, tolerance=0.1) {
   return(bestModel)
 }
 
-
-DoSeqND <- function(barcodeMatrix, assay = "HTO", min_quantile = 0.01, min_average_reads = 10){
+GenerateCellHashCallsSeqND <- function(barcodeMatrix, assay = "HTO", min_quantile = 0.01, min_average_reads = 10){
   #filter barcodes for low average expression (at least average 1 read per cell)
   barcodeMatrix <- barcodeMatrix[rowMeans(barcodeMatrix) > min_average_reads,]
   seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
   seuratObj[[assay]]@data <- prop.table(barcodeMatrix, margin=2)
   
-  #TODO remove cellhashR::: implicit call once integrated into codebase
-  rownames(seuratObj[[assay]]@data) <- cellhashR:::SimplifyHtoNames(rownames(seuratObj[[assay]]@data))
-  
-  #TODO: This currently returns a dataframe, not a Seurat Object as suggested
-  seuratObj <- SeqNDDemux(seuratObj = seuratObj, min_quantile = min_quantile)
-  
-  #TODO make calls parseable by SummarizeHashingCalls
-  #SummarizeHashingCalls(seuratObj, label = 'SeqND', htoClassificationField = 'classification.seqnd', globalClassificationField = 'classification.global.seqnd', assay = assay)
-  return(seuratObj)
+  seuratObj <- SeqNDDemux(seuratObj = seuratObj, min_quantile = min_quantile, assay = assay)
+
+  SummarizeHashingCalls(seuratObj, label = 'SeqND', htoClassificationField = 'classification.seqnd', globalClassificationField = 'classification.global.seqnd', assay = assay)
+
+  df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'seqnd', classification = seuratObj$classification.seqnd, classification.global = seuratObj$classification.global.seqnd, stringsAsFactors = FALSE)
+
+  return(df)
 }
 
-SeqNDDemux <- function(seuratObj, min_quantile = 0.01, plotcolor =  "#00BFC4") {
+SeqNDDemux <- function(seuratObj, assay, min_quantile = 0.01, plotcolor =  "#00BFC4") {
   #Perform thresholding
-  barcodeMatrix <- seuratObj$HTO
+  barcodeMatrix <- GetAssayData(
+		object = seuratObj,
+		assay = assay,
+		slot = 'counts'
+  )[, colnames(x = object)]
+
   #loop over HTOs in matrix, perform thresholding and store cells that pass the threshold
-  cellList <- lapply(1:nrow(barcodeMatrix), FUN= function(x) {
+  #return a discrete matrix, with 1 equal to a call positive for that barcode
+  discrete <- lapply(1:nrow(barcodeMatrix), FUN= function(x) {
     cells <- barcodeMatrix[x,] 
     #finding the best model produces NaNs when scanning, so we suppress them
     bestModel <- suppressWarnings(get_right_dist_beta(cells))
@@ -82,68 +87,12 @@ SeqNDDemux <- function(seuratObj, min_quantile = 0.01, plotcolor =  "#00BFC4") {
       ggtitle("Hashing Threhshold for Barcode", rownames(barcodeMatrix)[[x]])
     
     print(P1)
-    
-    calls <- cells[,cells > threshold]
-    return(calls)
-  })
-  
-    allPositiveCalls <- as.data.frame(dplyr::bind_rows(cellList))
-    allPositiveCalls[!is.na(allPositiveCalls)]<-1
-    allPositiveCalls[is.na(allPositiveCalls)]<-0
-    rownames(allPositiveCalls) <- rownames(barcodeMatrix)
-    print(allPositiveCalls[1:2,1:5])
-    
-    #This code is from Seurat_HTO_Demux.R and creates a dataframe to be parsed by GenerateHashingCalls()
-    npositive <- colSums(x = allPositiveCalls)
-    classification.global <- allPositiveCalls
-    classification.global[npositive == 0] <- "Negative"
-    classification.global[npositive == 1] <- "Singlet"
-    classification.global[npositive > 1] <- "Doublet"
-    print(classification.global[1:2,1:5])
-    donor.id = rownames(x =  allPositiveCalls)
-    hash.max <- apply(X =  allPositiveCalls, MARGIN = 2, FUN = max)
-    hash.maxID <- apply(X =  allPositiveCalls, MARGIN = 2, FUN = which.max)
-    hash.second <- apply(X =  allPositiveCalls, MARGIN = 2, FUN = MaxN, N = 2)
-    hash.maxID <- as.character(x = donor.id[sapply(
-      X = 1:ncol(x =  allPositiveCalls),
-      FUN = function(x) {
-        return(which(x =  allPositiveCalls[, x] == hash.max[x])[1])
-      }
-    )])
-    hash.secondID <- as.character(x = donor.id[sapply(
-      X = 1:ncol(x =  allPositiveCalls),
-      FUN = function(x) {
-        return(which(x =  allPositiveCalls[, x] == hash.second[x])[1])
-      }
-    )])
-    hash.margin <- hash.max - hash.second
-    doublet_id <- sapply(
-      X = 1:length(x = hash.maxID),
-      FUN = function(x) {
-        return(paste(sort(x = c(hash.maxID[x], hash.secondID[x])), collapse = "_"))
-      }
-    )
-    
-    classification <- classification.global
-    classification[classification.global == "Negative"] <- "Negative"
-    classification[classification.global == "Singlet"] <- hash.maxID[which(x = classification.global == "Singlet")]
-    classification[classification.global == "Doublet"] <- "Doublet" #doublet_id[which(x = classification.global == "Doublet")]
-    
-    classification.metadata <- data.frame(
-      hash.maxID,
-      hash.secondID,
-      hash.margin,
-      classification,
-      classification.global
-    )
 
-    suffix <- 'SeqND'
-    colnames(x = classification.metadata) <- paste(c('maxID', 'secondID', 'margin', 'classification', 'classification.global'), suffix, sep = '.')
-    
-    seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = 'HTO')
-    #This step currently doesn't work and returns an error. 
-    seuratObj <- Seurat::AddMetaData(object = seuratObj, metadata = classification.metadata)
-    
-    
-    return(seuratObj)
+    return(ifelse(cells > threshold, yes = 1, no = 0))
+  })
+
+	# now assign cells to HTO based on discretized values
+  seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'seqnd')
+
+  return(seuratObj)
 }
