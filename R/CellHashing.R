@@ -129,7 +129,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
         callList[[method]] <- calls
       }
     } else if (method == 'multiseq-rel'){
-      calls <- GenerateCellHashCallsMultiSeq(barcodeMatrix, doRelNorm = TRUE, methodName = method, 'Multiseq deMULTIplex (RelNorm)')
+      calls <- GenerateCellHashCallsMultiSeq(barcodeMatrix, doRelNorm = TRUE, methodName = method, label = 'Multiseq deMULTIplex (RelNorm)')
       if (!is.null(calls)) {
         print(unique(calls$method))
         callList[[method]] <- calls
