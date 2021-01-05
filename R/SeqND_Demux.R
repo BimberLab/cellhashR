@@ -1,6 +1,12 @@
 #' @include Utils.R
 #' @include Visualization.R
 
+utils::globalVariables(
+  names = c('relative_counts'),
+  package = 'cellhashR',
+  add = TRUE
+)
+
 #Fits a beta distribution to a subset of barcodeMatrix
 get_model <- function(barcodeMatrix, breakpoint,  dist_type) {
   barcodeMatrix <- as.vector(barcodeMatrix[barcodeMatrix > breakpoint])
