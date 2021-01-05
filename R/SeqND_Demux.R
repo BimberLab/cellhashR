@@ -49,19 +49,42 @@ get_right_dist_beta <- function(barcodeMatrix, tolerance=0.1) {
   return(bestModel)
 }
 
-GenerateCellHashCallsSeqND <- function(barcodeMatrix, assay = "HTO", min_quantile = 0.01, min_average_reads = 10){
-  #filter barcodes for low average expression (at least average 1 read per cell)
-  barcodeMatrix <- barcodeMatrix[rowMeans(barcodeMatrix) > min_average_reads,]
-  seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
-  seuratObj[[assay]]@data <- NormalizeRelative(barcodeMatrix)
-  
-  seuratObj <- SeqNDDemux(seuratObj = seuratObj, min_quantile = min_quantile, assay = assay)
+GenerateCellHashCallsSeqND <- function(barcodeMatrix, assay = "HTO", min_quantile = 0.01, min_average_reads = 10, verbose = TRUE){
+	if (verbose) {
+		print('Starting SeqND')
+	}
 
-  SummarizeHashingCalls(seuratObj, label = 'SeqND', htoClassificationField = 'classification.seqnd', globalClassificationField = 'classification.global.seqnd', assay = assay)
+	#TODO: what's the rationale for avg reads over total reads? if you have two barcodes and 100% of reads are one, you've pentalized this row by 50%?
+	#Further, this gets worse with >2 barcodes...
 
-  df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'seqnd', classification = seuratObj$classification.seqnd, classification.global = seuratObj$classification.global.seqnd, stringsAsFactors = FALSE)
+	#filter barcodes for low average expression:
+	sel <- rowMeans(barcodeMatrix) > min_average_reads
+  barcodeMatrix <- barcodeMatrix[sel,]
+	if (nrow(barcodeMatrix) == 0) {
+    print(paste0('No passing barcodes after filter using min_average_reads: ', min_average_reads))
+    return(NULL)
+	}
 
-  return(df)
+	if (verbose) {
+		print(paste0('rows dropped for low counts: ', sum(!sel), ' of ', length(sel)))
+	}
+
+	tryCatch({
+		seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
+		seuratObj[[assay]]@data <- NormalizeRelative(barcodeMatrix)
+
+		seuratObj <- SeqNDDemux(seuratObj = seuratObj, min_quantile = min_quantile, assay = assay)
+
+		SummarizeHashingCalls(seuratObj, label = 'SeqND', htoClassificationField = 'classification.seqnd', globalClassificationField = 'classification.global.seqnd', assay = assay)
+
+    df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'seqnd', classification = seuratObj$classification.seqnd, classification.global = seuratObj$classification.global.seqnd, stringsAsFactors = FALSE)
+    return(df)
+  }, error = function(e){
+		print('Error generating seqnd calls, aborting')
+		print(e)
+
+		return(NULL)
+	})
 }
 
 SeqNDDemux <- function(seuratObj, assay, min_quantile = 0.01, plotcolor =  "#00BFC4") {
@@ -69,13 +92,17 @@ SeqNDDemux <- function(seuratObj, assay, min_quantile = 0.01, plotcolor =  "#00B
   barcodeMatrix <- GetAssayData(
 		object = seuratObj,
 		assay = assay,
-		slot = 'counts'
+		slot = 'data'
   )[, colnames(x = seuratObj)]
 
   #loop over HTOs in matrix, perform thresholding and store cells that pass the threshold
   #return a discrete matrix, with 1 equal to a call positive for that barcode
-  discrete <- lapply(1:nrow(barcodeMatrix), FUN= function(x) {
-    cells <- barcodeMatrix[x,] 
+  discrete <- GetAssayData(object = seuratObj, assay = assay)
+  discrete[discrete > 0] <- 0
+
+  for (hto in rownames(barcodeMatrix)) {
+    cells <- barcodeMatrix[hto, colnames(seuratObj), drop = FALSE]
+
     #finding the best model produces NaNs when scanning, so we suppress them
     bestModel <- suppressWarnings(get_right_dist_beta(cells))
     boot <- fitdistrplus::bootdist(bestModel)
@@ -91,12 +118,12 @@ SeqNDDemux <- function(seuratObj, assay, min_quantile = 0.01, plotcolor =  "#00B
       xlab("Fraction of Total Counts") +
       ylab("Density") +
       geom_vline(xintercept=threshold, linetype="dashed") +
-      ggtitle("Hashing Threhshold for Barcode", rownames(barcodeMatrix)[[x]])
+      ggtitle("SeqND Threhshold", hto)
     
     print(P1)
 
-    return(ifelse(cells > threshold, yes = 1, no = 0))
-  })
+		discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold, yes = 1, no = 0)
+  }
 
 	# now assign cells to HTO based on discretized values
   seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'seqnd', assay = assay)

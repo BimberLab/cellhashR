@@ -42,7 +42,8 @@ tests <- list(
 			Doublet = 251,
       MultiSeqCalled = 4547,
       Discordant = 376,
-      SeuratCalled = 3038
+      SeuratCalled = 3038,
+			SeqNDCalled = 3959
     ),
     '449-1' = list(
       input = '../testdata/449-1-GEX/umi_count',
@@ -139,7 +140,7 @@ test_that("Saturation plot works", {
 	expect_equal(0.36, saturation)
 })
 
-DoTest <- function(test, callsFile, summaryFile, methods = c('multiseq', 'htodemux')) {
+DoTest <- function(test, callsFile, summaryFile, methods = c('multiseq', 'htodemux'), skipNormalizationQc = FALSE) {
 	barcodeFile <- test$input
 	barcodeData <- ProcessCountMatrix(rawCountData = barcodeFile, barcodeWhitelist = test$htos)
 
@@ -158,8 +159,10 @@ DoTest <- function(test, callsFile, summaryFile, methods = c('multiseq', 'htodem
 	}
 
 	# This is giving memory errors on github runners:
-	PlotNormalizationQC(barcodeData)
-
+	if (!skipNormalizationQc) {
+		PlotNormalizationQC(barcodeData)
+	}
+	
 	metricsFile <- 'metrics.txt'
 	if (file.exists(metricsFile)) {
 		unlink(metricsFile)
@@ -209,7 +212,7 @@ test_that("Cell hashing works", {
 
 
 test_that("SeqND calling works", {
-	testName <- names(tests)[1]
+	testName <- names(tests)[4]
 
 	print(paste0('Running test: ', testName))
 	test <- tests[[testName]]
@@ -220,8 +223,9 @@ test_that("SeqND calling works", {
 		summaryFile <- paste0(testName, '-summary.txt')
 	}
 
-	l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile, methods = c('seqnd', 'multiseq', 'htodemux'))
+	l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile, methods = c('seqnd', 'multiseq', 'htodemux'), skipNormalizationQc = TRUE)
 	barcodeData <- l$barcodeData
 	df <- l$df
-	metricsFile <- l$metricsFile
+	
+	expect_equal(expected = test[['SeqNDCalled']], object = sum(df$seqnd != 'Negative'), info = testName)
 })
