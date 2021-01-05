@@ -62,7 +62,7 @@ SeqNDDemux <- function(seuratObj, min_quantile = 0.01, plotcolor =  "#00BFC4") {
   #Perform thresholding
   barcodeMatrix <- seuratObj$HTO
   #loop over HTOs in matrix, perform thresholding and store cells that pass the threshold
-  cellList<- lapply(1:nrow(barcodeMatrix), FUN= function(x) {
+  cellList <- lapply(1:nrow(barcodeMatrix), FUN= function(x) {
     cells <- barcodeMatrix[x,] 
     #finding the best model produces NaNs when scanning, so we suppress them
     bestModel <- suppressWarnings(get_right_dist_beta(cells))
@@ -87,9 +87,63 @@ SeqNDDemux <- function(seuratObj, min_quantile = 0.01, plotcolor =  "#00BFC4") {
     return(calls)
   })
   
-  allPositiveCalls <- as.data.frame(dplyr::bind_rows(cellList))
-  allPositiveCalls[!is.na(allPositiveCalls)]<-1
-  allPositiveCalls[is.na(allPositiveCalls)]<-0
-  rownames(allPositiveCalls) <- rownames(barcodeMatrix)
-  return(allPositiveCalls)
+    allPositiveCalls <- as.data.frame(dplyr::bind_rows(cellList))
+    allPositiveCalls[!is.na(allPositiveCalls)]<-1
+    allPositiveCalls[is.na(allPositiveCalls)]<-0
+    rownames(allPositiveCalls) <- rownames(barcodeMatrix)
+    print(allPositiveCalls[1:2,1:5])
+    
+    #This code is from Seurat_HTO_Demux.R and creates a dataframe to be parsed by GenerateHashingCalls()
+    npositive <- colSums(x = allPositiveCalls)
+    classification.global <- allPositiveCalls
+    classification.global[npositive == 0] <- "Negative"
+    classification.global[npositive == 1] <- "Singlet"
+    classification.global[npositive > 1] <- "Doublet"
+    print(classification.global[1:2,1:5])
+    donor.id = rownames(x =  allPositiveCalls)
+    hash.max <- apply(X =  allPositiveCalls, MARGIN = 2, FUN = max)
+    hash.maxID <- apply(X =  allPositiveCalls, MARGIN = 2, FUN = which.max)
+    hash.second <- apply(X =  allPositiveCalls, MARGIN = 2, FUN = MaxN, N = 2)
+    hash.maxID <- as.character(x = donor.id[sapply(
+      X = 1:ncol(x =  allPositiveCalls),
+      FUN = function(x) {
+        return(which(x =  allPositiveCalls[, x] == hash.max[x])[1])
+      }
+    )])
+    hash.secondID <- as.character(x = donor.id[sapply(
+      X = 1:ncol(x =  allPositiveCalls),
+      FUN = function(x) {
+        return(which(x =  allPositiveCalls[, x] == hash.second[x])[1])
+      }
+    )])
+    hash.margin <- hash.max - hash.second
+    doublet_id <- sapply(
+      X = 1:length(x = hash.maxID),
+      FUN = function(x) {
+        return(paste(sort(x = c(hash.maxID[x], hash.secondID[x])), collapse = "_"))
+      }
+    )
+    
+    classification <- classification.global
+    classification[classification.global == "Negative"] <- "Negative"
+    classification[classification.global == "Singlet"] <- hash.maxID[which(x = classification.global == "Singlet")]
+    classification[classification.global == "Doublet"] <- "Doublet" #doublet_id[which(x = classification.global == "Doublet")]
+    
+    classification.metadata <- data.frame(
+      hash.maxID,
+      hash.secondID,
+      hash.margin,
+      classification,
+      classification.global
+    )
+
+    suffix <- 'SeqND'
+    colnames(x = classification.metadata) <- paste(c('maxID', 'secondID', 'margin', 'classification', 'classification.global'), suffix, sep = '.')
+    
+    seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = 'HTO')
+    #This step currently doesn't work and returns an error. 
+    seuratObj <- Seurat::AddMetaData(object = seuratObj, metadata = classification.metadata)
+    
+    
+    return(seuratObj)
 }
