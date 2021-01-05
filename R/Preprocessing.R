@@ -297,6 +297,32 @@ PrintColumnQc <- function(barcodeMatrix) {
 	P1 <- P1 + plot_annotation(caption = paste0('Total cells where top barcode is >0.75 of counts: ', sum(topValue > 0.75), ' of ', length(topValue))) & theme(plot.caption = element_text(size = 14))
 
 	print(P1)
+
+	#MA-plot
+	if (nrow(barcodeMatrix) == 2){
+		df <- data.frame(t(barcodeMatrix))
+		M = log2(df[,1]) - log2(df[,2])
+		A = (log2(df[,1]) + log2(df[,2]))/2
+
+		df$M <- M
+		df$A <- A
+		o <- order(A)
+		a <- A[o]
+		m <- M[o]
+		ind <- round(seq(1, length(a), len = 5000))
+		a <- a[ind]
+		m <- m[ind]
+		fit <- stats::loess(m ~ a)
+		bias <- stats::predict(fit, newdata = data.frame(a = A))
+		df$nM <- M - bias
+		newdat <- data.frame(a, pred = fit$fitted)
+
+		print(ggplot(df, aes(x=A, y=M)) + geom_point() +
+			geom_line(data = newdat, aes(x=a, y = pred), size = 1, col=2) +
+			ggtitle("MA-plot with Loess Fit of Bias") +
+			egg::theme_presentation()
+		)
+	}
 }
 
 utils::globalVariables(
