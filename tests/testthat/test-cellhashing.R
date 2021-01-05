@@ -226,6 +226,8 @@ test_that("SeqND calling works", {
 	l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile, methods = c('seqnd', 'multiseq', 'htodemux'), skipNormalizationQc = TRUE)
 	barcodeData <- l$barcodeData
 	df <- l$df
+	metricsFile <- l$metricsFile
+	unlink(metricsFile)
 	
 	expect_equal(expected = test[['SeqNDCalled']], object = sum(df$seqnd != 'Negative'), info = testName)
 })
