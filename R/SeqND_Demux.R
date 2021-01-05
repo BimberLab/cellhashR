@@ -70,7 +70,7 @@ SeqNDDemux <- function(seuratObj, assay, min_quantile = 0.01, plotcolor =  "#00B
 		object = seuratObj,
 		assay = assay,
 		slot = 'counts'
-  )[, colnames(x = object)]
+  )[, colnames(x = seuratObj)]
 
   #loop over HTOs in matrix, perform thresholding and store cells that pass the threshold
   #return a discrete matrix, with 1 equal to a call positive for that barcode

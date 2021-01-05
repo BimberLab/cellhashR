@@ -117,7 +117,7 @@ SimplifyHtoNames <- function(x) {
 	classification <- classification.global
 	classification[classification.global == "Negative"] <- "Negative"
 	classification[classification.global == "Singlet"] <- hash.maxID[which(x = classification.global == "Singlet")]
-	classification[classification.global == "Doublet"] <- "Doublet" #doublet_id[which(x = classification.global == "Doublet")]
+	classification[classification.global == "Doublet"] <- "Doublet"
 	classification.metadata <- data.frame(
 		hash.maxID,
 		hash.secondID,
