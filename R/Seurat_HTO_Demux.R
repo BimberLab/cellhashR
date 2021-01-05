@@ -7,31 +7,35 @@ utils::globalVariables(
 	add = TRUE
 )
 
-GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95) {
+GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95, methodName = 'htodemux', verbose= TRUE) {
+	if (verbose) {
+		print('Starting HTODemux')
+	}
+
 	seuratObj <- CreateSeuratObject(barcodeMatrix, assay = 'HTO')
 
 	tryCatch({
-		seuratObj <- DoHtoDemux(seuratObj, positive.quantile = positive.quantile)
+		seuratObj <- DoHtoDemux(seuratObj, positive.quantile = positive.quantile, verbose = verbose)
 
-		return(data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'htodemux', classification = seuratObj$classification.htodemux, classification.global = seuratObj$classification.global.htodemux, stringsAsFactors = FALSE))
+		return(data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = methodName, classification = seuratObj$classification.htodemux, classification.global = seuratObj$classification.global.htodemux, stringsAsFactors = FALSE))
 	}, error = function(e){
 		print('Error generating seurat htodemux calls, aborting')
-		print(e)
+		if (!is.null(e)) {
+			print(e)
+		}
 
 		return(NULL)
 	})
 }
 
 
-DoHtoDemux <- function(seuratObj, positive.quantile, label = 'Seurat HTODemux', plotDist = FALSE) {
+DoHtoDemux <- function(seuratObj, positive.quantile, label = 'Seurat HTODemux', plotDist = FALSE, verbose = TRUE) {
 	# Normalize HTO data, here we use centered log-ratio (CLR) transformation
 	seuratObj <- NormalizeData(seuratObj, assay = "HTO", normalization.method = "CLR", verbose = FALSE)
 
-	seuratObj <- HTODemux(seuratObj, positive.quantile =  positive.quantile, plotDist = plotDist)
-	seuratObj$classification.htodemux <- naturalsort::naturalfactor(as.character(seuratObj$classification.htodemux))
-	seuratObj$classification.global.htodemux <- naturalsort::naturalfactor(as.character(seuratObj$classification.global.htodemux))
+	seuratObj <- HTODemux(seuratObj, positive.quantile =  positive.quantile, plotDist = plotDist, verbose = verbose)
 
-	SummarizeHashingCalls(seuratObj, label = label, htoClassificationField = 'classification.htodemux', globalClassificationField = 'classification.global.htodemux')
+	SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'htodemux')
 
 	return(seuratObj)
 }
@@ -53,10 +57,6 @@ HTODemux <- function(
 	verbose = TRUE,
 	plotDist = FALSE
 ) {
-	if (verbose) {
-		print('Starting HTODemux')
-	}
-
 	#initial clustering
 	data <- GetAssayData(object = object, assay = assay)
 	counts <- GetAssayData(

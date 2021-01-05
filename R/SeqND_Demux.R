@@ -49,7 +49,7 @@ get_right_dist_beta <- function(barcodeMatrix, tolerance=0.1) {
   return(bestModel)
 }
 
-GenerateCellHashCallsSeqND <- function(barcodeMatrix, assay = "HTO", min_quantile = 0.01, min_average_reads = 10, verbose = TRUE){
+GenerateCellHashCallsSeqND <- function(barcodeMatrix, assay = "HTO", min_quantile = 0.01, min_average_reads = 10, verbose = TRUE, methodName = 'seqnd'){
 	if (verbose) {
 		print('Starting SeqND')
 	}
@@ -75,9 +75,9 @@ GenerateCellHashCallsSeqND <- function(barcodeMatrix, assay = "HTO", min_quantil
 
 		seuratObj <- SeqNDDemux(seuratObj = seuratObj, min_quantile = min_quantile, assay = assay)
 
-		SummarizeHashingCalls(seuratObj, label = 'SeqND', htoClassificationField = 'classification.seqnd', globalClassificationField = 'classification.global.seqnd', assay = assay)
+		SummarizeHashingCalls(seuratObj, label = 'SeqND', columnSuffix = 'seqnd', assay = assay)
 
-    df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'seqnd', classification = seuratObj$classification.seqnd, classification.global = seuratObj$classification.global.seqnd, stringsAsFactors = FALSE)
+    df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = methodName, classification = seuratObj$classification.seqnd, classification.global = seuratObj$classification.global.seqnd, stringsAsFactors = FALSE)
     return(df)
   }, error = function(e){
 		print('Error generating seqnd calls, aborting')

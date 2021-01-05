@@ -126,6 +126,10 @@ SimplifyHtoNames <- function(x) {
 		classification.global
 	)
 
+	# NOTE: leave these as strings to allow easier rbind later:
+	#classification.metadata$classification <- naturalsort::naturalfactor(as.character(classification.metadata$classification))
+	#classification.metadata$classification.global <- naturalsort::naturalfactor(as.character(classification.metadata$classification.global))
+
 	colnames(x = classification.metadata) <- paste(c('maxID', 'secondID', 'margin', 'classification', 'classification.global'), suffix, sep = '.')
 	object <- AddMetaData(object = object, metadata = classification.metadata)
 
