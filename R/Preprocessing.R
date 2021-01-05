@@ -164,9 +164,9 @@ PrintRowQc <- function(barcodeMatrix) {
 	colnames(df) <- SimplifyHtoNames(rownames(barcodeMatrix))
 	df <- tidyr::gather(df, Barcode, Count)
 
-	P1 <- ggplot(df, aes(x = Count, color = Barcode)) +
+	P1 <- ggplot(df[df$Count > 0,], aes(x = Count, color = Barcode)) +
 		geom_density() +
-		ggtitle('Counts/Cell') +
+		ggtitle('Non-zero Counts/Cell') +
 		egg::theme_presentation(base_size = 18) +
 		xlab('Counts/Cell') + ylab('Density') +
 		scale_x_continuous(trans = scales::log1p_trans()) +
@@ -182,9 +182,9 @@ PrintRowQc <- function(barcodeMatrix) {
 	out <- out[out > mean(df$Count[df$Count > 0])]
 	df <- df[df$Count < min(out),]
 
-	P2 <- ggplot(df, aes(x = Count, color = Barcode)) +
+	P2 <- ggplot(df[df$Count > 0,], aes(x = Count, color = Barcode)) +
 		geom_density() +
-		ggtitle('Counts/Cell, Outlier Trimmed') +
+		ggtitle('Non-zero Counts/Cell, Outlier Trimmed') +
 		egg::theme_presentation(base_size = 18) +
 		xlab('Counts/Cell') + ylab('Density') +
 		scale_x_continuous(trans = scales::log1p_trans()) +
