@@ -2,6 +2,7 @@
 #' @include Visualization.R
 #' @include Multiseq.R
 #' @include Seurat_HTO_Demux.R
+#' @include SeqND_Demux.R
 
 utils::globalVariables(
   names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall', 'consensuscall.global', 'topFraction', 'totalReadsPerCell'),
@@ -127,6 +128,17 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
+    } else if (method == 'multiseq-rel'){
+      calls <- GenerateCellHashCallsMultiSeq(barcodeMatrix, doRelNorm = TRUE, methodName = method, label = 'Multiseq deMULTIplex (RelNorm)')
+      if (!is.null(calls)) {
+        print(unique(calls$method))
+        callList[[method]] <- calls
+      }
+    } else if (method == 'seqnd'){
+      calls <- GenerateCellHashCallsSeqND(barcodeMatrix)
+      if (!is.null(calls)) {
+        callList[[method]] <- calls
+      }
     } else {
       stop(paste0('Unknown method: ', method))
     }
@@ -180,6 +192,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
 
   for (method in methods) {
     if (!(method %in% names(dataClassification))) {
+      print(paste0('adding missing method: ', method))
       dataClassification[method] <- 'Not Called'
     }
 
@@ -225,7 +238,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
   P1 <- ggplot(summary, aes(x = classification, group = method, fill = method)) +
     geom_bar(position = position_dodge2(preserve = 'single')) +
     egg::theme_presentation(base_size = 14) +
-    labs(x = '', y = 'Cells', fill = 'Classification') +
+    labs(x = '', y = 'Cells', fill = 'Caller') +
     theme(
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
     )
@@ -273,8 +286,12 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
         next
       }
 
-      discord <- data[data$consensuscall == 'Discordant',] %>% dplyr::group_by_at(c(method1, method2)) %>% summarise(Count = dplyr::n())
-      P1 <- ggplot(discord, aes_string(x = method1, y = method2, fill = 'Count')) +
+      #NOTE: this is a little awkward, but some methods may contain special characters, so use fixed names:
+      discord <- data[data$consensuscall == 'Discordant', c(method1, method2)]
+      names(discord) <- c('method1', 'method2')
+      discord <- discord %>% dplyr::group_by(method1, method2) %>% dplyr::summarise(Count = dplyr::n())
+
+      P1 <- ggplot(discord, aes(x = method1, y = method2, fill = Count)) +
         geom_tile() +
         geom_text(aes(label = Count)) +
         egg::theme_presentation(base_size = 12) +
@@ -285,8 +302,10 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
         scale_fill_gradient2(low = "blue", mid = "white", high = "red") +
         ylab(method2) + xlab(method1)
 
-      discordWithNeg <- data %>% dplyr::group_by_at(c(method1, method2)) %>% summarise(Count = dplyr::n())
-      P2 <- ggplot(discordWithNeg, aes_string(x = method1, y = method2, fill = 'Count')) +
+      discordWithNeg <- data[c(method1, method2)]
+      names(discordWithNeg) <- c('method1', 'method2')
+      discordWithNeg <- discordWithNeg %>% dplyr::group_by(method1, method2) %>% dplyr::summarise(Count = dplyr::n())
+      P2 <- ggplot(discordWithNeg, aes(x = method1, y = method2, fill = Count)) +
         geom_tile() +
         geom_text(aes(label = Count)) +
         egg::theme_presentation(base_size = 12) +
@@ -440,7 +459,7 @@ SummarizeCellsByClassification <- function(calls, barcodeMatrix) {
     ylab('Counts/Cell') + labs(color = 'Call') +
     egg::theme_presentation(base_size = 14) +
     theme(
-    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+      axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
     )
 
   P2 <- ggplot(df, aes(x = consensuscall.global, y = topFraction, color = consensuscall)) +
@@ -450,7 +469,7 @@ SummarizeCellsByClassification <- function(calls, barcodeMatrix) {
     ylab('Top Barcode Fraction') + labs(color = 'Call') +
     egg::theme_presentation(base_size = 14) +
     theme(
-    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+      axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
     )
 
   print(P1 + P2 + plot_layout(guides = 'collect'))

@@ -6,9 +6,13 @@ utils::globalVariables(
 	add = TRUE
 )
 
-SummarizeHashingCalls <- function(seuratObj, label, htoClassificationField = 'classification', globalClassificationField = 'classification.global', doHeatmap = T, doTSNE = T, assay = 'HTO') {
+SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T, doTSNE = T, assay = 'HTO') {
+	htoClassificationField = paste0('classification.', columnSuffix)
+	globalClassificationField <- paste0('classification.global.', columnSuffix)
+
 	#report outcome
 	df <- data.frame(prop.table(table(Barcode = seuratObj[[htoClassificationField]])))
+	df$Barcode <- naturalsort::naturalfactor(df$Barcode)
 	P1 <- ggplot(df, aes(x = '', y=Freq, fill=Barcode)) +
 		geom_bar(width = 1, stat = "identity", color = "black") +
 		coord_polar("y", start=0) +
@@ -20,6 +24,7 @@ SummarizeHashingCalls <- function(seuratObj, label, htoClassificationField = 'cl
 			axis.ticks = element_blank(),
 			panel.grid  = element_blank()
 		)
+
 	df <- data.frame(prop.table(table(Classification = seuratObj[[globalClassificationField]])))
 	P2 <- ggplot(df, aes(x = '', y=Freq, fill=Classification)) +
 		geom_bar(width = 1, stat = "identity", color = "black") +

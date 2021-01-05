@@ -42,7 +42,8 @@ tests <- list(
 			Doublet = 251,
       MultiSeqCalled = 4547,
       Discordant = 376,
-      SeuratCalled = 3038
+      SeuratCalled = 3038,
+			SeqNDCalled = 3959
     ),
     '449-1' = list(
       input = '../testdata/449-1-GEX/umi_count',
@@ -139,38 +140,40 @@ test_that("Saturation plot works", {
 	expect_equal(0.36, saturation)
 })
 
+DoTest <- function(test, callsFile, summaryFile, methods = c('multiseq', 'htodemux'), skipNormalizationQc = FALSE) {
+	barcodeFile <- test$input
+	barcodeData <- ProcessCountMatrix(rawCountData = barcodeFile, barcodeWhitelist = test$htos)
+
+	if (nrow(barcodeData) == 0) {
+		stop('No passing HTOs')
+	}
+
+	if (ncol(barcodeData) == 0) {
+		stop('No passing cells')
+	}
+
+	#Subset to keep reasonable
+	if (ncol(barcodeData) > 5000) {
+		print('Subsetting barcodeData to 5000 cells')
+		barcodeData <- barcodeData[,1:5000]
+	}
+
+	# This is giving memory errors on github runners:
+	if (!skipNormalizationQc) {
+		PlotNormalizationQC(barcodeData)
+	}
+	
+	metricsFile <- 'metrics.txt'
+	if (file.exists(metricsFile)) {
+		unlink(metricsFile)
+	}
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, metricsFile = metricsFile)
+
+	return(list(barcodeData = barcodeData, df = df, metricsFile = metricsFile))
+}
+
 test_that("Cell hashing works", {
     for (testName in names(tests)) {
-        DoTest <- function(test, callsFile, summaryFile) {
-          barcodeFile <- test$input
-					barcodeData <- ProcessCountMatrix(rawCountData = barcodeFile, barcodeWhitelist = test$htos)
-					
-					if (nrow(barcodeData) == 0) {
-							stop('No passing HTOs')
-					}
-
-					if (ncol(barcodeData) == 0) {
-							stop('No passing cells')
-					}
-
-					#Subset to keep reasonable
-					if (ncol(barcodeData) > 5000) {
-							print('Subsetting barcodeData to 5000 cells')             
-							barcodeData <- barcodeData[,1:5000]
-					}
-
-          # This is giving memory errors on github runners:
-          PlotNormalizationQC(barcodeData)
-
-					metricsFile <- 'metrics.txt'
-					if (file.exists(metricsFile)) {
-						unlink(metricsFile)
-					}
-          df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'htodemux'), metricsFile = metricsFile)
-
-					return(list(barcodeData = barcodeData, df = df, metricsFile = metricsFile))
-				}
-
 				print(paste0('Running test: ', testName))
 				test <- tests[[testName]]
 
@@ -207,3 +210,24 @@ test_that("Cell hashing works", {
     }
 })
 
+
+test_that("SeqND calling works", {
+	testName <- names(tests)[4]
+
+	print(paste0('Running test: ', testName))
+	test <- tests[[testName]]
+
+	callsFile <- paste0(testName, '-calls.txt')
+	summaryFile <- NULL
+	if (!is.null(test$gexBarcodeFile)) {
+		summaryFile <- paste0(testName, '-summary.txt')
+	}
+
+	l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile, methods = c('seqnd', 'multiseq', 'htodemux'), skipNormalizationQc = TRUE)
+	barcodeData <- l$barcodeData
+	df <- l$df
+	metricsFile <- l$metricsFile
+	unlink(metricsFile)
+	
+	expect_equal(expected = test[['SeqNDCalled']], object = sum(df$seqnd != 'Negative'), info = testName)
+})

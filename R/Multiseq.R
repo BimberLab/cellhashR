@@ -8,11 +8,25 @@ utils::globalVariables(
 	add = TRUE
 )
 
-GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO') {
-	tryCatch({
-		seuratObj <- DoMULTIseqDemux(barcodeMatrix, assay = assay)
+GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO', autoThresh = TRUE, quantile = NULL, maxiter = 20, qrange = seq(from = 0.2, to = 0.95, by = 0.05), doRelNorm = FALSE, methodName = 'multiseq', label = 'Multiseq deMULTIplex', verbose = TRUE) {
+	if (verbose) {
+		print(paste0('Starting ', label))
+	}
 
-		return(data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'multiseq', classification = seuratObj$classification.multiseq, classification.global = seuratObj$classification.global.multiseq, stringsAsFactors = FALSE))
+	tryCatch({
+		seuratObj <- CreateSeuratObject(barcodeMatrix, assay = assay)
+		if (doRelNorm) {
+			print('Performing relative normalization instead of log2')
+			seuratObj[[assay]]@data <- NormalizeRelative(barcodeMatrix)
+		} else {
+			seuratObj[[assay]]@data <- NormalizeLog2(barcodeMatrix)
+		}
+
+		seuratObj <- MULTIseqDemux(seuratObj, assay = assay, quantile = quantile, verbose = verbose, autoThresh = autoThresh, maxiter = maxiter, qrange = qrange)
+
+		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'multiseq', assay = assay)
+
+		return(data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = methodName, classification = seuratObj$classification.multiseq, classification.global = seuratObj$classification.global.multiseq, stringsAsFactors = FALSE))
 	}, error = function(e){
 		print('Error generating multiseq calls, aborting')
 		print(e)
@@ -21,20 +35,9 @@ GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO') {
 	})
 }
 
-DoMULTIseqDemux <- function(barcodeMatrix, assay = 'HTO', autoThresh = TRUE, quantile = NULL, maxiter = 20, qrange = seq(from = 0.2, to = 0.95, by = 0.05)) {
-	seuratObj <- CreateSeuratObject(barcodeMatrix, assay = assay)
-	seuratObj[[assay]]@data <- NormalizeLog2(barcodeMatrix)
-
-	seuratObj <- MULTIseqDemux(seuratObj, assay = assay, quantile = quantile, verbose = TRUE, autoThresh = autoThresh, maxiter = maxiter, qrange = qrange)
-
-	SummarizeHashingCalls(seuratObj, label = 'Multiseq deMULTIplex', htoClassificationField = 'classification.multiseq', globalClassificationField = 'classification.global.multiseq', assay = assay)
-
-	return(seuratObj)
-}
-
 #' @rawNamespace import(Matrix, except = c('tail', 'head'))
-#' @author
-#' @url
+#' @author Chris McGinnis, Gartner Lab, UCSF
+#' @references \url{https://www.biorxiv.org/content/10.1101/387241v1}
 MULTIseqDemux <- function(
 	object,
 	assay = "HTO",
@@ -44,10 +47,6 @@ MULTIseqDemux <- function(
 	qrange = seq(from = 0.1, to = 0.9, by = 0.05),
 	verbose = TRUE
 ) {
-	if (verbose) {
-		print('Starting Multiseq deMULTIplex')
-	}
-
 	if (is.na(assay) || is.null(assay)) {
 		assay <- DefaultAssay(object = object)
 	}

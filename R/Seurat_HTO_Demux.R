@@ -7,31 +7,35 @@ utils::globalVariables(
 	add = TRUE
 )
 
-GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95) {
+GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95, methodName = 'htodemux', verbose= TRUE) {
+	if (verbose) {
+		print('Starting HTODemux')
+	}
+
 	seuratObj <- CreateSeuratObject(barcodeMatrix, assay = 'HTO')
 
 	tryCatch({
-		seuratObj <- DoHtoDemux(seuratObj, positive.quantile = positive.quantile)
+		seuratObj <- DoHtoDemux(seuratObj, positive.quantile = positive.quantile, verbose = verbose)
 
-		return(data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'htodemux', classification = seuratObj$classification.htodemux, classification.global = seuratObj$classification.global.htodemux, stringsAsFactors = FALSE))
+		return(data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = methodName, classification = seuratObj$classification.htodemux, classification.global = seuratObj$classification.global.htodemux, stringsAsFactors = FALSE))
 	}, error = function(e){
 		print('Error generating seurat htodemux calls, aborting')
-		print(e)
+		if (!is.null(e)) {
+			print(e)
+		}
 
 		return(NULL)
 	})
 }
 
 
-DoHtoDemux <- function(seuratObj, positive.quantile, label = 'Seurat HTODemux', plotDist = FALSE) {
+DoHtoDemux <- function(seuratObj, positive.quantile, label = 'Seurat HTODemux', plotDist = FALSE, verbose = TRUE) {
 	# Normalize HTO data, here we use centered log-ratio (CLR) transformation
 	seuratObj <- NormalizeData(seuratObj, assay = "HTO", normalization.method = "CLR", verbose = FALSE)
 
-	seuratObj <- HTODemux(seuratObj, positive.quantile =  positive.quantile, plotDist = plotDist)
-	seuratObj$classification.htodemux <- naturalsort::naturalfactor(as.character(seuratObj$classification.htodemux))
-	seuratObj$classification.global.htodemux <- naturalsort::naturalfactor(as.character(seuratObj$classification.global.htodemux))
+	seuratObj <- HTODemux(seuratObj, positive.quantile =  positive.quantile, plotDist = plotDist, verbose = verbose)
 
-	SummarizeHashingCalls(seuratObj, label = label, htoClassificationField = 'classification.htodemux', globalClassificationField = 'classification.global.htodemux')
+	SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'htodemux')
 
 	return(seuratObj)
 }
@@ -53,10 +57,6 @@ HTODemux <- function(
 	verbose = TRUE,
 	plotDist = FALSE
 ) {
-	if (verbose) {
-		print('Starting HTODemux')
-	}
-
 	#initial clustering
 	data <- GetAssayData(object = object, assay = assay)
 	counts <- GetAssayData(
@@ -173,50 +173,7 @@ HTODemux <- function(
 	}
 
 	# now assign cells to HTO based on discretized values
-	npositive <- colSums(x = discrete)
-	classification.global <- npositive
-	classification.global[npositive == 0] <- "Negative"
-	classification.global[npositive == 1] <- "Singlet"
-	classification.global[npositive > 1] <- "Doublet"
-	donor.id = rownames(x = data)
-	hash.max <- apply(X = data, MARGIN = 2, FUN = max)
-	hash.maxID <- apply(X = data, MARGIN = 2, FUN = which.max)
-	hash.second <- apply(X = data, MARGIN = 2, FUN = MaxN, N = 2)
-	hash.maxID <- as.character(x = donor.id[sapply(
-		X = 1:ncol(x = data),
-		FUN = function(x) {
-			return(which(x = data[, x] == hash.max[x])[1])
-		}
-	)])
-	hash.secondID <- as.character(x = donor.id[sapply(
-		X = 1:ncol(x = data),
-		FUN = function(x) {
-			return(which(x = data[, x] == hash.second[x])[1])
-		}
-	)])
-	hash.margin <- hash.max - hash.second
-	doublet_id <- sapply(
-		X = 1:length(x = hash.maxID),
-		FUN = function(x) {
-			return(paste(sort(x = c(hash.maxID[x], hash.secondID[x])), collapse = "_"))
-		}
-	)
-
-	classification <- classification.global
-	classification[classification.global == "Negative"] <- "Negative"
-	classification[classification.global == "Singlet"] <- hash.maxID[which(x = classification.global == "Singlet")]
-	classification[classification.global == "Doublet"] <- "Doublet" #doublet_id[which(x = classification.global == "Doublet")]
-	classification.metadata <- data.frame(
-		hash.maxID,
-		hash.secondID,
-		hash.margin,
-		classification,
-		classification.global
-	)
-
-	suffix <- 'htodemux'
-	colnames(x = classification.metadata) <- paste(c('maxID', 'secondID', 'margin', 'classification', 'classification.global'), suffix, sep = '.')
-	object <- AddMetaData(object = object, metadata = classification.metadata)
+	object <- .AssignCallsToMatrix(object, discrete, suffix = 'htodemux', assay = assay)
 
 	return(object)
 }
