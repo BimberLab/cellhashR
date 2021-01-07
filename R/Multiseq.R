@@ -10,7 +10,7 @@ utils::globalVariables(
 
 GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO', autoThresh = TRUE, quantile = NULL, maxiter = 20, qrange = seq(from = 0.2, to = 0.95, by = 0.05), doRelNorm = FALSE, methodName = 'multiseq', label = 'Multiseq deMULTIplex', verbose = TRUE) {
 	if (verbose) {
-		print('Starting Multiseq deMULTIplex')
+		print(paste0('Starting ', label))
 	}
 
 	tryCatch({

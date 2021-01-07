@@ -129,7 +129,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
         callList[[method]] <- calls
       }
     } else if (method == 'multiseq-rel'){
-      calls <- GenerateCellHashCallsMultiSeq(barcodeMatrix, doRelNorm = TRUE, methodName = method, 'Multiseq deMULTIplex (RelNorm)')
+      calls <- GenerateCellHashCallsMultiSeq(barcodeMatrix, doRelNorm = TRUE, methodName = method, label = 'Multiseq deMULTIplex (RelNorm)')
       if (!is.null(calls)) {
         print(unique(calls$method))
         callList[[method]] <- calls
@@ -238,7 +238,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
   P1 <- ggplot(summary, aes(x = classification, group = method, fill = method)) +
     geom_bar(position = position_dodge2(preserve = 'single')) +
     egg::theme_presentation(base_size = 14) +
-    labs(x = '', y = 'Cells', fill = 'Classification') +
+    labs(x = '', y = 'Cells', fill = 'Caller') +
     theme(
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
     )
