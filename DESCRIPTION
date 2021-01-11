@@ -31,11 +31,13 @@ Imports:
     reshape2,
     rmarkdown,
     rmdformats,
-    ggforce
+    ggforce,
+    DropletUtils,
+    S4Vectors
 Suggests:
     devtools,
     testthat (>= 2.1.0),
-    DropletUtils
+    knitr
 RoxygenNote: 7.1.1
 URL: https://github.com/BimberLab/cellhashR
 BugReports: https://github.com/BimberLab/cellhashR/issues
@@ -45,9 +47,13 @@ Collate:
     'Utils.R'
     'Visualization.R'
     'Normalization.R'
+    'DropletUtils_Demux.R'
+    'Threshold_Demux.R'
+    'PeakND_Demux.R'
     'SeqND_Demux.R'
     'Seurat_HTO_Demux.R'
     'Multiseq.R'
     'CellHashing.R'
     'Preprocessing.R'
     'CiteSeq.R'
+VignetteBuilder: knitr

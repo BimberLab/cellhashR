@@ -223,7 +223,7 @@ test_that("SeqND calling works", {
 		summaryFile <- paste0(testName, '-summary.txt')
 	}
 
-	l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile, methods = c('seqnd', 'multiseq', 'htodemux'), skipNormalizationQc = TRUE)
+	l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile, methods = c('dropletutils', 'threshold', 'peaknd', 'seqnd', 'multiseq', 'htodemux'), skipNormalizationQc = TRUE)
 	barcodeData <- l$barcodeData
 	df <- l$df
 	metricsFile <- l$metricsFile

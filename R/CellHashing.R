@@ -3,6 +3,9 @@
 #' @include Multiseq.R
 #' @include Seurat_HTO_Demux.R
 #' @include SeqND_Demux.R
+#' @include PeakND_Demux.R
+#' @include Threshold_Demux.R
+#' @include DropletUtils_Demux.R
 
 utils::globalVariables(
   names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall', 'consensuscall.global', 'topFraction', 'totalReadsPerCell'),
@@ -136,6 +139,21 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       }
     } else if (method == 'seqnd'){
       calls <- GenerateCellHashCallsSeqND(barcodeMatrix)
+      if (!is.null(calls)) {
+        callList[[method]] <- calls
+      }
+    } else if (method == 'peaknd'){
+      calls <- GenerateCellHashCallsPeakND(barcodeMatrix)
+      if (!is.null(calls)) {
+        callList[[method]] <- calls
+      }
+    } else if (method == 'threshold'){
+      calls <- GenerateCellHashCallsThreshold(barcodeMatrix)
+      if (!is.null(calls)) {
+        callList[[method]] <- calls
+      }
+    } else if (method == 'dropletutils'){
+      calls <- GenerateCellHashCallsDropletUtils(barcodeMatrix)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
