@@ -433,7 +433,7 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhi
   }
 
   # Use suppressWarnings() to avoid 'MathJax doesn't work with self_contained' warning:
-  suppressWarnings(rmarkdown::render(output_file = reportFile, input = rmd, params = paramList))
+  suppressWarnings(rmarkdown::render(output_file = reportFile, input = rmd, params = paramList, intermediates_dir  = tempdir()))
 
   return(reportFile)
 }
