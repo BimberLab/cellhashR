@@ -29,7 +29,7 @@ GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO', autoThre
 		return(data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = methodName, classification = seuratObj$classification.multiseq, classification.global = seuratObj$classification.global.multiseq, stringsAsFactors = FALSE))
 	}, error = function(e){
 		print('Error generating multiseq calls, aborting')
-		print(e)
+		print(conditionMessage(e))
 
 		return(NULL)
 	})

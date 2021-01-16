@@ -86,7 +86,7 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 		.PlotClusters(barcodeMatrix, seuratObj, norm)
 	}, error = function(e){
 		print('Error generating tSNE, skipping')
-		print(e)
+		print(conditionMessage(e))
 	})
 }
 

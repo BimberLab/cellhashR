@@ -81,7 +81,7 @@ GenerateCellHashCallsSeqND <- function(barcodeMatrix, assay = "HTO", min_quantil
     return(df)
   }, error = function(e){
 		print('Error generating seqnd calls, aborting')
-		print(e)
+		print(conditionMessage(e))
 
 		return(NULL)
 	})

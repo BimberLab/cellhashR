@@ -300,28 +300,35 @@ PrintColumnQc <- function(barcodeMatrix) {
 
 	#MA-plot
 	if (nrow(barcodeMatrix) == 2){
-		df <- data.frame(t(barcodeMatrix))
-		M = log2(df[,1]) - log2(df[,2])
-		A = (log2(df[,1]) + log2(df[,2]))/2
+		tryCatch({
+			df <- data.frame(t(barcodeMatrix))
+			M = log2(df[,1]) - log2(df[,2])
+			A = (log2(df[,1]) + log2(df[,2]))/2
 
-		df$M <- M
-		df$A <- A
-		o <- order(A)
-		a <- A[o]
-		m <- M[o]
-		ind <- round(seq(1, length(a), len = 5000))
-		a <- a[ind]
-		m <- m[ind]
-		fit <- stats::loess(m ~ a)
-		bias <- stats::predict(fit, newdata = data.frame(a = A))
-		df$nM <- M - bias
-		newdat <- data.frame(a, pred = fit$fitted)
+			df$M <- M
+			df$A <- A
+			df <- df[is.finite(df$M) & is.finite(df$A),]
+			o <- order(A)
+			a <- A[o]
+			m <- M[o]
+			ind <- round(seq(1, length(a), len = 5000))
+			a <- a[ind]
+			m <- m[ind]
+			fit <- stats::loess(m ~ a)
+			bias <- stats::predict(fit, newdata = data.frame(a = A))
+			df$nM <- M - bias
+			newdat <- data.frame(a, pred = fit$fitted)
 
-		print(ggplot(df, aes(x=A, y=M)) + geom_point() +
-			geom_line(data = newdat, aes(x=a, y = pred), size = 1, col=2) +
-			ggtitle("MA-plot with Loess Fit of Bias") +
-			egg::theme_presentation()
-		)
+			print(ggplot(df, aes(x=A, y=M)) +
+				geom_point() +
+				geom_line(data = newdat, aes(x=a, y = pred), size = 1, col=2) +
+				ggtitle("MA-plot with Loess Fit of Bias") +
+				egg::theme_presentation()
+			)
+		}, error = function(e){
+			print('Error generating MA plot, skipping')
+			print(conditionMessage(e))
+		})
 	}
 }
 

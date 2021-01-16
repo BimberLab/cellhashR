@@ -55,8 +55,8 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 
 			print(P1 + P2  + plot_annotation(label))
 		}, error = function(e){
-			print(e)
 			print('Error generating tSNE, skipping')
+			print(conditionMessage(e))
 		})
 	}
 
