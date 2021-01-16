@@ -95,6 +95,7 @@ PlotNormalizationQC(barcodeData)
 
 ```{r GenerateCalls}
 
+df <- NULL
 if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
 
 	if (!is.null(saveOriginalCellBarcodeFile)) {
@@ -116,17 +117,23 @@ if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
 
 # Final Calls
 
-```{r}
+```{r FinalCalls}
 
-knitr::kable(head(df, n = 10))
+if (!is.null(df)) {
+  knitr::kable(head(df, n = 10))
+}
 
 ```
 
 # Summary of Negative Cells
 
-```{r}
+```{r SummarizeNegatives}
 
-SummarizeCellsByClassification(calls = df, barcodeMatrix = barcodeData)
+if (!is.null(df)) {
+  SummarizeCellsByClassification(calls = df, barcodeMatrix = barcodeData)
+} else {
+  print('Something went wrong scoring cells')
+}
 
 ```
 
