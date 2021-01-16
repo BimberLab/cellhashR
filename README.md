@@ -66,10 +66,10 @@ local({options(repos = BiocManager::repositories())})
 devtools::install_github(repo = 'bimberlab/cellhashR', ref = 'master', dependencies = TRUE, upgrade = 'always')
 ```
     
-Pre-packaged Docker images with all needed dependencies installed can be found on our [github repository](https://hub.docker.com/r/bimberlab/oosap): 
+Pre-packaged Docker images with all needed dependencies installed can be found on our [GitHub Packages page](https://github.com/orgs/BimberLab/packages/container/package/cellhashr). We recommend using a specific release, which you can do using tags:    
 
 ```
-docker pull ghcr.io/bimberlab/cellhashR:latest
+docker pull ghcr.io/bimberlab/cellhashr:latest
 ```
 
 ### <a name="developers">Development Guidelines</a>

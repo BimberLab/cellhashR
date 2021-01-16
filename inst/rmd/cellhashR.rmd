@@ -10,7 +10,9 @@ output:
     thumbnails: yes
     fig_width: 12
     code_folding: hide
-
+    gallery: true
+    lightbox: true
+    df_print: paged
 ---
 
 ```{r setup}
@@ -62,7 +64,7 @@ if (!is.null(metricsFile)) {
 
 # Data Loading / QC
 
-```{r QC, fig.width=12}
+```{r QC}
 
 if (!is.null(citeSeqCountDir)) {
   saturation <- PlotLibrarySaturation(citeSeqCountDir, metricsFile = metricsFile)
@@ -83,7 +85,7 @@ if (ncol(barcodeData) == 0) {
 
 These plots are designed to provide visualization of potential normalizations.
 
-```{r NormalizationQC, fig.width=12}
+```{r NormalizationQC}
 
 PlotNormalizationQC(barcodeData)
 
@@ -91,7 +93,7 @@ PlotNormalizationQC(barcodeData)
 
 # Generate Hashing Calls
 
-```{r GenerateCalls, fig.width=12}
+```{r GenerateCalls}
 
 if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
 
