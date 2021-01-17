@@ -193,7 +193,7 @@ test_that("Cell hashing works", {
 				expect_equal(expected = expectedHtos, object = actualHtosMatrix)
 
 				expect_true(file.exists(metricsFile))
-				metrics <- read.table(metricsFile, sep = '\t', header = FALSE, col.names = c('MetricName', 'MetricValue'))
+				metrics <- read.table(metricsFile, sep = '\t', header = FALSE, col.names = c('Category', 'MetricName', 'MetricValue'))
 				expect_equal(object = nrow(metrics), expected = 13)
 				unlink(metricsFile)
 
