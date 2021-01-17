@@ -268,6 +268,15 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
     .LogMetric(metricsFile, 'TotalNegative', sum(dataClassificationGlobal$consensuscall == 'Negative'))
     .LogMetric(metricsFile, 'TotalDiscordant', sum(dataClassification$consensuscall == 'Discordant'))
     .LogMetric(metricsFile, 'TotalLowCounts', sum(dataClassificationGlobal$consensuscall == 'Low Counts'))
+
+    totalCells <- nrow(dataClassification)
+    .LogMetric(metricsFile, 'FractionCalled', sum(dataClassificationGlobal$consensuscall != 'Negative') / totalCells)
+    .LogMetric(metricsFile, 'FractionSinglet', sum(dataClassificationGlobal$consensuscall == 'Singlet') / totalCells)
+    .LogMetric(metricsFile, 'FractionDoublet', sum(dataClassificationGlobal$consensuscall == 'Doublet') / totalCells)
+    .LogMetric(metricsFile, 'FractionNegative', sum(dataClassificationGlobal$consensuscall == 'Negative') / totalCells)
+    .LogMetric(metricsFile, 'FractionDiscordant', sum(dataClassification$consensuscall == 'Discordant') / totalCells)
+
+    
   }
 
   discord <- dataClassification[dataClassification$consensuscall == 'Discordant',]
