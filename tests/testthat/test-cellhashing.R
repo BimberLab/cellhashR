@@ -127,7 +127,7 @@ test_that("Workflow works", {
 
 	expect_true(file.exists(metricsFile))
 	metrics <- read.table(metricsFile, sep = '\t', header = FALSE)
-	expect_equal(nrow(metrics), 16)
+	expect_equal(nrow(metrics), 21)
 
 	unlink(html)
 	unlink(output)
@@ -194,7 +194,7 @@ test_that("Cell hashing works", {
 
 				expect_true(file.exists(metricsFile))
 				metrics <- read.table(metricsFile, sep = '\t', header = FALSE, col.names = c('Category', 'MetricName', 'MetricValue'))
-				expect_equal(object = nrow(metrics), expected = 13)
+				expect_equal(object = nrow(metrics), expected = 18)
 				unlink(metricsFile)
 
 				print(paste0('evaluating test: ', testName))
