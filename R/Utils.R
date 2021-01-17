@@ -76,9 +76,9 @@ SimplifyHtoNames <- function(x) {
 	return(perplexity)
 }
 
-.LogMetric <- function(metricsFile, metricName, metricValue, append = TRUE) {
+.LogMetric <- function(metricsFile, metricName, metricValue, category = 'CellHashing', append = TRUE) {
 	if (!is.null(metricsFile)) {
-		write(x = paste0(metricName, '\t', metricValue), file = metricsFile, append = append)
+		write(x = paste0(category, '\t', metricName, '\t', metricValue), file = metricsFile, append = append)
 	}
 }
 
