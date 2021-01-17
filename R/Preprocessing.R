@@ -232,7 +232,7 @@ DoCellFiltering <- function(barcodeData, minCountPerCell = 5){
 }
 
 utils::globalVariables(
-	names = c('Barcode1'),
+	names = c('Barcode1', 'pred'),
 	package = 'cellhashR',
 	add = TRUE
 )
