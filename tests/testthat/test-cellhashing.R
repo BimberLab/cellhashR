@@ -190,11 +190,11 @@ test_that("Cell hashing works", {
 
 				expectedHtos <- sort(test$htos)
 				actualHtosMatrix <- sort(unname(cellhashR:::SimplifyHtoNames(rownames(barcodeData))))
-				expect_equal(expected = expectedHtos, object = actualHtosMatrix)
+				expect_equal(expected = expectedHtos, object = actualHtosMatrix, info = testName)
 
-				expect_true(file.exists(metricsFile))
+				expect_true(file.exists(metricsFile), info = testName)
 				metrics <- read.table(metricsFile, sep = '\t', header = FALSE, col.names = c('Category', 'MetricName', 'MetricValue'))
-				expect_equal(object = nrow(metrics), expected = 18)
+				expect_equal(object = nrow(metrics), expected = 18 + length(expectedHtos), info = testName)
 				unlink(metricsFile)
 
 				print(paste0('evaluating test: ', testName))
