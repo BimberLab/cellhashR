@@ -164,7 +164,7 @@ PrintRowQc <- function(barcodeMatrix) {
 	colnames(df) <- SimplifyHtoNames(rownames(barcodeMatrix))
 	df <- tidyr::gather(df, Barcode, Count)
 	df <- df[df$Count > 0,]
-	df$Barcode <- as.factor(unique(as.character(df$Barcode)))
+	df$Barcode <- as.factor(as.character(df$Barcode))
 
 	P7 <- ggplot(df, aes(x = Count, color = Barcode)) +
 		geom_density() +
@@ -186,7 +186,7 @@ PrintRowQc <- function(barcodeMatrix) {
 		df <- df[df$Count < min(out),]
 	}
 	df <- df[df$Count > 0,]
-	df$Barcode <- as.factor(unique(as.character(df$Barcode)))
+	df$Barcode <- as.factor(as.character(df$Barcode))
 
 	P8 <- ggplot(df, aes(x = Count, color = Barcode)) +
 		geom_density() +
@@ -237,6 +237,8 @@ DoRowFiltering <- function(barcodeData, minCountPerRow = 1, doLog = TRUE) {
 			print(paste0('Rows after filter: ', nrow(barcodeData)))
 		}
 	}
+
+	return(barcodeData)
 }
 
 DoCellFiltering <- function(barcodeData, minCountPerCell = 5){
