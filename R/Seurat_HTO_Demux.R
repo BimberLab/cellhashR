@@ -7,7 +7,7 @@ utils::globalVariables(
 	add = TRUE
 )
 
-GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95, methodName = 'htodemux', verbose= TRUE) {
+GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95, methodName = 'htodemux', verbose= TRUE, metricsFile = NULL) {
 	if (verbose) {
 		print('Starting HTODemux')
 	}
@@ -15,7 +15,7 @@ GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95,
 	seuratObj <- CreateSeuratObject(barcodeMatrix, assay = 'HTO')
 
 	tryCatch({
-		seuratObj <- DoHtoDemux(seuratObj, positive.quantile = positive.quantile, verbose = verbose)
+		seuratObj <- DoHtoDemux(seuratObj, positive.quantile = positive.quantile, verbose = verbose, metricsFile = metricsFile)
 
 		return(data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = methodName, classification = seuratObj$classification.htodemux, classification.global = seuratObj$classification.global.htodemux, stringsAsFactors = FALSE))
 	}, error = function(e){
@@ -29,11 +29,11 @@ GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95,
 }
 
 
-DoHtoDemux <- function(seuratObj, positive.quantile, label = 'Seurat HTODemux', plotDist = FALSE, verbose = TRUE) {
+DoHtoDemux <- function(seuratObj, positive.quantile, label = 'Seurat HTODemux', plotDist = FALSE, verbose = TRUE, metricsFile = NULL) {
 	# Normalize HTO data, here we use centered log-ratio (CLR) transformation
 	seuratObj <- NormalizeData(seuratObj, assay = "HTO", normalization.method = "CLR", verbose = FALSE)
 
-	seuratObj <- HTODemux(seuratObj, positive.quantile =  positive.quantile, plotDist = plotDist, verbose = verbose)
+	seuratObj <- HTODemux(seuratObj, positive.quantile =  positive.quantile, plotDist = plotDist, verbose = verbose, metricsFile = metricsFile)
 
 	SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'htodemux')
 
@@ -55,7 +55,8 @@ HTODemux <- function(
 	kfunc = "clara",
 	nsamples = 100,
 	verbose = TRUE,
-	plotDist = FALSE
+	plotDist = FALSE,
+	metricsFile = NULL
 ) {
 	#initial clustering
 	data <- GetAssayData(object = object, assay = assay)
@@ -164,6 +165,8 @@ HTODemux <- function(
 			print(paste0("Cutoff for ", hto, " : ", cutoff, " reads"))
 		}
 		discrete[hto, names(x = which(x = values > cutoff))] <- 1
+
+		.LogMetric(metricsFile, paste0('cutoff.htodemux.', hto), cutoff)
 
 		if (verbose) {
 			#P1 <- VlnPlot(average.expression, features = c(hto))

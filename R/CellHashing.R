@@ -119,7 +119,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
   callList <- list()
   for (method in methods) {
     if (method == 'htodemux') {
-      calls <- GenerateCellHashCallsSeurat(barcodeMatrix, positive.quantile = htodemux.positive.quantile)
+      calls <- GenerateCellHashCallsSeurat(barcodeMatrix, positive.quantile = htodemux.positive.quantile, metricsFile = metricsFile)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
@@ -210,17 +210,18 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
 
   MakeConsensusCall <- function(x) {
     x <- unique(x)
+
+    # Treat these as negative:
+    if ('Not Called' %in% x) {
+      x[x == 'Not Called'] <- 'Negative'
+      x <- unique(x)
+    }
+
     if (length(x) == 1) {
       return(x[1])
     }
 
-    # Sequentially drop:
     x <- x[!(x %in% c('Negative'))]
-    if (length(x) == 1) {
-      return(x[1])
-    }
-
-    x <- x[!(x %in% c('Not Called'))]
     if (length(x) == 1) {
       return(x[1])
     }
