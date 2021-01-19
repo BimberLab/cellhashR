@@ -86,7 +86,7 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 }
 
 utils::globalVariables(
-	names = c('Barcode', 'Value', 'CellBarcode', 'Freq', 'Str', 'mean_nonzero'),
+	names = c('Barcode', 'Value', 'CellBarcode', 'Freq', 'Str', 'mean_nonzero', 'barcodeMatrix'),
 	package = 'cellhashR',
 	add = TRUE
 )
