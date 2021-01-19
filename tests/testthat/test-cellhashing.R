@@ -72,7 +72,7 @@ tests <- list(
       Singlet = 3368,
 			Doublet = 580,
       MultiSeqCalled = 5000,
-      Discordant = 1052,
+      Discordant = 0,
       SeuratCalled = 3948
     ),
     '471-2' = list(
@@ -127,7 +127,7 @@ test_that("Workflow works", {
 
 	expect_true(file.exists(metricsFile))
 	metrics <- read.table(metricsFile, sep = '\t', header = FALSE)
-	expect_equal(nrow(metrics), 21)
+	expect_equal(nrow(metrics), 23)
 
 	unlink(html)
 	unlink(output)
