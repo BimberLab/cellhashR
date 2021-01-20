@@ -119,7 +119,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
   callList <- list()
   for (method in methods) {
     if (method == 'htodemux') {
-      calls <- GenerateCellHashCallsSeurat(barcodeMatrix, positive.quantile = htodemux.positive.quantile)
+      calls <- GenerateCellHashCallsSeurat(barcodeMatrix, positive.quantile = htodemux.positive.quantile, metricsFile = metricsFile)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
@@ -210,11 +210,18 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
 
   MakeConsensusCall <- function(x) {
     x <- unique(x)
+
+    # Treat these as negative:
+    if ('Not Called' %in% x) {
+      x[x == 'Not Called'] <- 'Negative'
+      x <- unique(x)
+    }
+
     if (length(x) == 1) {
       return(x[1])
     }
 
-    x <- x[!(x %in% c('Negative', 'Not Called'))]
+    x <- x[!(x %in% c('Negative'))]
     if (length(x) == 1) {
       return(x[1])
     }
@@ -500,16 +507,17 @@ SummarizeCellsByClassification <- function(calls, barcodeMatrix) {
 
 
   df2$Category <- 'All'
-
   df3 <- df2[df2$consensuscall.global == 'Negative',]
-  df3$Category <- 'Negatives'
-  df3 <- rbind(df2, df3)
+  if (nrow(df3 > 0)) {
+    df3$Category <- 'Negatives'
+    df3 <- rbind(df2, df3)
 
-  P2 <- ggplot(df3, aes(x = totalReadsPerCell, y = topFraction, color = consensuscall)) +
-    geom_point() +
-    xlab('Counts/Cell') + ylab('Top Barcode Fraction') + labs(color = 'Call') +
-    egg::theme_presentation(base_size = 14) +
-    facet_grid(. ~ Category)
+    P2 <- ggplot(df3, aes(x = totalReadsPerCell, y = topFraction, color = consensuscall)) +
+      geom_point() +
+      xlab('Counts/Cell') + ylab('Top Barcode Fraction') + labs(color = 'Call') +
+      egg::theme_presentation(base_size = 14) +
+      facet_grid(. ~ Category)
 
-  print(P2)
+    print(P2)
+  }
 }

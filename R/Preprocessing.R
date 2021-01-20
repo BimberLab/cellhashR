@@ -86,7 +86,7 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 }
 
 utils::globalVariables(
-	names = c('Barcode', 'Value', 'CellBarcode', 'Freq', 'Str', 'mean_nonzero'),
+	names = c('Barcode', 'Value', 'CellBarcode', 'Freq', 'Str', 'mean_nonzero', 'barcodeMatrix'),
 	package = 'cellhashR',
 	add = TRUE
 )
@@ -118,7 +118,7 @@ PrintRowQc <- function(barcodeMatrix) {
 	print(P1 | P2)
 
 	# Mean Counts
-	P1 <- ggplot(df, aes(x = Barcode, y = mean)) +
+	P3 <- ggplot(df, aes(x = Barcode, y = mean)) +
 		geom_bar(stat = 'identity') +
 		ggtitle('Mean Counts/Cell') +
 		ylab('Mean Counts/Cell') +
@@ -127,7 +127,7 @@ PrintRowQc <- function(barcodeMatrix) {
 			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
 		)
 
-	P2 <- ggplot(df, aes(x = Barcode, y = mean)) +
+	P4 <- ggplot(df, aes(x = Barcode, y = mean)) +
 		geom_bar(stat = 'identity') +
 		egg::theme_presentation(base_size = 14) +
 		ylab('Mean Counts/Cell (log1p)') +
@@ -136,35 +136,37 @@ PrintRowQc <- function(barcodeMatrix) {
 			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
 		)
 
-	print(P1 | P2)
+	print(P3 | P4)
 
 	# Mean Counts, Non-zero
-	P1 <- ggplot(df, aes(x = Barcode, y = mean_nonzero)) +
+	P5 <- ggplot(df, aes(x = Barcode, y = mean_nonzero)) +
 		geom_bar(stat = 'identity') +
 		ggtitle('Mean Counts/Cell') +
 		ylab('Mean Counts/Cell') +
 		egg::theme_presentation(base_size = 14) +
 		theme(
-		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
 		)
 
-	P2 <- ggplot(df, aes(x = Barcode, y = mean_nonzero)) +
+	P6 <- ggplot(df, aes(x = Barcode, y = mean_nonzero)) +
 		geom_bar(stat = 'identity') +
 		egg::theme_presentation(base_size = 14) +
 		ylab('Mean Counts/Cell (log1p)') +
 		scale_y_continuous(trans = scales::log1p_trans()) +
 		theme(
-		axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
 		)
 
-	print(P1 | P2)
+	print(P5 | P6)
 
 	# Density:
 	df <- data.frame(t(barcodeMatrix))
 	colnames(df) <- SimplifyHtoNames(rownames(barcodeMatrix))
-	df <- tidyr::gather(df, Barcode, Count)
+	df <- tidyr::gather(df, Barcode, Count, na.rm = TRUE)
+	df <- df[df$Count > 0,]
+	df$Barcode <- as.factor(as.character(df$Barcode))
 
-	P1 <- ggplot(df[df$Count > 0,], aes(x = Count, color = Barcode)) +
+	P7 <- ggplot(df, aes(x = Count, color = Barcode)) +
 		geom_density() +
 		ggtitle('Non-zero Counts/Cell') +
 		egg::theme_presentation(base_size = 18) +
@@ -177,12 +179,16 @@ PrintRowQc <- function(barcodeMatrix) {
 	# Density, trimmed:
 	df <- data.frame(t(barcodeMatrix))
 	colnames(df) <- SimplifyHtoNames(rownames(barcodeMatrix))
-	df <- tidyr::gather(df, Barcode, Count)
+	df <- tidyr::gather(df, Barcode, Count, na.rm = TRUE)
 	out <- grDevices::boxplot.stats(df$Count)$out
 	out <- out[out > mean(df$Count[df$Count > 0])]
-	df <- df[df$Count < min(out),]
+	if (length(out) > 0) {
+		df <- df[df$Count < min(out),]
+	}
+	df <- df[df$Count > 0,]
+	df$Barcode <- as.factor(as.character(df$Barcode))
 
-	P2 <- ggplot(df[df$Count > 0,], aes(x = Count, color = Barcode)) +
+	P8 <- ggplot(df, aes(x = Count, color = Barcode)) +
 		geom_density() +
 		ggtitle('Non-zero Counts/Cell, Outlier Trimmed') +
 		egg::theme_presentation(base_size = 18) +
@@ -192,8 +198,8 @@ PrintRowQc <- function(barcodeMatrix) {
 			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = rel(0.5))
 		)
 
-	print(P1)
-	print(P2)
+	print(P7)
+	print(P8)
 }
 
 GenerateByRowSummary <- function(barcodeMatrix) {
@@ -216,6 +222,23 @@ GenerateByRowSummary <- function(barcodeMatrix) {
 	df <- df[order(df$Barcode),]
 
 	return(df)
+}
+
+DoRowFiltering <- function(barcodeData, minCountPerRow = 1, doLog = TRUE) {
+	toDropRows <- rowSums(barcodeMatrix) < minCountPerRow
+	if (sum(toDropRows) > 0) {
+		if (doLog) {
+			print(paste0('Rows dropped due to low counts (<', minCountPerRow, '): ', paste0(rownames(barcodeMatrix)[toDropRows])))
+		}
+
+		barcodeData <- barcodeData[!toDropRows, , drop = FALSE]
+
+		if (doLog) {
+			print(paste0('Rows after filter: ', nrow(barcodeData)))
+		}
+	}
+
+	return(barcodeData)
 }
 
 DoCellFiltering <- function(barcodeData, minCountPerCell = 5){
@@ -287,16 +310,16 @@ PrintColumnQc <- function(barcodeMatrix) {
 	})
 
 	df <- data.frame(Barcode1 = topValue)
-	P1 <- ggplot(df, aes(x = Barcode1)) +
+	P3 <- ggplot(df, aes(x = Barcode1)) +
 		geom_histogram(binwidth = 0.05) +
 		egg::theme_presentation() +
 		xlab('Fraction') +
 		ylab('# Cells') + ggtitle('Top Barcode Fraction Per Cell') +
 		expand_limits(x = c(0, 1))
 
-	P1 <- P1 + plot_annotation(caption = paste0('Total cells where top barcode is >0.75 of counts: ', sum(topValue > 0.75), ' of ', length(topValue))) & theme(plot.caption = element_text(size = 14))
+	P3 <- P3 + plot_annotation(caption = paste0('Total cells where top barcode is >0.75 of counts: ', sum(topValue > 0.75), ' of ', length(topValue))) & theme(plot.caption = element_text(size = 14))
 
-	print(P1)
+	print(P3)
 
 	#MA-plot
 	if (nrow(barcodeMatrix) == 2){

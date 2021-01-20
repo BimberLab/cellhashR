@@ -68,11 +68,11 @@ tests <- list(
     '471-1' = list(
       input = '../testdata/471-1-GEX/umi_count',
       htos = paste0('MS-', c(1, 2)),
-      CalledCells = 3948,
+      CalledCells = 5000,
       Singlet = 3368,
 			Doublet = 580,
       MultiSeqCalled = 5000,
-      Discordant = 1052,
+      Discordant = 0,
       SeuratCalled = 3948
     ),
     '471-2' = list(
@@ -127,7 +127,7 @@ test_that("Workflow works", {
 
 	expect_true(file.exists(metricsFile))
 	metrics <- read.table(metricsFile, sep = '\t', header = FALSE)
-	expect_equal(nrow(metrics), 21)
+	expect_equal(nrow(metrics), 23)
 
 	unlink(html)
 	unlink(output)
@@ -190,11 +190,11 @@ test_that("Cell hashing works", {
 
 				expectedHtos <- sort(test$htos)
 				actualHtosMatrix <- sort(unname(cellhashR:::SimplifyHtoNames(rownames(barcodeData))))
-				expect_equal(expected = expectedHtos, object = actualHtosMatrix)
+				expect_equal(expected = expectedHtos, object = actualHtosMatrix, info = testName)
 
-				expect_true(file.exists(metricsFile))
+				expect_true(file.exists(metricsFile), info = testName)
 				metrics <- read.table(metricsFile, sep = '\t', header = FALSE, col.names = c('Category', 'MetricName', 'MetricValue'))
-				expect_equal(object = nrow(metrics), expected = 18)
+				expect_equal(object = nrow(metrics), expected = 18 + length(expectedHtos), info = testName)
 				unlink(metricsFile)
 
 				print(paste0('evaluating test: ', testName))
