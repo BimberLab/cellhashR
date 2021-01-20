@@ -162,7 +162,7 @@ PrintRowQc <- function(barcodeMatrix) {
 	# Density:
 	df <- data.frame(t(barcodeMatrix))
 	colnames(df) <- SimplifyHtoNames(rownames(barcodeMatrix))
-	df <- tidyr::gather(df, Barcode, Count)
+	df <- tidyr::gather(df, Barcode, Count, na.rm = TRUE)
 	df <- df[df$Count > 0,]
 	df$Barcode <- as.factor(as.character(df$Barcode))
 
@@ -179,7 +179,7 @@ PrintRowQc <- function(barcodeMatrix) {
 	# Density, trimmed:
 	df <- data.frame(t(barcodeMatrix))
 	colnames(df) <- SimplifyHtoNames(rownames(barcodeMatrix))
-	df <- tidyr::gather(df, Barcode, Count)
+	df <- tidyr::gather(df, Barcode, Count, na.rm = TRUE)
 	out <- grDevices::boxplot.stats(df$Count)$out
 	out <- out[out > mean(df$Count[df$Count > 0])]
 	if (length(out) > 0) {
