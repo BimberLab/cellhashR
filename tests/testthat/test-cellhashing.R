@@ -68,7 +68,7 @@ tests <- list(
     '471-1' = list(
       input = '../testdata/471-1-GEX/umi_count',
       htos = paste0('MS-', c(1, 2)),
-      CalledCells = 3948,
+      CalledCells = 5000,
       Singlet = 3368,
 			Doublet = 580,
       MultiSeqCalled = 5000,
