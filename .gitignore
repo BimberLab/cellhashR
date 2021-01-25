@@ -11,3 +11,6 @@ cellhashR.Rproj
 install.bat
 docs/*
 docs
+inst/doc
+doc
+Meta
