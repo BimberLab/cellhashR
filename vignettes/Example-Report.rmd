@@ -1,0 +1,185 @@
+---
+title: "`r params$doc_title`"
+date: "`r Sys.Date()`"
+params:
+  doc_title: "Example cellhashR Report"
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    self_contained: yes
+    thumbnails: yes
+    fig_width: 12
+    code_folding: hide
+vignette: >
+  %\VignetteIndexEntry{Example cellhashR Report}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, eval=FALSE}
+
+library(cellhashR)
+
+knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error=TRUE)
+
+```
+
+```{r setupVariables, include=FALSE, eval=FALSE}
+
+requiredVars <- c('rawCountData', 'callFile')
+for (v in requiredVars) {
+	if (!exists(v)) {
+		stop(paste0('Need to define variable: ', v))
+	}
+}
+
+if (!file.exists(rawCountData)) {
+  stop(paste0('Could not find rawCountData: ', rawCountData))
+}
+
+optionalVars <- c('barcodeWhitelist', 'cellbarcodeWhitelist', 'citeSeqCountDir', 'minCountPerCell', 'metricsFile')
+for (v in requiredVars) {
+	if (!exists(v)) {
+		if (v == 'minCountPerCell') {
+			minCountPerCell <- 5
+		} else {
+			assign(v, NULL)
+		}
+	}
+}
+
+# If cellbarcodeWhitelist == inputMatrix, save/restore the set of cellbarcodes for reporting:
+saveOriginalCellBarcodeFile <- NULL
+if (!is.null(cellbarcodeWhitelist)) {
+	if (cellbarcodeWhitelist == 'inputMatrix') {
+		saveOriginalCellBarcodeFile <- 'originalBarcodes.txt'
+	}
+}
+
+# Truncate metricsFile if provided:
+if (!is.null(metricsFile)) {
+  file.create(metricsFile)
+}
+
+```
+
+# Data Loading / QC
+
+Load raw counts, perform basic filtering an QC. The input count matrix was generated to include all possible barcodes, even though this sample only contains 5. The figures demonstrate the other barcodes are absent, which is useful information to verify.
+
+```{r QC, fig.width=12, eval=FALSE}
+
+if (!is.null(citeSeqCountDir)) {
+  saturation <- PlotLibrarySaturation(citeSeqCountDir, metricsFile = metricsFile)
+}
+
+barcodeData <- ProcessCountMatrix(rawCountData = rawCountData, minCountPerCell = minCountPerCell, barcodeWhitelist = barcodeWhitelist, saveOriginalCellBarcodeFile = saveOriginalCellBarcodeFile, metricsFile = metricsFile)
+if (nrow(barcodeData) == 0) {
+  stop('No passing barcodes')
+}
+
+if (ncol(barcodeData) == 0) {
+  stop('No passing cells')
+}
+
+```
+
+![](image/QC-1.png)
+![](image/QC-2.png)
+![](image/QC-3.png)
+![](image/QC-4.png)
+![](image/QC-5.png)
+![](image/QC-6.png)
+![](image/QC-7.png)
+![](image/QC-8.png)
+![](image/QC-9.png)
+
+# Normalization / QC
+
+These plots are designed to provide visualization of potential normalizations.
+
+```{r NormalizationQC, fig.width=12, eval=FALSE}
+
+PlotNormalizationQC(barcodeData)
+
+```
+![](image/NormalizationQC-1.png)
+![](image/NormalizationQC-2.png)
+![](image/NormalizationQC-3.png)
+![](image/NormalizationQC-4.png)
+![](image/NormalizationQC-5.png)
+![](image/NormalizationQC-6.png)
+![](image/NormalizationQC-7.png)
+
+# Generate Hashing Calls
+
+```{r GenerateCalls, fig.width=12, eval=FALSE}
+
+if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
+
+	if (!is.null(saveOriginalCellBarcodeFile)) {
+	  cellbarcodeWhitelist <- read.table(saveOriginalCellBarcodeFile, header = FALSE, col.names = c('cellbarcode'))
+	  cellbarcodeWhitelist <- cellbarcodeWhitelist$cellbarcode
+  }
+
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile)
+	write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
+
+	if (!is.null(saveOriginalCellBarcodeFile)) {
+	  unlink(saveOriginalCellBarcodeFile)
+  }
+} else {
+	stop('No passing cels were found in the count matrix')
+}
+
+```
+
+## MultiSeq deMultiplex
+
+![](image/GenerateCalls-1.png)
+![](image/GenerateCalls-2.png)
+![](image/GenerateCalls-3.png)
+![](image/GenerateCalls-4.png)
+![](image/GenerateCalls-5.png)
+![](image/GenerateCalls-6.png)
+![](image/GenerateCalls-7.png)
+![](image/GenerateCalls-8.png)
+
+## Seurat HTODemux
+
+![](image/GenerateCalls-9.png)
+![](image/GenerateCalls-10.png)
+![](image/GenerateCalls-11.png)
+![](image/GenerateCalls-12.png)
+![](image/GenerateCalls-13.png)
+
+## SeqND
+
+![](image/GenerateCalls-14.png)
+![](image/GenerateCalls-15.png)
+![](image/GenerateCalls-16.png)
+![](image/GenerateCalls-17.png)
+![](image/GenerateCalls-18.png)
+![](image/GenerateCalls-19.png)
+![](image/GenerateCalls-20.png)
+
+## DropletUtils hashedDrops
+
+![](image/GenerateCalls-21.png)
+![](image/GenerateCalls-22.png)
+![](image/GenerateCalls-23.png)
+![](image/GenerateCalls-24.png)
+
+
+# Final Calls
+
+The output is a data frame, with the calls from each caller, and a consensus call. See AppendCellHashing to append the results to a seurat object as metadata.
+
+
+```{r, eval=FALSE}
+
+knitr::kable(head(df, n = 10))
+
+```
+
+![](image/FinalCalls-1.png)
