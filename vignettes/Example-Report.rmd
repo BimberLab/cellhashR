@@ -10,7 +10,10 @@ output:
     thumbnails: yes
     fig_width: 12
     code_folding: hide
-
+vignette: >
+  %\VignetteIndexEntry{Example cellhashR Report}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, eval=FALSE}
