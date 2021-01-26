@@ -1,8 +1,5 @@
 ---
-title: "`r params$doc_title`"
-date: "`r Sys.Date()`"
-params:
-  doc_title: "Example cellhashR Report"
+title: "Example cellhashR Report"
 output:
   rmdformats::html_clean:
     highlight: kate
