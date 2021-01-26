@@ -42,8 +42,8 @@ RoxygenNote: 7.1.1
 URL: https://github.com/BimberLab/cellhashR
 BugReports: https://github.com/BimberLab/cellhashR/issues
 Remotes:
-    bioc::release/DropletUtils
-Collate: 
+    bioc::DropletUtils
+Collate:
     'Utils.R'
     'Visualization.R'
     'Normalization.R'
