@@ -140,21 +140,7 @@ MULTIseqDemux <- function(
 }
 
 # Inter-maxima quantile sweep to find ideal barcode thresholds
-#
-# Finding ideal thresholds for positive-negative signal classification per multiplex barcode
-#
-# @param call.list A list of sample classification result from different quantiles using ClassifyCells
-#
-# @return A list with two values: \code{res} and \code{extrema}:
-# \describe{
-#   \item{res}{A data.frame named res_id documenting the quantile used, subset, number of cells and proportion}
-#   \item{extrema}{...}
-# }
-#
 # @author Chris McGinnis, Gartner Lab, UCSF
-#
-# @examples
-# FindThresh(call.list = bar.table_sweep.list)
 #
 FindThresh <- function(call.list) {
 	# require(reshape2)
@@ -263,19 +249,13 @@ ClassifyCells <- function(data, q) {
 	return(calls)
 }
 
-# Melt a data frame
-#
-# @param x A data frame
-# @author Seurat
-# @return A molten data frame
-#
 Melt <- function(x) {
 	if (!is.data.frame(x = x)) {
 		x <- as.data.frame(x = x)
 	}
 	return(data.frame(
-	rows = rep.int(x = rownames(x = x), times = ncol(x = x)),
-	cols = unlist(x = lapply(X = colnames(x = x), FUN = rep.int, times = nrow(x = x))),
-	vals = unlist(x = x, use.names = FALSE)
+		rows = rep.int(x = rownames(x = x), times = ncol(x = x)),
+		cols = unlist(x = lapply(X = colnames(x = x), FUN = rep.int, times = nrow(x = x))),
+		vals = unlist(x = x, use.names = FALSE)
 	))
 }
