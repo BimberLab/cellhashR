@@ -81,15 +81,20 @@ if (ncol(barcodeData) == 0) {
 
 ```
 
-![](image/QC-1.png)
-![](image/QC-2.png)
-![](image/QC-3.png)
-![](image/QC-4.png)
-![](image/QC-5.png)
-![](image/QC-6.png)
-![](image/QC-7.png)
-![](image/QC-8.png)
-![](image/QC-9.png)
+```{r, echo=FALSE}
+
+knitr::include_graphics('figures/QC-1.png')
+knitr::include_graphics('figures/QC-2.png')
+knitr::include_graphics('figures/QC-3.png')
+knitr::include_graphics('figures/QC-4.png')
+knitr::include_graphics('figures/QC-5.png')
+knitr::include_graphics('figures/QC-6.png')
+knitr::include_graphics('figures/QC-7.png')
+knitr::include_graphics('figures/QC-8.png')
+knitr::include_graphics('figures/QC-9.png')
+knitr::include_graphics('figures/QC-10.png')
+
+```
 
 # Normalization / QC
 
@@ -100,13 +105,16 @@ These plots are designed to provide visualization of potential normalizations.
 PlotNormalizationQC(barcodeData)
 
 ```
-![](image/NormalizationQC-1.png)
-![](image/NormalizationQC-2.png)
-![](image/NormalizationQC-3.png)
-![](image/NormalizationQC-4.png)
-![](image/NormalizationQC-5.png)
-![](image/NormalizationQC-6.png)
-![](image/NormalizationQC-7.png)
+
+```{r, echo=FALSE}
+knitr::include_graphics('figures/NormalizationQC-1.png')
+knitr::include_graphics('figures/NormalizationQC-2.png')
+knitr::include_graphics('figures/NormalizationQC-3.png')
+knitr::include_graphics('figures/NormalizationQC-4.png')
+knitr::include_graphics('figures/NormalizationQC-5.png')
+knitr::include_graphics('figures/NormalizationQC-6.png')
+knitr::include_graphics('figures/NormalizationQC-7.png')
+```
 
 # Generate Hashing Calls
 
@@ -133,45 +141,60 @@ if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
 
 ## MultiSeq deMultiplex
 
-![](image/GenerateCalls-1.png)
-![](image/GenerateCalls-2.png)
-![](image/GenerateCalls-3.png)
-![](image/GenerateCalls-4.png)
-![](image/GenerateCalls-5.png)
-![](image/GenerateCalls-6.png)
-![](image/GenerateCalls-7.png)
-![](image/GenerateCalls-8.png)
+```{r, echo=FALSE}
+knitr::include_graphics('figures/GenerateCalls-1.png')
+knitr::include_graphics('figures/GenerateCalls-2.png')
+knitr::include_graphics('figures/GenerateCalls-3.png')
+knitr::include_graphics('figures/GenerateCalls-4.png')
+knitr::include_graphics('figures/GenerateCalls-5.png')
+knitr::include_graphics('figures/GenerateCalls-6.png')
+knitr::include_graphics('figures/GenerateCalls-7.png')
+knitr::include_graphics('figures/GenerateCalls-8.png')
+```
 
 ## Seurat HTODemux
 
-![](image/GenerateCalls-9.png)
-![](image/GenerateCalls-10.png)
-![](image/GenerateCalls-11.png)
-![](image/GenerateCalls-12.png)
-![](image/GenerateCalls-13.png)
+```{r, echo=FALSE}
+knitr::include_graphics('figures/GenerateCalls-9.png')
+knitr::include_graphics('figures/GenerateCalls-10.png')
+knitr::include_graphics('figures/GenerateCalls-11.png')
+knitr::include_graphics('figures/GenerateCalls-12.png')
+knitr::include_graphics('figures/GenerateCalls-13.png')
+```
 
 ## SeqND
-
-![](image/GenerateCalls-14.png)
-![](image/GenerateCalls-15.png)
-![](image/GenerateCalls-16.png)
-![](image/GenerateCalls-17.png)
-![](image/GenerateCalls-18.png)
-![](image/GenerateCalls-19.png)
-![](image/GenerateCalls-20.png)
+```{r, echo=FALSE}
+knitr::include_graphics('figures/GenerateCalls-14.png')
+knitr::include_graphics('figures/GenerateCalls-15.png')
+knitr::include_graphics('figures/GenerateCalls-16.png')
+knitr::include_graphics('figures/GenerateCalls-17.png')
+knitr::include_graphics('figures/GenerateCalls-18.png')
+knitr::include_graphics('figures/GenerateCalls-19.png')
+knitr::include_graphics('figures/GenerateCalls-20.png')
+```
 
 ## DropletUtils hashedDrops
 
-![](image/GenerateCalls-21.png)
-![](image/GenerateCalls-22.png)
-![](image/GenerateCalls-23.png)
-![](image/GenerateCalls-24.png)
+```{r, echo=FALSE}
+knitr::include_graphics('figures/GenerateCalls-21.png')
+knitr::include_graphics('figures/GenerateCalls-22.png')
+knitr::include_graphics('figures/GenerateCalls-23.png')
+knitr::include_graphics('figures/GenerateCalls-24.png')
+```
+
+## Summary of Calls
 
 
-# Final Calls
+```{r, echo=FALSE}
+knitr::include_graphics('figures/Summary-1.png')
+knitr::include_graphics('figures/Summary-2.png')
+knitr::include_graphics('figures/Summary-3.png')
+```
+
+
+# Calls Per Cell
 
 The output is a data frame, with the calls from each caller, and a consensus call. See AppendCellHashing to append the results to a seurat object as metadata.
-
 
 ```{r, eval=FALSE}
 
@@ -179,4 +202,6 @@ knitr::kable(head(df, n = 10))
 
 ```
 
-![](image/FinalCalls-1.png)
+```{r, echo=FALSE}
+knitr::include_graphics('figures/FinalCalls-1.png')
+```
