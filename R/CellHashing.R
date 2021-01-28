@@ -99,7 +99,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
   HTO <- as.character(seuratObj$HTO)
   consensuscall.global <- as.character(seuratObj$consensuscall.global)
 
-  HTO[datasetSelect] <- df$HTO
+  HTO[datasetSelect] <- df$consensuscall
   consensuscall.global[datasetSelect] <- df$consensuscall.global
 
   seuratObj$consensuscall <- as.factor(consensuscall)
