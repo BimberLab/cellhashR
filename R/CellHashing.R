@@ -28,27 +28,30 @@ utils::globalVariables(
 #' @return A modified Seurat object.
 #' @export
 #' @importFrom dplyr arrange
-AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) {
-  initialCells <- ncol(seuratObj)
-  print(paste0('Initial cell barcodes in GEX data: ', ncol(seuratObj)))
-
-  if (!file.exists(barcodeCallFile)) stop("Barcode File Not found")
-
-  barcodeCallTable <- utils::read.table(barcodeCallFile, sep = '\t', header = T)
-  if (!is.null(barcodePrefix)) {
-    barcodeCallTable$cellbarcode<- paste0(barcodePrefix, '_', barcodeCallTable$cellbarcode)
-
-    initialCells <- sum(seuratObj$BarcodePrefix == barcodePrefix)
-    print(paste0('Initial cell barcodes in GEX data for prefix: ', initialCells))
+AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
+  if (!file.exists(barcodeCallFile)) {
+    stop("Barcode File Not found")
   }
 
+  if (!is.null(barcodePrefix)) {
+    stop('Must provide the barcodePrefix')
+  }
+
+  print(paste0('Initial cell barcodes in GEX data: ', ncol(seuratObj)))
+
+  initialCells <- sum(seuratObj$BarcodePrefix == barcodePrefix)
+  print(paste0('Initial cell barcodes in GEX data for prefix: ', initialCells))
+
+  barcodeCallTable <- utils::read.table(barcodeCallFile, sep = '\t', header = T)
+  barcodeCallTable$cellbarcode<- paste0(barcodePrefix, '_', barcodeCallTable$cellbarcode)
   if (sum(duplicated(barcodeCallTable$cellbarcode) != 0)) {
     stop('There were duplicated cell barcodes')
   }
-  barcodeCallTable <- unique(barcodeCallTable)
 
   barcodeCallTable <- barcodeCallTable[barcodeCallTable$consensuscall != 'Negative',]
-  if (nrow(barcodeCallTable)==0) stop("Something is wrong, table became 0 rows")
+  if (nrow(barcodeCallTable)== 0) {
+    stop("There are zero rows with non-negative HTO calls")
+	}
 
   print(paste0('Non-negative cell barcodes in cell hashing calls: ', nrow(barcodeCallTable)))
 
@@ -56,7 +59,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
   if (!('HTO' %in% names(seuratObj@meta.data))) {
     print('Adding HTO columns to seurat object')
     seuratObj$HTO <- c(NA)
-    seuratObj$consensuscall.global <- c(NA)
+    seuratObj$HTO.Classification <- c(NA)
   }
 
   datasetSelect <- seuratObj$BarcodePrefix == barcodePrefix
@@ -69,11 +72,11 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
 
   print(paste0('Barcodes with calls: ', nrow(barcodeCallTable), ', intersecting with GEX data (total ', nrow(df),'): ', nrow(bcIntersect), " (", pct, "% / ", pct2, "%)"))
   if (nrow(bcIntersect) == 0) {
-    print('no barcodes shared')
-    print(paste0('first GEX barcodes:'))
+    print(paste0('First GEX cell barcodes:'))
     print(head(df$cellbarcode))
-    print(paste0('first Hashing barcodes:'))
+    print(paste0('First hashing cell barcodes:'))
     print(head(barcodeCallTable$cellbarcode))
+    stop('Error: no barcodes shared between GEX and hashing data')
   }
 
   df <- merge(df, barcodeCallTable, all.x = T, all.y = F, by = c('cellbarcode'))
@@ -96,14 +99,14 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix = NULL) 
     stop(paste0('Seurat and cell hashing barcodes do not match after merge, differences: ', sum(df$cellbarcode != colnames(seuratObj)[seuratObj$BarcodePrefix == barcodePrefix])))
   }
 
-  HTO <- as.character(seuratObj$HTO)
-  consensuscall.global <- as.character(seuratObj$consensuscall.global)
+  consensuscall <- as.character(seuratObj$HTO)
+  consensuscall.global <- as.character(seuratObj$HTO.Classification)
 
-  HTO[datasetSelect] <- df$consensuscall
+  consensuscall[datasetSelect] <- df$consensuscall
   consensuscall.global[datasetSelect] <- df$consensuscall.global
 
-  seuratObj$consensuscall <- as.factor(consensuscall)
-  seuratObj$consensuscall.global <- as.factor(consensuscall.global)
+  seuratObj$HTO <- naturalsort::naturalfactor(consensuscall)
+  seuratObj$HTO.Classification <- naturalsort::naturalfactor(consensuscall.global)
 
   return(seuratObj)
 }
