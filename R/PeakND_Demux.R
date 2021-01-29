@@ -3,7 +3,7 @@
 #' @include Visualization.R
 
 utils::globalVariables(
-  names = c('relative_counts'),
+  names = c('relative_counts', 'x', 'y', '..density..'),
   package = 'cellhashR',
   add = TRUE
 )
@@ -17,7 +17,7 @@ getCountCutoff <- function(data, label) {
   while ((change > 0) | (num_peaks > 2)) {
     j <- j + 0.5
     #TODO?: Potentially add support for different kernels/bandwidths? 
-    smooth <- density(data, adjust = j, kernel = 'gaussian',
+    smooth <- stats::density(data, adjust = j, kernel = 'gaussian',
                       bw = 'SJ', give.Rkern = FALSE)
     deriv <- numeric(length(smooth$x))
     max_list <- c()
@@ -61,7 +61,7 @@ getCountCutoff <- function(data, label) {
     geom_line(data = data.frame(x = smooth$x, y = smooth$y), mapping = aes(x = x, y = y), color = "blue", size = 1) +
     geom_line(data = data.frame(x = smooth$x, y = 50*deriv), mapping = aes(x = x, y = y), color = "red", size = 1)
 
-  ymax <- max(hist(data, breaks = nbins, plot=FALSE)$density)
+  ymax <- max(graphics::hist(data, breaks = nbins, plot=FALSE)$density)
   P1 <- P1 + ylim(c(0, ymax * 1.05))
 
   if (x2 < x1) {
@@ -95,11 +95,6 @@ GenerateCellHashCallsPeakND <- function(barcodeMatrix, assay = "HTO", verbose = 
     print('Starting PeakND')
   }
   
-  if (nrow(barcodeMatrix) == 0) {
-    print(paste0('No passing barcodes after filter using min_average_reads: ', min_average_reads))
-    return(NULL)
-  }
-
   tryCatch({
     seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
     seuratObj <- PeakNDDemux(seuratObj = seuratObj, assay = assay)

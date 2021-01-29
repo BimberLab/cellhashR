@@ -2,6 +2,12 @@
 #' @include Normalization.R
 #' @include Visualization.R
 
+utils::globalVariables(
+	names = c('Rank', 'Total', 'LogFC', 'LogFC2', 'Category'),
+	package = 'cellhashR',
+	add = TRUE
+)
+
 
 GenerateCellHashCallsDropletUtils <- function(barcodeMatrix, verbose = TRUE, assay = 'HTO', methodName = 'dropletutils', label = 'DropletUtils hashedDrops', runEmptyDrops = FALSE) {
 	if (verbose) {

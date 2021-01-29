@@ -27,6 +27,7 @@ Imports:
     grDevices,
     utils,
     stats,
+    graphics,
     RColorBrewer,
     reshape2,
     rmarkdown,
