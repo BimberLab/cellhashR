@@ -4,7 +4,7 @@
 \alias{AppendCellHashing}
 \title{Append Cell Hashing to a Seurat Object}
 \usage{
-AppendCellHashing(seuratObj, barcodeCallFile, barcodePrefix = NULL)
+AppendCellHashing(seuratObj, barcodeCallFile, barcodePrefix)
 }
 \arguments{
 \item{seuratObj}{The seurat object}

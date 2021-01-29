@@ -3,7 +3,7 @@
 #' @include Visualization.R
 
 utils::globalVariables(
-  names = c('relative_counts', 'barcode'),
+  names = c('relative_counts', 'barcode', 'min_average_reads'),
   package = 'cellhashR',
   add = TRUE
 )
