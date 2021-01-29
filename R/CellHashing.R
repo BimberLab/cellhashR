@@ -33,7 +33,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
     stop("Barcode File Not found")
   }
 
-  if (!is.null(barcodePrefix)) {
+  if (is.null(barcodePrefix)) {
     stop('Must provide the barcodePrefix')
   }
 
