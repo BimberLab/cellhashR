@@ -54,22 +54,19 @@ GenerateCellHashCallsSeqND <- function(barcodeMatrix, assay = "HTO", min_quantil
 		print('Starting SeqND')
 	}
 
-	#TODO: what's the rationale for avg reads over total reads? if you have two barcodes and 100% of reads are one, you've pentalized this row by 50%?
-	#Further, this gets worse with >2 barcodes...
-
-	#filter barcodes for low average expression:
-	sel <- rowMeans(barcodeMatrix) > min_average_reads
-  barcodeMatrix <- barcodeMatrix[sel,]
-	if (nrow(barcodeMatrix) == 0) {
-    print(paste0('No passing barcodes after filter using min_average_reads: ', min_average_reads))
-    return(NULL)
-	}
-
-	if (verbose) {
-		print(paste0('rows dropped for low counts: ', sum(!sel), ' of ', length(sel)))
-	}
-
 	tryCatch({
+		#filter barcodes for low average expression:
+		sel <- rowMeans(barcodeMatrix) > min_average_reads
+		if (sum(sel) == 0) {
+			print(paste0('No passing barcodes after filter using min_average_reads: ', min_average_reads))
+			return(NULL)
+		}
+
+		barcodeMatrix <- barcodeMatrix[sel,]
+		if (verbose) {
+			print(paste0('rows dropped for low counts: ', sum(!sel), ' of ', length(sel)))
+		}
+
 		seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
 		seuratObj[[assay]]@data <- NormalizeRelative(barcodeMatrix)
 
