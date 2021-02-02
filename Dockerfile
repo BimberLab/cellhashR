@@ -12,17 +12,21 @@ RUN apt-get update -y \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 
+# NOTE: until layer caching works better on github, dont bother with this:
 # Let this run for the purpose of installing/caching dependencies
-RUN Rscript -e "install.packages(c('devtools', 'BiocManager', 'remotes'), dependencies=TRUE, ask = FALSE)" \
-	&& echo "local({\noptions(repos = BiocManager::repositories())\n})\n" >> ~/.Rprofile \
-    && Rscript -e "devtools::install_github(repo = 'BimberLab/cellhashR', ref = 'master', dependencies = T, upgrade = 'always')" \
-	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
+#RUN Rscript -e "install.packages(c('devtools', 'BiocManager', 'remotes'), dependencies=TRUE, ask = FALSE)" \
+#	&& echo "local({\noptions(repos = BiocManager::repositories())\n})\n" >> ~/.Rprofile \
+#	&& Rscript -e "install.packages(c('DelayedMatrixStats'), dependencies=TRUE, ask = FALSE)" \
+#    && Rscript -e "devtools::install_github(repo = 'BimberLab/cellhashR', ref = 'master', dependencies = T, upgrade = 'always')" \
+#	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 # This should not be cached if the files change
 ADD . /cellhashR
 
+#NOTE: do manual install of fixed DelayedMatrixStats until new version is pushed
 RUN cd /cellhashR \
 	&& R CMD build . \
+	&& Rscript -e "devtools::install_github('bbimber/DelayedMatrixStats', ref = 'RELEASE_3_12');" \
 	&& Rscript -e "BiocManager::install(ask = F, upgrade = 'always');" \
 	&& Rscript -e "devtools::install_deps(pkg = '.', dependencies = TRUE, upgrade = 'always');" \
 	&& R CMD INSTALL --build *.tar.gz \
