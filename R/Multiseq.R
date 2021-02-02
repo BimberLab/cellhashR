@@ -30,7 +30,7 @@ GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO', autoThre
 	}, error = function(e){
 		print('Error generating multiseq calls, aborting')
 		print(conditionMessage(e))
-
+		traceback()
 		return(NULL)
 	})
 }

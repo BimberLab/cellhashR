@@ -21,7 +21,8 @@ GenerateCellHashCallsThreshold <- function(barcodeMatrix, verbose = TRUE, assay 
 		return(df)
 	}, error = function(e){
 		print('Error generating threshold calls, aborting')
-		print(e)
+		print(conditionMessage(e))
+		traceback()
 
 		return(NULL)
 	})

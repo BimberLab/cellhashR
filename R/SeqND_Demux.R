@@ -24,7 +24,8 @@ get_right_dist_beta <- function(barcodeMatrix, tolerance=0.1) {
       return(chi_sq)
     }, error = function(e){
       #print('Error fitting beta distribution. Likely not enough strongly hashed cells in this cluster')
-      #print(e)
+			print(conditionMessage(e))
+			traceback()
       return(NULL)
     })
   })
@@ -79,6 +80,7 @@ GenerateCellHashCallsSeqND <- function(barcodeMatrix, assay = "HTO", min_quantil
   }, error = function(e){
 		print('Error generating seqnd calls, aborting')
 		print(conditionMessage(e))
+		traceback()
 
 		return(NULL)
 	})

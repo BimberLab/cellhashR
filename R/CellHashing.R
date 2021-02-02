@@ -482,63 +482,68 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhi
 #' @param barcodeMatrix The filtered matrix of hashing count data
 #' @export
 SummarizeCellsByClassification <- function(calls, barcodeMatrix) {
-  df <- data.frame(cellbarcode = colnames(barcodeMatrix), totalReadsPerCell = colSums(barcodeMatrix))
-  df$topFraction <- apply(sweep(barcodeMatrix, 2, colSums(barcodeMatrix),`/`), 2, function(x){
-    max(x)
-  })
+  tryCatch({
+    df <- data.frame(cellbarcode = colnames(barcodeMatrix), totalReadsPerCell = colSums(barcodeMatrix))
+    df$topFraction <- apply(sweep(barcodeMatrix, 2, colSums(barcodeMatrix),`/`), 2, function(x){
+      max(x)
+    })
 
-  df <- merge(calls, df, by = 'cellbarcode', all.x = F)
-  df$topFraction[is.na(df$topFraction)] <- 0
-  df$totalReadsPerCell[is.na(df$totalReadsPerCell)] <- 0
+    df <- merge(calls, df, by = 'cellbarcode', all.x = F)
+    df$topFraction[is.na(df$topFraction)] <- 0
+    df$totalReadsPerCell[is.na(df$totalReadsPerCell)] <- 0
 
-  P1 <- ggplot(df, aes(x = consensuscall.global, y = totalReadsPerCell, color = consensuscall)) +
-    geom_boxplot() +
-    geom_jitter() +
-    xlab('') +
-    ylab('Counts/Cell') + labs(color = 'Call') +
-    egg::theme_presentation(base_size = 14) +
-    theme(
-      axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
-    )
-
-  P2 <- ggplot(df, aes(x = consensuscall.global, y = topFraction, color = consensuscall)) +
-    geom_boxplot() +
-    geom_jitter() +
-    xlab('') +
-    ylab('Top Barcode Fraction') + labs(color = 'Call') +
-    egg::theme_presentation(base_size = 14) +
-    theme(
-      axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
-    )
-
-  print(P1 + P2 + plot_layout(guides = 'collect'))
-
-  df2 <- df[df$consensuscall.global %in% c('Singlet', 'Doublet', 'Negative'),]
-  out <- grDevices::boxplot.stats(df2$totalReadsPerCell)$out
-  out <- out[out > mean(df2$totalReadsPerCell[df2$totalReadsPerCell > 0])]
-  df2 <- df2[df2$totalReadsPerCell < min(out),]
-
-  P1 <- ggplot(df2, aes(x = totalReadsPerCell, color = consensuscall)) +
-    geom_density() +
-    xlab('Counts/Cell') + labs(color = 'Call') +
-    egg::theme_presentation(base_size = 14) +
-    facet_wrap(. ~ consensuscall.global, ncol = 1)
-
-  print(P1)
-
-
-  df2$Category <- 'All'
-  df3 <- df2[df2$consensuscall.global == 'Negative',]
-  if (nrow(df3 > 0)) {
-    df3$Category <- 'Negatives'
-    df3 <- rbind(df2, df3)
-
-    P2 <- ggplot(df3, aes(x = totalReadsPerCell, y = topFraction, color = consensuscall)) +
-      geom_point() +
-      xlab('Counts/Cell') + ylab('Top Barcode Fraction') + labs(color = 'Call') +
+    P1 <- ggplot(df, aes(x = consensuscall.global, y = totalReadsPerCell, color = consensuscall)) +
+      geom_boxplot() +
+      geom_jitter() +
+      xlab('') +
+      ylab('Counts/Cell') + labs(color = 'Call') +
       egg::theme_presentation(base_size = 14) +
-      facet_grid(. ~ Category)
+      theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+      )
 
-    print(P2)
-  }
+    P2 <- ggplot(df, aes(x = consensuscall.global, y = topFraction, color = consensuscall)) +
+      geom_boxplot() +
+      geom_jitter() +
+      xlab('') +
+      ylab('Top Barcode Fraction') + labs(color = 'Call') +
+      egg::theme_presentation(base_size = 14) +
+      theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+      )
+
+    print(P1 + P2 + plot_layout(guides = 'collect'))
+
+    df2 <- df[df$consensuscall.global %in% c('Singlet', 'Doublet', 'Negative'),]
+    out <- grDevices::boxplot.stats(df2$totalReadsPerCell)$out
+    out <- out[out > mean(df2$totalReadsPerCell[df2$totalReadsPerCell > 0])]
+    df2 <- df2[df2$totalReadsPerCell < min(out),]
+
+    P1 <- ggplot(df2, aes(x = totalReadsPerCell, color = consensuscall)) +
+      geom_density() +
+      xlab('Counts/Cell') + labs(color = 'Call') +
+      egg::theme_presentation(base_size = 14) +
+      facet_wrap(. ~ consensuscall.global, ncol = 1)
+
+    print(P1)
+
+
+    df2$Category <- 'All'
+    df3 <- df2[df2$consensuscall.global == 'Negative',]
+    if (nrow(df3 > 0)) {
+      df3$Category <- 'Negatives'
+      df3 <- rbind(df2, df3)
+
+      P2 <- ggplot(df3, aes(x = totalReadsPerCell, y = topFraction, color = consensuscall)) +
+        geom_point() +
+        xlab('Counts/Cell') + ylab('Top Barcode Fraction') + labs(color = 'Call') +
+        egg::theme_presentation(base_size = 14) +
+        facet_grid(. ~ Category)
+
+      print(P2)
+    }
+  }, error = function(e){
+    print(conditionMessage(e))
+    traceback()
+  })
 }

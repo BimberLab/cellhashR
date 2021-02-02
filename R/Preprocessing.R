@@ -351,6 +351,7 @@ PrintColumnQc <- function(barcodeMatrix) {
 		}, error = function(e){
 			print('Error generating MA plot, skipping')
 			print(conditionMessage(e))
+			traceback()
 		})
 	}
 }

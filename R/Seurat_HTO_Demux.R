@@ -22,6 +22,7 @@ GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95,
 		print('Error generating seurat htodemux calls, aborting')
 		if (!is.null(e)) {
 			print(conditionMessage(e))
+			traceback()
 		}
 
 		return(NULL)

@@ -103,7 +103,9 @@ GenerateCellHashCallsPeakND <- function(barcodeMatrix, assay = "HTO", verbose = 
     df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = methodName, classification = seuratObj$classification.peaknd, classification.global = seuratObj$classification.global.peaknd, stringsAsFactors = FALSE)
     return(df)
   }, error = function(e){
-    warning('Error generating peaknd calls, aborting', e)
+    warning('Error generating peaknd calls, aborting')
+    print(conditionMessage(e))
+    traceback()
     return(NULL)
   })
 }

@@ -87,6 +87,7 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 	}, error = function(e){
 		print('Error generating tSNE, skipping')
 		print(conditionMessage(e))
+		traceback()
 	})
 }
 
