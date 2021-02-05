@@ -56,5 +56,4 @@ Collate:
     'Multiseq.R'
     'CellHashing.R'
     'Preprocessing.R'
-    'CiteSeq.R'
 VignetteBuilder: knitr
