@@ -14,7 +14,8 @@ CallAndGenerateReport(
   citeSeqCountDir = NULL,
   minCountPerCell = 5,
   title = NULL,
-  metricsFile = NULL
+  metricsFile = NULL,
+  skipNormalizationQc = FALSE
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ CallAndGenerateReport(
 \item{title}{A title for the HTML report}
 
 \item{metricsFile}{If provided, summary metrics will be written to this file.}
+
+\item{skipNormalizationQc}{If true, the normalization/QC plots will be skipped. These can be time consuming on large input data.}
 }
 \description{
 Runs the default processing pipeline
