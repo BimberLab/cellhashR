@@ -8,6 +8,169 @@ utils::globalVariables(
   add = TRUE
 )
 
+to_check <- c('AAGACCTGTCAGATAA', 'CTAGCCTTCAGTGTTG')
+
+get_Top2 <- function(mat) {
+  outmat <- mat
+  for (barcode in rownames(outmat)) {
+    outmat[barcode,][which(outmat[barcode,] < TopN(outmat[barcode,])[[1]])] <- 0
+  }
+  return(outmat)
+}
+
+rel_Threshold <- function(top2, discrete, threshold) {
+  outdiscrete <- discrete
+  for (barcode in rownames(top2)) {
+    if (max(top2[barcode,]) >= threshold) {
+      outdiscrete[, barcode] <- 0
+      outdiscrete[which.max(top2[barcode,])[[1]], barcode] <- 1
+    }
+  }
+  return(outdiscrete)
+}
+
+filter_lowmax <- function(mat, minval) {
+  barcodes <- c()
+  for (barcode in rownames(mat)) {
+    if (max(mat[barcode,]) > minval) {
+      barcodes <- c(barcodes, barcode)
+    }
+  }
+  return(barcodes)
+}
+
+callFile2 <- "/Users/boggy/bimberlab/dist_normed.csv"
+callFile3 <- "/Users/boggy/bimberlab/neg_normed.csv"
+
+top2_1 <- function(discrete, barcodeMatrix) {
+  negs <- colnames(discrete[, colSums(discrete)==0])
+  filtered_negs <- filter_lowmax(t(barcodeMatrix)[negs,], 10)
+  dist_normed <- NormalizeQuantile(t(barcodeMatrix))
+  print(dist_normed[to_check,])
+  write.table(as.data.frame(dist_normed), file = callFile2, sep = '\t', row.names = TRUE, quote = FALSE, col.names = NA)
+  top2_negs <- get_Top2(dist_normed[filtered_negs,])
+  top2_negs_relnormed <- t(NormalizeRelative(as.matrix(t(top2_negs))))
+  print(top2_negs_relnormed[to_check,])
+  return(list(dist_normed, top2_negs_relnormed))
+}
+
+top2_2 <- function(discrete, barcodeMatrix) {
+  negs <- colnames(discrete[, colSums(discrete)==0])
+  negdiscrete <- 1 - discrete
+  is.na(negdiscrete) <- negdiscrete==0
+  negvals <- negdiscrete * barcodeMatrix
+  print(t(negvals)[to_check,])
+  neg_normed <- NormalizeQuantile(t(negvals))
+  print(neg_normed[to_check,])
+  neg_normed[is.na(neg_normed)] <- 0
+  write.table(as.data.frame(neg_normed), file = callFile3, sep = '\t', row.names = TRUE, quote = FALSE, col.names = NA)
+  filtered_negs <- filter_lowmax(t(barcodeMatrix)[negs,], 10)
+  top2_negs <- get_Top2(neg_normed[filtered_negs,])
+  top2_negs_relnormed <- t(NormalizeRelative(as.matrix(t(top2_negs))))
+  print(top2_negs_relnormed[to_check,])
+  return(list(neg_normed, top2_negs_relnormed))
+}
+
+#New PeakND
+
+evaluate_objective <- function(seuratObj, cutoffs, penalty="log"){
+  if (penalty=='square'){
+    obj_value <- sum((colSums(getDiscreteFromCutoffs(seuratObj, 'HTO', cutoffs))-1)^2)
+  }
+  if (penalty == "log"){
+    obj_value <- sum(10^(abs(colSums(as.matrix(getDiscreteFromCutoffs(seuratObj, 'HTO', cutoffs))-1))))
+  }
+  if (penalty == "magnitude"){
+    obj_value <- sum(abs(colSums(getDiscreteFromCutoffs(seuratObj, 'HTO', cutoffs))-1))
+  }
+  return(obj_value)
+}
+
+getDiscreteFromCutoffs <- function(seuratObj, assay, cutoffs) {
+  barcodeMatrix <- GetAssayData(
+    object = seuratObj,
+    assay = assay,
+    slot = 'counts'
+  )[, colnames(x = seuratObj)]
+  
+  #loop over HTOs in matrix, perform thresholding and store cells that pass the threshold
+  #return a discrete matrix, with 1 equal to a call positive for that barcode
+  discrete <- GetAssayData(object = seuratObj, assay = assay)
+  discrete[discrete > 0] <- 0
+  for (hto in ls(cutoffs)) {
+    cells <- barcodeMatrix[hto, colnames(seuratObj), drop = FALSE]
+    #PeakND uses a log-scale to smooth higher counts, so we transform back once we find the threshold
+    threshold <- cutoffs[[hto]]
+    discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold, yes = 1, no = 0)
+  }
+  # now assign cells to HTO based on discretized values
+  
+  return(discrete)
+}
+
+gridSearch <- function(seuratObj, barcodeMatrix, hto, cutoffs, penalty, num = 50) {
+  # returns vector of objective function values vs. threshold for an HTO
+  cutoff <- cutoffs[[hto]]
+  data <- t(barcodeMatrix)[,hto]
+  sorted <- data[order(data)]
+  higher <- sorted[sorted > cutoff]
+  lower <- sorted[sorted < cutoff]
+  #TODO: This has edge cases that break the algorithm
+  num <- min(num, length(lower)-1, length(higher)-1)
+  lower_eval <- tail(lower, num + 1)
+  higher_eval <- head(higher, num + 1)
+  cutoff_temp <- mean(c(lower_eval[[1]], lower_eval[[2]]))
+  cutoffs[[hto]] <- cutoff_temp
+  obj_vals <- data.frame("cutoff" = cutoff_temp, "obj" = evaluate_objective(seuratObj, cutoffs))
+  names(obj_vals) <- c("cutoff", "obj")
+  #Scan cutoff values below original PeakND threshold
+  for (i in 2:num) {
+    cutoff_temp <- mean(c(lower_eval[[i]], lower_eval[[i+1]]))
+    cutoffs[[hto]] <- cutoff_temp
+    new_row <- data.frame("cutoff"= cutoff_temp,"obj"= evaluate_objective(seuratObj, cutoffs))
+    obj_vals <- rbind(obj_vals, new_row)
+  }
+  cutoffs[[hto]] <- cutoff
+  new_row <- data.frame("cutoff"= cutoff,"obj"= evaluate_objective(seuratObj, cutoffs))
+  obj_vals <- rbind(obj_vals, new_row)
+  #Scan cutoff values above original PeakND threshold
+  for (i in 1:num) {
+    cutoff_temp <- mean(c(higher_eval[[i]], higher_eval[[i+1]]))
+    cutoffs[[hto]] <- cutoff_temp
+    new_row <- data.frame("cutoff"= cutoff_temp,"obj"= evaluate_objective(seuratObj, cutoffs))
+    obj_vals <- rbind(obj_vals, new_row)
+  }
+  return(obj_vals)
+}
+
+getCutoffsFromGridSearch <- function(seuratObj, barcodeMatrix, cutoffs, penalty ) {
+  # loops over HTos to find optimal threshold values
+  for (hto in rownames(barcodeMatrix)) {
+    gs <- gridSearch(seuratObj, barcodeMatrix, hto, cutoffs, penalty = penalty)
+    vals <- which(gs[['obj']]==min(gs[['obj']]))
+    cutoffs[[hto]] <- gs[max(vals),'cutoff']
+    plot(gs, main=hto)
+    abline(v=gs[vals,'cutoff'])
+  }
+  return(cutoffs)
+}
+
+#loops over getCutoffsFromGridSearch() until the thresholds converge
+loopsearch <- function(seuratObj, barcodeMatrix, cutoffs, penalty = 'log') {
+  cutoffs2 <- hash::copy(cutoffs)
+  cutoffs2 <- getCutoffsFromGridSearch(seuratObj, barcodeMatrix, cutoffs2)
+  i <- 1
+  #TODO: find best convergence criterion
+  while (sum(as.numeric(hash::values(cutoffs2)) - as.numeric(hash::values(cutoffs))) > 10 ) {
+    i <- i + 1
+    cutoffs <- hash::copy(cutoffs2)
+    cutoffs2 <- getCutoffsFromGridSearch(seuratObj, barcodeMatrix, cutoffs2, penalty)
+  }
+  return(cutoffs)
+}
+
+# Old PeakND
+
 getCountCutoff <- function(data, label) {
   #TODO: See about making this code less dependent on initial conditions
   num_peaks <- 10000
@@ -90,18 +253,59 @@ getCountCutoff <- function(data, label) {
 }
 
 
-GenerateCellHashCallsPeakND <- function(barcodeMatrix, assay = "HTO", verbose = TRUE, methodName = 'peaknd'){
+GenerateCellHashCallsPeakND <- function(barcodeMatrix, assay = "HTO", min_average_reads = 10, verbose = TRUE, methodName = 'peaknd', optimize_cutoffs, recover, doublet_thresh, neg_thresh, rec_meth){
   if (verbose) {
     print('Starting PeakND')
   }
+  #filter barcodes for low average expression:
+  sel <- rowMeans(barcodeMatrix) > min_average_reads
+  barcodeMatrix <- barcodeMatrix[sel,]
   
+  if (nrow(barcodeMatrix) == 0) {
+    print(paste0('No passing barcodes after filter using min_average_reads: ', min_average_reads))
+    return(NULL)
+  }
+  
+  if (verbose) {
+    print(paste0('rows dropped for low counts: ', sum(!sel), ' of ', length(sel)))
+  }
+
   tryCatch({
     seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
-    seuratObj <- PeakNDDemux(seuratObj = seuratObj, assay = assay)
-
-    SummarizeHashingCalls(seuratObj, label = 'PeakND', columnSuffix = 'peaknd', assay = assay, doHeatmap = FALSE)
-    df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = methodName, classification = seuratObj$classification.peaknd, classification.global = seuratObj$classification.global.peaknd, stringsAsFactors = FALSE)
-    return(df)
+    seuratObj <- PeakNDDemux(seuratObj = seuratObj, assay = assay, optimize_cutoffs = optimize_cutoffs, recover=recover, doublet_thresh=doublet_thresh, neg_thresh=neg_thresh, rec_meth=rec_meth)
+    print(paste("Optimize: ", optimize_cutoffs))
+    print(paste("Recover: ", recover))
+    print(paste("Doublet thresh: ", doublet_thresh))
+    print(paste("Neg thresh: ", neg_thresh))
+    print(paste("Recovery method: ", rec_meth))
+    # if (optimize_cutoffs==TRUE && recover==TRUE && rec_meth == 1){
+    #   SummarizeHashingCalls(seuratObj, label = 'PeakND_opt_rec', columnSuffix = 'peaknd_opt_rec', assay = assay, doHeatmap = FALSE)
+    #   df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'peaknd_opt_rec', classification = seuratObj$classification.peaknd_opt_rec, classification.global = seuratObj$classification.global.peaknd_opt_rec, stringsAsFactors = FALSE)
+    #   return(df)
+    # } else if (optimize_cutoffs==TRUE && recover==TRUE && rec_meth == 2){
+    #   SummarizeHashingCalls(seuratObj, label = 'PeakND_opt_rec2', columnSuffix = 'peaknd_opt_rec2', assay = assay, doHeatmap = FALSE)
+    #   df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'peaknd_opt_rec2', classification = seuratObj$classification.peaknd_opt_rec2, classification.global = seuratObj$classification.global.peaknd_opt_rec2, stringsAsFactors = FALSE)
+    #   return(df)
+    # } else if (optimize_cutoffs==FALSE && recover==FALSE){
+    #   SummarizeHashingCalls(seuratObj, label = 'PeakND', columnSuffix = 'peaknd', assay = assay, doHeatmap = FALSE)
+    #   df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'peaknd', classification = seuratObj$classification.peaknd, classification.global = seuratObj$classification.global.peaknd, stringsAsFactors = FALSE)
+    #   return(df)
+    # } else 
+    if (optimize_cutoffs==FALSE && recover==TRUE && rec_meth == 1){
+      SummarizeHashingCalls(seuratObj, label = 'PeakND_rec', columnSuffix = 'peaknd_rec', assay = assay, doHeatmap = FALSE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'peaknd_rec', classification = seuratObj$classification.peaknd_rec, classification.global = seuratObj$classification.global.peaknd_rec, stringsAsFactors = FALSE)
+      return(df)
+    } else if (optimize_cutoffs==FALSE && recover==TRUE && rec_meth == 2){
+      SummarizeHashingCalls(seuratObj, label = 'PeakND_rec2', columnSuffix = 'peaknd_rec2', assay = assay, doHeatmap = FALSE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'peaknd_rec2', classification = seuratObj$classification.peaknd_rec2, classification.global = seuratObj$classification.global.peaknd_rec2, stringsAsFactors = FALSE)
+      return(df)
+    # } else if (optimize_cutoffs==TRUE && recover==FALSE){
+    #   SummarizeHashingCalls(seuratObj, label = 'PeakND_opt', columnSuffix = 'peaknd_opt', assay = assay, doHeatmap = FALSE)
+    #   df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'peaknd_opt', classification = seuratObj$classification.peaknd_opt, classification.global = seuratObj$classification.global.peaknd_opt, stringsAsFactors = FALSE)
+    #   return(df)
+    }
+    
+    
   }, error = function(e){
     warning('Error generating peaknd calls, aborting')
     print(conditionMessage(e))
@@ -110,7 +314,7 @@ GenerateCellHashCallsPeakND <- function(barcodeMatrix, assay = "HTO", verbose = 
   })
 }
 
-PeakNDDemux <- function(seuratObj, assay, plotcolor =  "#00BFC4") {
+PeakNDDemux <- function(seuratObj, assay, optimize_cutoffs, recover, doublet_thresh, neg_thresh, rec_meth) {
   barcodeMatrix <- GetAssayData(
     object = seuratObj,
     assay = assay,
@@ -121,13 +325,80 @@ PeakNDDemux <- function(seuratObj, assay, plotcolor =  "#00BFC4") {
   #return a discrete matrix, with 1 equal to a call positive for that barcode
   discrete <- GetAssayData(object = seuratObj, assay = assay)
   discrete[discrete > 0] <- 0
+  cutoffs <- hash::hash()
   for (hto in rownames(barcodeMatrix)) {
     cells <- barcodeMatrix[hto, colnames(seuratObj), drop = FALSE]
     #PeakND uses a log-scale to smooth higher counts, so we transform back once we find the threshold
     threshold <- 10^getCountCutoff(cells, hto)
     discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold, yes = 1, no = 0)
+    cutoffs[[hto]] <- threshold
+  }
+  print("Unoptimized Thresholds:")
+  print(cutoffs)
+  #New PeakND code
+  if (optimize_cutoffs == FALSE && recover == FALSE) {
+    seuratObj <- .AssignCallsToMatrix(seuratObj, as.matrix(discrete), suffix = 'peaknd', assay = assay)
+    return(seuratObj)
+  }
+
+  if (optimize_cutoffs == TRUE){
+    new_thresholds <- loopsearch(seuratObj, barcodeMatrix, cutoffs, penalty = "log")
+    discrete <- getDiscreteFromCutoffs(seuratObj, assay, new_thresholds)
+    print("Optimized Thresholds:")
+    print(new_thresholds)
+  }
+  if (optimize_cutoffs == TRUE && recover == FALSE) {
+    seuratObj <- .AssignCallsToMatrix(seuratObj, as.matrix(discrete), suffix = 'peaknd_opt', assay = assay)
+    return(seuratObj)
+  }
+  if (recover == TRUE) {
+    called <- colnames(discrete[, colSums(discrete)>=1])
+    called_vals <- t(discrete[,called]* barcodeMatrix[,called])
+    called_vals_df <- as.data.frame(called_vals)
+    is.na(called_vals_df) <- called_vals_df==0
+    pos_normed <- NormalizeQuantile(called_vals_df)
+    multi <- colnames(discrete[, colSums(discrete)>1])
+    multi_pos_normed <- pos_normed[multi,]
+    multi_pos_normed[is.na(multi_pos_normed)] <- 0
+    
+    top2_multi_pos_normed <- get_Top2(multi_pos_normed)
+    top2_pos_relnormed <- t(NormalizeRelative(as.matrix(t(multi_pos_normed))))
+    discrete <- rel_Threshold(top2_pos_relnormed, discrete, doublet_thresh)
+    
+    if (rec_meth==1) {
+      # negs <- colnames(discrete[, colSums(discrete)==0])
+      # filtered_negs <- filter_lowmax(t(barcodeMatrix)[negs,], 10)
+      # dist_normed <- NormalizeQuantile(t(barcodeMatrix))
+      # top2_negs <- get_Top2(dist_normed[filtered_negs,])
+      # top2_negs_relnormed <- t(NormalizeRelative(as.matrix(t(top2_negs))))
+      top2_negs_relnormed <- top2_1(discrete, barcodeMatrix)[[2]]
+      discrete <- rel_Threshold(top2_negs_relnormed, discrete, neg_thresh)
+    } else if (rec_meth==2){
+      # negs <- colnames(discrete[, colSums(discrete)==0])
+      # filtered_negs <- filter_lowmax(t(barcodeMatrix)[negs,], 10)
+      # negdiscrete <- 1 - discrete
+      # is.na(negdiscrete) <- negdiscrete==0
+      # negvals <- negdiscrete * barcodeMatrix
+      # neg_normed <- NormalizeQuantile(t(negvals))
+      # neg_normed[is.na(neg_normed)] <- 0
+      # top2_negs <- get_Top2(neg_normed[filtered_negs,])
+      # top2_negs_relnormed <- t(NormalizeRelative(as.matrix(t(top2_negs))))
+      top2_negs_relnormed <- top2_2(discrete, barcodeMatrix)[[2]]
+      discrete <- rel_Threshold(top2_negs_relnormed, discrete, neg_thresh)
+    }
   }
   # now assign cells to HTO based on discretized values
-  seuratObj <- .AssignCallsToMatrix(seuratObj, as.matrix(discrete), suffix = 'peaknd', assay = assay)
-  return(seuratObj)
+  if (optimize_cutoffs == TRUE && recover == TRUE && rec_meth==1) {
+    seuratObj <- .AssignCallsToMatrix(seuratObj, as.matrix(discrete), suffix = 'peaknd_opt_rec', assay = assay)
+    return(seuratObj)
+  } else if (optimize_cutoffs == TRUE && recover == TRUE && rec_meth==2) {
+    seuratObj <- .AssignCallsToMatrix(seuratObj, as.matrix(discrete), suffix = 'peaknd_opt_rec2', assay = assay)
+    return(seuratObj)
+  } else if (optimize_cutoffs == FALSE && recover == TRUE && rec_meth==1) {
+    seuratObj <- .AssignCallsToMatrix(seuratObj, as.matrix(discrete), suffix = 'peaknd_rec', assay = assay)
+    return(seuratObj)
+  } else if (optimize_cutoffs == FALSE && recover == TRUE && rec_meth==2) {
+    seuratObj <- .AssignCallsToMatrix(seuratObj, as.matrix(discrete), suffix = 'peaknd_rec2', assay = assay)
+    return(seuratObj)
+  }
 }

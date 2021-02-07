@@ -145,11 +145,6 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-    } else if (method == 'peaknd'){
-      calls <- GenerateCellHashCallsPeakND(barcodeMatrix)
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
     } else if (method == 'threshold'){
       calls <- GenerateCellHashCallsThreshold(barcodeMatrix)
       if (!is.null(calls)) {
@@ -157,6 +152,69 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       }
     } else if (method == 'dropletutils'){
       calls <- GenerateCellHashCallsDropletUtils(barcodeMatrix)
+      if (!is.null(calls)) {
+        callList[[method]] <- calls
+      }
+#     } else if (method == 'peaknd'){
+#       tryCatch({
+#       calls <- GenerateCellHashCallsPeakND(barcodeMatrix, optimize_cutoffs=FALSE, recover=FALSE, doublet_thresh = NULL, neg_thresh=NULL, rec_meth=1)
+#       }, error = function(e){
+#         warning('Error generating peaknd calls, aborting', e)
+#         return(NULL)
+#       })
+#       if (!is.null(calls)) {
+#         callList[[method]] <- calls
+#       }
+# 		} else if (method == 'peaknd_opt_rec'){
+#       tryCatch({
+#         calls <- GenerateCellHashCallsPeakND(barcodeMatrix, optimize_cutoffs=TRUE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.75, rec_meth=1)
+#       }, error = function(e){
+#         warning('Error generating peaknd calls, aborting', e)
+#         return(NULL)
+#       })
+#       if (!is.null(calls)) {
+#         callList[[method]] <- calls
+#       }
+#     } else if (method == 'peaknd_opt_rec2'){
+#       tryCatch({
+#         calls <- GenerateCellHashCallsPeakND(barcodeMatrix, optimize_cutoffs=TRUE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.75, rec_meth=2)
+#       }, error = function(e){
+#         warning('Error generating peaknd calls, aborting', e)
+#         return(NULL)
+#       })
+#       if (!is.null(calls)) {
+#         callList[[method]] <- calls
+#       }
+#     } else if (method == 'peaknd_opt'){
+#       tryCatch({
+#         calls <- GenerateCellHashCallsPeakND(barcodeMatrix, optimize_cutoffs=TRUE, recover=FALSE, doublet_thresh = NULL, neg_thresh=NULL, rec_meth=1)
+#       }, error = function(e){
+#         warning('Error generating peaknd calls, aborting', e)
+#         return(NULL)
+#       })
+#       if (!is.null(calls)) {
+#         callList[[method]] <- calls
+#       }
+    # } else 
+    } else if (method == 'peaknd_rec'){
+      tryCatch({
+        calls <- GenerateCellHashCallsPeakND(barcodeMatrix, optimize_cutoffs=FALSE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.75, rec_meth=1)
+      }, error = function(e){
+        warning('Error generating peaknd calls, aborting', e)
+        return(NULL)
+      })
+      if (!is.null(calls)) {
+        callList[[method]] <- calls
+      }
+    } else if (method == 'peaknd_rec2'){
+      tryCatch({
+        calls <- GenerateCellHashCallsPeakND(barcodeMatrix, optimize_cutoffs=FALSE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.75, rec_meth=2)
+      }, error = function(e){
+        warning('Error generating peaknd calls, aborting')
+        print(conditionMessage(e))
+        traceback()
+        return(NULL)
+      })
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
