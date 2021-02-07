@@ -131,6 +131,17 @@ test_that("Workflow works", {
 
 	unlink(html)
 	unlink(output)
+	unlink(metricsFile)
+	
+	# Repeat with skip normalization
+	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile, skipNormalizationQc = TRUE)
+	
+	df <- read.table(output, sep = '\t', header = TRUE)
+	expect_equal(nrow(df), 2500)
+	expect_equal(sum(df$consensuscall == 'MS-12'), 1124)
+
+	unlink(html)
+	unlink(output)
 	unlink(subsetCountDir, recursive = TRUE)
 	unlink(metricsFile)
 })
