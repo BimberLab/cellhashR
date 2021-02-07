@@ -4,7 +4,7 @@
 
 utils::globalVariables(
   names = c('relative_counts', 'x', 'y', '..density..'),
-  package = 'cellhashR',
+  # package = 'cellhashR',
   add = TRUE
 )
 

@@ -2,7 +2,7 @@
 
 utils::globalVariables(
 	names = c('NormCount', 'Saturation', 'Cluster', 'AvgExpression'),
-	package = 'cellhashR',
+	# package = 'cellhashR',
 	add = TRUE
 )
 
