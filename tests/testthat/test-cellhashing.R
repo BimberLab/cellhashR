@@ -131,7 +131,6 @@ test_that("Workflow works", {
 
 	unlink(html)
 	unlink(output)
-	unlink(subsetCountDir, recursive = TRUE)
 	unlink(metricsFile)
 	
 	# Repeat with skip normalization
