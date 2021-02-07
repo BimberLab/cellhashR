@@ -139,7 +139,8 @@
   citeSeqCountDir <span class='op'>=</span> <span class='cn'>NULL</span>,
   minCountPerCell <span class='op'>=</span> <span class='fl'>5</span>,
   title <span class='op'>=</span> <span class='cn'>NULL</span>,
-  metricsFile <span class='op'>=</span> <span class='cn'>NULL</span>
+  metricsFile <span class='op'>=</span> <span class='cn'>NULL</span>,
+  skipNormalizationQc <span class='op'>=</span> <span class='cn'>FALSE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -184,6 +185,10 @@
     <tr>
       <th>metricsFile</th>
       <td><p>If provided, summary metrics will be written to this file.</p></td>
+    </tr>
+    <tr>
+      <th>skipNormalizationQc</th>
+      <td><p>If true, the normalization/QC plots will be skipped. These can be time consuming on large input data.</p></td>
     </tr>
     </table>
 
