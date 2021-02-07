@@ -17,13 +17,18 @@ output:
 
 ```{r setup}
 
-library(cellhashR)
+# library(cellhashR)
+library(devtools)
+load_all()
 
 knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error=FALSE)
 
 ```
 
 ```{r setupVariables, include=FALSE}
+rawCountData <- "/Users/boggy/bimberlab/cellhashR/tests/testdata/449-1-GEX/umi_count"
+callFile <- "/Users/boggy/bimberlab/449-1-GEX-cellhashing.csv"
+
 
 requiredVars <- c('rawCountData', 'callFile')
 for (v in requiredVars) {
@@ -36,6 +41,11 @@ if (!file.exists(rawCountData)) {
   stop(paste0('Could not find rawCountData: ', rawCountData))
 }
 
+barcodeWhitelist <- NULL #c("MS-2", "MS-3", "MS-4", "MS-5", "MS-6", "MS-7", "MS-8", "MS-11", "MS-13")
+cellbarcodeWhitelist <- NULL 
+citeSeqCountDir <- NULL
+minCountPerCell <- 10
+metricsFile <- NULL
 optionalVars <- c('barcodeWhitelist', 'cellbarcodeWhitelist', 'citeSeqCountDir', 'minCountPerCell', 'metricsFile')
 for (v in requiredVars) {
 	if (!exists(v)) {
@@ -56,6 +66,7 @@ if (!is.null(cellbarcodeWhitelist)) {
 }
 
 # Truncate metricsFile if provided:
+metricsFile <-NULL
 if (!is.null(metricsFile)) {
   file.create(metricsFile)
 }
@@ -87,7 +98,7 @@ These plots are designed to provide visualization of potential normalizations.
 
 ```{r NormalizationQC}
 
-PlotNormalizationQC(barcodeData)
+# PlotNormalizationQC(barcodeData)
 
 ```
 
@@ -96,6 +107,10 @@ PlotNormalizationQC(barcodeData)
 ```{r GenerateCalls}
 
 df <- NULL
+# methods <- c("htodemux", "threshold", "multiseq", "seqnd", "peaknd", "peaknd_opt_rec")
+# methods <- c("threshold", "seqnd", "peaknd_opt_rec", "peaknd_opt_rec2", "peaknd_opt", "peaknd_rec", "peaknd_rec2", "peaknd")
+methods <- c("peaknd_rec", "peaknd_rec2")
+# methods <- c("threshold")
 if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
 
 	if (!is.null(saveOriginalCellBarcodeFile)) {
