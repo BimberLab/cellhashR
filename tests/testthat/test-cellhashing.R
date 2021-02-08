@@ -97,6 +97,17 @@ tests <- list(
     )
 )
 
+test_that("Cellbarcode Whitelist Works", {
+	test <- tests[['438-21']]
+	
+	#Subset rows to run quicker:
+	countData <- Seurat::Read10X(test$input, gene.column=1, strip.suffix = TRUE)
+	countData <- countData[,1:2500]
+	
+	mat <- ProcessCountMatrix(rawCountData = test$input, cellbarcodeWhitelist = colnames(countData)[1:200])
+	expect_equal(colnames(mat), colnames(countData)[1:200])
+})
+
 test_that("RMarkdown Copy works", {
 	fn <- paste0(getwd(), '/foo.rmd')
 	print(paste0('saving file to: ', fn))
