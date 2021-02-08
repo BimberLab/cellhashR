@@ -9,6 +9,7 @@ ProcessCountMatrix(
   minCountPerCell = 5,
   barcodeWhitelist = NULL,
   barcodeBlacklist = c("no_match", "total_reads", "unmapped"),
+  cellbarcodeWhitelist = NULL,
   doPlot = TRUE,
   simplifyBarcodeNames = TRUE,
   saveOriginalCellBarcodeFile = NULL,
@@ -23,6 +24,8 @@ ProcessCountMatrix(
 \item{barcodeWhitelist}{A vector of barcode names to retain.}
 
 \item{barcodeBlacklist}{A vector of barcodes names to discard.}
+
+\item{cellbarcodeWhitelist}{If provided, the raw count matrix will be subset to include only these cells. This allows one to use the cellranger unfiltered matrix as an input, but filter based on target cells, such as those with GEX data.}
 
 \item{doPlot}{If true, QC plots will be generated}
 
