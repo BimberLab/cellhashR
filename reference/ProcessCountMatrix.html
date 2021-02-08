@@ -134,6 +134,7 @@
   minCountPerCell <span class='op'>=</span> <span class='fl'>5</span>,
   barcodeWhitelist <span class='op'>=</span> <span class='cn'>NULL</span>,
   barcodeBlacklist <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"no_match"</span>, <span class='st'>"total_reads"</span>, <span class='st'>"unmapped"</span><span class='op'>)</span>,
+  cellbarcodeWhitelist <span class='op'>=</span> <span class='cn'>NULL</span>,
   doPlot <span class='op'>=</span> <span class='cn'>TRUE</span>,
   simplifyBarcodeNames <span class='op'>=</span> <span class='cn'>TRUE</span>,
   saveOriginalCellBarcodeFile <span class='op'>=</span> <span class='cn'>NULL</span>,
@@ -158,6 +159,10 @@
     <tr>
       <th>barcodeBlacklist</th>
       <td><p>A vector of barcodes names to discard.</p></td>
+    </tr>
+    <tr>
+      <th>cellbarcodeWhitelist</th>
+      <td><p>If provided, the raw count matrix will be subset to include only these cells. This allows one to use the cellranger unfiltered matrix as an input, but filter based on target cells, such as those with GEX data.</p></td>
     </tr>
     <tr>
       <th>doPlot</th>
