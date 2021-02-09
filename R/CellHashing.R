@@ -213,7 +213,11 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
     dataClassificationGlobal <- allCalls[c('cellbarcode', 'method', 'classification.global')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification.global, values_fill = 'Negative')
   }, error = function(x){
     print('Error pivoting calls table!')
-    write.table(allCalls, file = 'allCalls.txt', sep = '\t', quote = FALSE, row.names = FALSE)
+    if (!is.null(metricsFile)) {
+      fn <- paste0(dirname(metricsFile), '/allCalls.txt')
+      write.table(allCalls, file = fn, sep = '\t', quote = FALSE, row.names = FALSE)
+    }
+
     print(conditionMessage(e))
     traceback()
 
