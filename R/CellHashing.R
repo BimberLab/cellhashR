@@ -208,8 +208,17 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
     allCalls$classification.global <- naturalsort::naturalfactor(allCalls$classification.global)
   }
 
-  dataClassification <- allCalls[c('cellbarcode', 'method', 'classification')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification, values_fill = 'Negative')
-  dataClassificationGlobal <- allCalls[c('cellbarcode', 'method', 'classification.global')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification.global, values_fill = 'Negative')
+  tryCatch({
+    dataClassification <- allCalls[c('cellbarcode', 'method', 'classification')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification, values_fill = 'Negative')
+    dataClassificationGlobal <- allCalls[c('cellbarcode', 'method', 'classification.global')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification.global, values_fill = 'Negative')
+  }, error = function(x){
+    print('Error pivoting calls table!')
+    write.table(allCalls, file = 'allCalls.txt', sep = '\t', quote = FALSE, row.names = FALSE)
+    print(conditionMessage(e))
+    traceback()
+
+    stop(e)
+  })
 
   for (method in methods) {
     if (!(method %in% names(dataClassification))) {
