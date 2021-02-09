@@ -103,9 +103,18 @@ test_that("Cellbarcode Whitelist Works", {
 	#Subset rows to run quicker:
 	countData <- Seurat::Read10X(test$input, gene.column=1, strip.suffix = TRUE)
 	countData <- countData[,1:2500]
-	
-	mat <- ProcessCountMatrix(rawCountData = test$input, cellbarcodeWhitelist = colnames(countData)[1:200])
-	expect_equal(colnames(mat), colnames(countData)[1:200])
+
+	cellbarcodeWhitelist <- colnames(countData)[1:200]
+
+	mat <- ProcessCountMatrix(rawCountData = test$input, cellbarcodeWhitelist = cellbarcodeWhitelist)
+	expect_equal(colnames(mat), cellbarcodeWhitelist)
+
+	fn <- 'whitelist.txt'
+	write.table(cellbarcodeWhitelist, file = fn, row.names = FALSE, col.names = FALSE, quote = FALSE)
+	mat <- ProcessCountMatrix(rawCountData = test$input, cellbarcodeWhitelist = fn)
+	expect_equal(colnames(mat), cellbarcodeWhitelist)
+
+	unlink(fn)
 })
 
 test_that("RMarkdown Copy works", {

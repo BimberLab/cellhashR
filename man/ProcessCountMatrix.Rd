@@ -25,7 +25,7 @@ ProcessCountMatrix(
 
 \item{barcodeBlacklist}{A vector of barcodes names to discard.}
 
-\item{cellbarcodeWhitelist}{If provided, the raw count matrix will be subset to include only these cells. This allows one to use the cellranger unfiltered matrix as an input, but filter based on target cells, such as those with GEX data.}
+\item{cellbarcodeWhitelist}{If provided, the raw count matrix will be subset to include only these cells. This allows one to use the cellranger unfiltered matrix as an input, but filter based on target cells, such as those with GEX data. This can either be a character vector of barcodes, or a file with one cell barcode per line.}
 
 \item{doPlot}{If true, QC plots will be generated}
 
