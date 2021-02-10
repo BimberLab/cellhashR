@@ -53,6 +53,7 @@ saveOriginalCellBarcodeFile <- NULL
 if (!is.null(cellbarcodeWhitelist)) {
 	if (cellbarcodeWhitelist == 'inputMatrix') {
 		saveOriginalCellBarcodeFile <- 'originalBarcodes.txt'
+		cellbarcodeWhitelist <- NULL
 	}
 }
 
@@ -71,7 +72,7 @@ if (!is.null(citeSeqCountDir)) {
   saturation <- PlotLibrarySaturation(citeSeqCountDir, metricsFile = metricsFile)
 }
 
-barcodeData <- ProcessCountMatrix(rawCountData = rawCountData, minCountPerCell = minCountPerCell, barcodeWhitelist = barcodeWhitelist, saveOriginalCellBarcodeFile = saveOriginalCellBarcodeFile, metricsFile = metricsFile)
+barcodeData <- ProcessCountMatrix(rawCountData = rawCountData, minCountPerCell = minCountPerCell, barcodeWhitelist = barcodeWhitelist, cellbarcodeWhitelist = cellbarcodeWhitelist, saveOriginalCellBarcodeFile = saveOriginalCellBarcodeFile, metricsFile = metricsFile)
 if (nrow(barcodeData) == 0) {
   stop('No passing barcodes')
 }

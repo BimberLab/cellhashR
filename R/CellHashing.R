@@ -179,6 +179,10 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
     return()
   }
 
+  if (!is.null(cellbarcodeWhitelist) && is.character(cellbarcodeWhitelist) && length(cellbarcodeWhitelist) == 1 && file.exists(cellbarcodeWhitelist)) {
+    cellbarcodeWhitelist <- read.table(cellbarcodeWhitelist, header = FALSE)[,1]
+  }
+
   methods <- expectedMethods
   allCalls <- NULL
   for (method in names(callList)) {
@@ -211,7 +215,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
   tryCatch({
     dataClassification <- allCalls[c('cellbarcode', 'method', 'classification')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification, values_fill = 'Negative')
     dataClassificationGlobal <- allCalls[c('cellbarcode', 'method', 'classification.global')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification.global, values_fill = 'Negative')
-  }, error = function(x){
+  }, error = function(e){
     print('Error pivoting calls table!')
     if (!is.null(metricsFile)) {
       fn <- paste0(dirname(metricsFile), '/allCalls.txt')
@@ -452,7 +456,7 @@ GetExampleMarkdown <- function(dest) {
 #' @param reportFile The file to which the HTML report will be written
 #' @param callFile The file to which the table of calls will be written
 #' @param barcodeWhitelist A vector of barcode names to retain.
-#' @param cellbarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
+#' @param cellbarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), a file with one cellbarcode per line, or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
 #' @param methods The set of methods to use for calling. See GenerateCellHashingCalls for options.
 #' @param citeSeqCountDir This is the root folder of the Cite-seq-Count output, containing umi_count and read_count folders. If provided, this will be used to generate a library saturation plot
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
