@@ -11,7 +11,7 @@ utils::globalVariables(
 get_Top2 <- function(mat) {
   outmat <- mat
   for (barcode in rownames(outmat)) {
-    outmat[barcode,][which(outmat[barcode,] < TopN(outmat[barcode,])[[1]])] <- 0
+    outmat[barcode,][which(outmat[barcode,] < TopN(outmat[barcode,], N = 2)[[1]])] <- 0
   }
   return(outmat)
 }
@@ -80,7 +80,7 @@ top2_doublets <- function(discrete, barcodeMatrix) {
   multi_pos_normed[is.na(multi_pos_normed)] <- 0
   
   top2_multi_pos_normed <- get_Top2(multi_pos_normed)
-  top2_pos_relnormed <- t(NormalizeRelative(as.matrix(t(multi_pos_normed))))
+  top2_pos_relnormed <- t(NormalizeRelative(as.matrix(t(top2_multi_pos_normed))))
   return(list(pos_normed, top2_pos_relnormed))
 }
 
@@ -133,11 +133,17 @@ gridSearch <- function(seuratObj, barcodeMatrix, hto, cutoffs_in, penalty, num =
   num <- min(num, length(lower)-1, length(higher)-1)
   lower_eval <- tail(lower, num + 1)
   higher_eval <- head(higher, num + 1)
+  if (num < 3) {
+    obj_vals <- data.frame("cutoff" = cutoff, "obj" = evaluate_objective(seuratObj, cutoffs))
+    names(obj_vals) <- c("cutoff", "obj")
+    return(obj_vals)
+  }
   cutoff_temp <- mean(c(lower_eval[[1]], lower_eval[[2]]))
   cutoffs[[hto]] <- cutoff_temp
   obj_vals <- data.frame("cutoff" = cutoff_temp, "obj" = evaluate_objective(seuratObj, cutoffs))
   names(obj_vals) <- c("cutoff", "obj")
   #Scan cutoff values below original PeakND threshold
+  
   for (i in 2:num) {
     cutoff_temp <- mean(c(lower_eval[[i]], lower_eval[[i+1]]))
     cutoffs[[hto]] <- cutoff_temp
@@ -185,30 +191,8 @@ loopsearch <- function(seuratObj, barcodeMatrix, cutoffs, penalty = 'log') {
 
 # Old PeakND
 
-getCountCutoff <- function(data, label) {
-  #TODO: See about making this code less dependent on initial conditions
-  num_peaks <- 10000
-  change <- 10
-  j <- 0
-  data <- log10(as.vector(data))
-  while ((change > 0) | (num_peaks > 2)) {
-    j <- j + 0.5
-    #TODO?: Potentially add support for different kernels/bandwidths? 
-    smooth <- stats::density(data, adjust = j, kernel = 'gaussian',
-                      bw = 'SJ', give.Rkern = FALSE)
-    deriv <- numeric(length(smooth$x))
-    max_list <- c()
-    for (i in 2:(length(smooth$x)-1)){
-      deriv[i] <- smooth$y[i+1] - smooth$y[i-1]
-    }
-    for (i in 2:(length(smooth$x)-1)){
-      if ((deriv[i+1] < 0 ) && (deriv[i] >= 0) ) {
-        max_list <- c(max_list, i)
-      }
-    }
-    change <- num_peaks - length(max_list)
-    num_peaks <- length(max_list)
-  }
+
+PlotCutoff <- function(data, smooth, label) {
   deriv <- numeric(length(smooth$x))
   max_list <- c()
   for (i in 2:(length(smooth$x)-1)){
@@ -222,13 +206,7 @@ getCountCutoff <- function(data, label) {
   yvals <- sapply(max_list, FUN = function(x) {
     return(smooth$y[x])
   })
-  y1 <- max(yvals)
-  index1 <- max_list[which.max(yvals)]
-  x1 <- smooth$x[index1]
-  y2 <- max(yvals[yvals != y1])
-  index2 <- max_list[which(yvals==y2)]
-  x2 <- smooth$x[index2]
-
+  
   nbins <- 100
   P1 <- ggplot(data.frame(Value = data), aes(x = Value)) +
     #geom_histogram(aes(y = stat(count / sum(count))), bins = nbins) +
@@ -237,33 +215,109 @@ getCountCutoff <- function(data, label) {
     xlab("log2(HTO Counts)") +
     geom_line(data = data.frame(x = smooth$x, y = smooth$y), mapping = aes(x = x, y = y), color = "blue", size = 1) +
     geom_line(data = data.frame(x = smooth$x, y = 50*deriv), mapping = aes(x = x, y = y), color = "red", size = 1)
-
+  
   ymax <- max(graphics::hist(data, breaks = nbins, plot=FALSE)$density)
   P1 <- P1 + ylim(c(0, ymax * 1.05))
-
-  if (x2 < x1) {
-    #2nd peak must be at least 1/10th the maximum peak
-    if (y2 < (y1/10)) {
-      print('Second peak was not at least 1/10th the maximum peak, using max value as cutoff')
-      P1 <- P1 + geom_vline(xintercept = max(data), size = 1)
-      print(P1)
-
-      return(max(data))
+  
+  if (length(max_list) > 1) {
+    y1 <- max(yvals)
+    index1 <- max_list[which.max(yvals)]
+    x1 <- smooth$x[index1]
+    y2 <- max(yvals[yvals != y1])
+    index2 <- max_list[which(yvals==y2)]
+    x2 <- smooth$x[index2]
+    
+    
+    if (x2 < x1){
+      #2nd peak must be at least 1/10th the maximum peak
+      if (y2 < (y1/10)) {
+        print('Second peak was not at least 1/10th the maximum peak, using max value as cutoff')
+        P1 <- P1 + geom_vline(xintercept = max(data), size = 1)
+        print(P1)
+        
+        return(max(data))
+      }
+      
+      cutoff_indices <- index2:index1
     }
-
-    cutoff_indices <- index2:index1
+    else {
+      cutoff_indices <- index1:index2
+    }
+    cutoff_index <- which.min(smooth$y[cutoff_indices]) + min(cutoff_indices)
+    cutoff <- smooth$x[cutoff_index]
   }
   else {
-    cutoff_indices <- index1:index2
+    print('Second peak was not at least 1/10th the maximum peak, using max value as cutoff')
+    P1 <- P1 + geom_vline(xintercept = max(data), size = 1)
+    print(P1)
+    
+    return(max(data))
   }
-  cutoff_index <- which.min(smooth$y[cutoff_indices]) + min(cutoff_indices)
-  cutoff <- smooth$x[cutoff_index]
-
+  
   P1 <- P1 + geom_vline(xintercept = cutoff, size = 1)
-
   print(P1)
-
   return(cutoff)
+
+}
+
+getCountCutoff <- function(data, label, barcodeBlocklist = NULL) {
+  #TODO: See about making this code less dependent on initial conditions
+  num_peaks <- 10000
+  change <- 10
+  j <- 1
+  max2_list <- numeric(10)
+  data <- log10(as.vector(data))
+  data <- data[data > 0]
+  while ((change > 0) | (length(max2_list) > 4)) {
+    j <- j + 0.5
+    #TODO?: Potentially add support for different kernels/bandwidths? 
+    smooth <- stats::density(data, adjust = j, kernel = 'gaussian',
+                      bw = 'SJ', give.Rkern = FALSE)
+    deriv <- numeric(length(smooth$x))
+    deriv2 <- numeric(length(smooth$x))
+    max_list <- c()
+    max2_list <- c()
+    for (i in 2:(length(smooth$x)-1)){
+      deriv[i] <- smooth$y[i+1] - smooth$y[i-1]
+      deriv2[i] <- smooth$y[i+1] - 2*smooth$y[i] + smooth$y[i-1]
+    }
+    for (i in 2:(length(smooth$x)-1)){
+      if ((deriv[i+1] < 0 ) && (deriv[i] >= 0) ) {
+        max_list <- c(max_list, i)
+      }
+      if ((deriv2[i+1] < 0 ) && (deriv2[i] >= 0) ) {
+        max2_list <- c(max2_list, i)
+      }
+    }
+    change <- num_peaks - length(max_list)
+    num_peaks <- length(max_list)
+    outlabel <- paste(label, change, num_peaks, length(max2_list))
+    
+  }
+  cutoff <- PlotCutoff(data, smooth, outlabel)
+  if (cutoff == max(data)) {
+    barcodeBlocklist <- c(barcodeBlocklist, label)
+  }
+
+  return(list(cutoff, barcodeBlocklist))
+}
+
+getPeakNDBarcodeWhitelist <- function(barcodeMatrix) {
+  # barcodeMatrix <- GetAssayData(
+  #   object = seuratObj,
+  #   assay = 'HTO',
+  #   slot = 'counts'
+  # )[, colnames(x = seuratObj)]
+  barcodeBlocklist <- NULL
+  
+  for (hto in rownames(barcodeMatrix)) {
+    cells <- barcodeMatrix[hto, colnames(barcodeMatrix), drop = FALSE]
+    #PeakND uses a log-scale to smooth higher counts, so we transform back once we find the threshold
+    cutoffresults <- getCountCutoff(cells, hto, barcodeBlocklist)
+    barcodeBlocklist <- cutoffresults[[2]]
+  }
+  PeakNDBarcodeWhitelist <- row.names(barcodeMatrix[!row.names(barcodeMatrix) %in% barcodeBlocklist,])
+  return(PeakNDBarcodeWhitelist)
 }
 
 
@@ -342,12 +396,13 @@ PeakNDDemux <- function(seuratObj, assay, optimize_cutoffs, recover, doublet_thr
   for (hto in rownames(barcodeMatrix)) {
     cells <- barcodeMatrix[hto, colnames(seuratObj), drop = FALSE]
     #PeakND uses a log-scale to smooth higher counts, so we transform back once we find the threshold
-    threshold <- 10^getCountCutoff(cells, hto)
+    cutoffresults <- getCountCutoff(cells, hto)
+    threshold <- 10^(cutoffresults[[1]])
     discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold, yes = 1, no = 0)
     cutoffs[[hto]] <- threshold
   }
+  # barcodeMatrix <- barcodeMatrix[!row.names(barcodeMatrix) %in% barcodeBlocklist,]
   write.table(as.data.frame(discrete), file = disc_outfile, sep = '\t', row.names = TRUE, quote = FALSE, col.names = NA)
-  
   print("Unoptimized Thresholds:")
   print(cutoffs)
   #New PeakND code
