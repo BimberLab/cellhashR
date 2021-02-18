@@ -186,10 +186,17 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
   methods <- expectedMethods
   allCalls <- NULL
   for (method in names(callList)) {
+		if (is.null(callList[[method]])) {
+			stop(paste0('Calls were NULL for ', method, ' this should not happen'))
+			next
+		}
+
+    df <- data.frame(lapply(callList[[method]], as.character), stringsAsFactors=FALSE)
+
     if (all(is.null(allCalls))) {
-      allCalls <- callList[[method]]
+      allCalls <- df
     } else {
-      allCalls <- rbind(allCalls, callList[[method]])
+      allCalls <- rbind(allCalls, df)
     }
   }
 
@@ -203,13 +210,20 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       toAdd <- cellbarcodeWhitelist[!(cellbarcodeWhitelist %in% unique(dat$cellbarcode))]
       if (length(toAdd) > 0) {
         print(paste0('Re-adding ', length(toAdd), ' cell barcodes to call list for: ', method))
-        allCalls <- rbind(allCalls, data.frame(cellbarcode = toAdd, method = method, classification = 'Low Counts', classification.global = 'Low Counts'))
+        allCalls <- rbind(allCalls, data.frame(cellbarcode = toAdd, method = method, classification = 'Low Counts', classification.global = 'Low Counts', stringsAsFactors = FALSE))
         .LogMetric(metricsFile, 'TotalLowCounts', length(toAdd))
       }
     }
 
     allCalls$classification <- naturalsort::naturalfactor(allCalls$classification)
+    if (!('Negative') %in% levels(allCalls$classification)) {
+      levels(allCalls$classification) <- c(levels(allCalls$classification), 'Negative')
+    }
+
     allCalls$classification.global <- naturalsort::naturalfactor(allCalls$classification.global)
+    if (!('Negative') %in% levels(allCalls$classification.global)) {
+      levels(allCalls$classification.global) <- c(levels(allCalls$classification.global), 'Negative')
+    }
   }
 
   tryCatch({
