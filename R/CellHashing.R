@@ -214,16 +214,16 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
         .LogMetric(metricsFile, 'TotalLowCounts', length(toAdd))
       }
     }
+  }
 
-    allCalls$classification <- naturalsort::naturalfactor(allCalls$classification)
-    if (!('Negative') %in% levels(allCalls$classification)) {
-      levels(allCalls$classification) <- c(levels(allCalls$classification), 'Negative')
-    }
+  allCalls$classification <- naturalsort::naturalfactor(allCalls$classification)
+  if (!('Negative') %in% levels(allCalls$classification)) {
+    levels(allCalls$classification) <- c(levels(allCalls$classification), 'Negative')
+  }
 
-    allCalls$classification.global <- naturalsort::naturalfactor(allCalls$classification.global)
-    if (!('Negative') %in% levels(allCalls$classification.global)) {
-      levels(allCalls$classification.global) <- c(levels(allCalls$classification.global), 'Negative')
-    }
+  allCalls$classification.global <- naturalsort::naturalfactor(allCalls$classification.global)
+  if (!('Negative') %in% levels(allCalls$classification.global)) {
+    levels(allCalls$classification.global) <- c(levels(allCalls$classification.global), 'Negative')
   }
 
   tryCatch({
