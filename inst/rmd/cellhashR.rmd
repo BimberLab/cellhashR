@@ -38,7 +38,7 @@ if (!file.exists(rawCountData)) {
 }
 
 optionalVars <- c('barcodeWhitelist', 'cellbarcodeWhitelist', 'citeSeqCountDir', 'minCountPerCell', 'metricsFile')
-for (v in requiredVars) {
+for (v in optionalVars) {
 	if (!exists(v)) {
 		if (v == 'minCountPerCell') {
 			minCountPerCell <- 5
