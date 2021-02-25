@@ -261,13 +261,24 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
     return()
   }
 
+  if (!is.null(cellbarcodeWhitelist) && is.character(cellbarcodeWhitelist) && length(cellbarcodeWhitelist) == 1 && file.exists(cellbarcodeWhitelist)) {
+    cellbarcodeWhitelist <- read.table(cellbarcodeWhitelist, header = FALSE)[,1]
+  }
+
   methods <- expectedMethods
   allCalls <- NULL
   for (method in names(callList)) {
+		if (is.null(callList[[method]])) {
+			stop(paste0('Calls were NULL for ', method, ' this should not happen'))
+			next
+		}
+
+    df <- data.frame(lapply(callList[[method]], as.character), stringsAsFactors=FALSE)
+
     if (all(is.null(allCalls))) {
-      allCalls <- callList[[method]]
+      allCalls <- df
     } else {
-      allCalls <- rbind(allCalls, callList[[method]])
+      allCalls <- rbind(allCalls, df)
     }
   }
 
@@ -281,17 +292,37 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       toAdd <- cellbarcodeWhitelist[!(cellbarcodeWhitelist %in% unique(dat$cellbarcode))]
       if (length(toAdd) > 0) {
         print(paste0('Re-adding ', length(toAdd), ' cell barcodes to call list for: ', method))
-        allCalls <- rbind(allCalls, data.frame(cellbarcode = toAdd, method = method, classification = 'Low Counts', classification.global = 'Low Counts'))
+        allCalls <- rbind(allCalls, data.frame(cellbarcode = toAdd, method = method, classification = 'Low Counts', classification.global = 'Low Counts', stringsAsFactors = FALSE))
         .LogMetric(metricsFile, 'TotalLowCounts', length(toAdd))
       }
     }
-
-    allCalls$classification <- naturalsort::naturalfactor(allCalls$classification)
-    allCalls$classification.global <- naturalsort::naturalfactor(allCalls$classification.global)
   }
 
-  dataClassification <- allCalls[c('cellbarcode', 'method', 'classification')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification, values_fill = 'Negative')
-  dataClassificationGlobal <- allCalls[c('cellbarcode', 'method', 'classification.global')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification.global, values_fill = 'Negative')
+  allCalls$classification <- naturalsort::naturalfactor(allCalls$classification)
+  if (!('Negative') %in% levels(allCalls$classification)) {
+    levels(allCalls$classification) <- c(levels(allCalls$classification), 'Negative')
+  }
+
+  allCalls$classification.global <- naturalsort::naturalfactor(allCalls$classification.global)
+  if (!('Negative') %in% levels(allCalls$classification.global)) {
+    levels(allCalls$classification.global) <- c(levels(allCalls$classification.global), 'Negative')
+  }
+
+  tryCatch({
+    dataClassification <- allCalls[c('cellbarcode', 'method', 'classification')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification, values_fill = 'Negative')
+    dataClassificationGlobal <- allCalls[c('cellbarcode', 'method', 'classification.global')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification.global, values_fill = 'Negative')
+  }, error = function(e){
+    print('Error pivoting calls table!')
+    if (!is.null(metricsFile)) {
+      fn <- paste0(dirname(metricsFile), '/allCalls.txt')
+      write.table(allCalls, file = fn, sep = '\t', quote = FALSE, row.names = FALSE)
+    }
+
+    print(conditionMessage(e))
+    traceback()
+
+    stop(e)
+  })
 
   for (method in methods) {
     if (!(method %in% names(dataClassification))) {
@@ -521,15 +552,16 @@ GetExampleMarkdown <- function(dest) {
 #' @param reportFile The file to which the HTML report will be written
 #' @param callFile The file to which the table of calls will be written
 #' @param barcodeWhitelist A vector of barcode names to retain.
-#' @param cellbarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
+#' @param cellbarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), a file with one cellbarcode per line, or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
 #' @param methods The set of methods to use for calling. See GenerateCellHashingCalls for options.
 #' @param citeSeqCountDir This is the root folder of the Cite-seq-Count output, containing umi_count and read_count folders. If provided, this will be used to generate a library saturation plot
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
 #' @param metricsFile If provided, summary metrics will be written to this file.
+#' @param skipNormalizationQc If true, the normalization/QC plots will be skipped. These can be time consuming on large input data.
 #' @param title A title for the HTML report
 #' @importFrom rmdformats html_clean
 #' @export
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), citeSeqCountDir = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL) {
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), citeSeqCountDir = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, skipNormalizationQc = FALSE) {
   rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
   if (!file.exists(rmd)) {
     stop(paste0('Unable to find file: ', rmd))
@@ -539,6 +571,8 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhi
   if (!is.null(title)) {
     paramList[['doc_title']] <- title
   }
+
+  paramList[['skipNormalizationQc']] <- skipNormalizationQc
 
   rawCountData <- normalizePath(rawCountData)
   if (!is.null(citeSeqCountDir)) {

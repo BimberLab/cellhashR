@@ -7,6 +7,7 @@
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
 #' @param barcodeWhitelist A vector of barcode names to retain.
 #' @param barcodeBlacklist A vector of barcodes names to discard.
+#' @param cellbarcodeWhitelist If provided, the raw count matrix will be subset to include only these cells. This allows one to use the cellranger unfiltered matrix as an input, but filter based on target cells, such as those with GEX data. This can either be a character vector of barcodes, or a file with one cell barcode per line.
 #' @param doPlot If true, QC plots will be generated
 #' @param simplifyBarcodeNames If true, the sequence tag portion will be removed from the barcode names (i.e. HTO-1-ATGTGTGA -> HTO-1)
 #' @param saveOriginalCellBarcodeFile An optional file path, where the set of original cell barcodes, prior to filtering, will be written. The primary use-case is if the count matrix was generated using a cell whitelist (like cells with passing gene expression). Preserving this list allows downstream reporting.
@@ -16,10 +17,20 @@
 #' @import utils
 #' @return The updated count matrix
 #' @export
-ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), doPlot = TRUE, simplifyBarcodeNames = TRUE, saveOriginalCellBarcodeFile = NULL, metricsFile = NULL) {
+ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), cellbarcodeWhitelist = NULL, doPlot = TRUE, simplifyBarcodeNames = TRUE, saveOriginalCellBarcodeFile = NULL, metricsFile = NULL) {
 	barcodeData <- .LoadCountMatrix(rawCountData = rawCountData, barcodeBlacklist = barcodeBlacklist, simplifyBarcodeNames = simplifyBarcodeNames)
 
 	print(paste0('Initial cell barcodes in hashing data: ', ncol(barcodeData)))
+
+	if (!is.null(cellbarcodeWhitelist)) {
+		if (is.character(cellbarcodeWhitelist) && length(cellbarcodeWhitelist) == 1 && file.exists(cellbarcodeWhitelist)) {
+			cellbarcodeWhitelist <- read.table(cellbarcodeWhitelist, header = FALSE)[,1]
+		}
+
+		cellbarcodeWhitelistToUse <- intersect(cellbarcodeWhitelist, colnames(barcodeData))
+		barcodeData <- barcodeData[ , cellbarcodeWhitelistToUse, drop = FALSE]
+		print(paste0('Subsetting based on whitelist. Cells in whitelist: ', length(cellbarcodeWhitelist), ', cells in matrix after subset: ', ncol(barcodeData)))
+	}
 	.LogMetric(metricsFile, 'InitialCellBarcodes', ncol(barcodeData))
 
 	if (!is.null(saveOriginalCellBarcodeFile)) {

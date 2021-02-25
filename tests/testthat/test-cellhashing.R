@@ -97,6 +97,26 @@ tests <- list(
     )
 )
 
+test_that("Cellbarcode Whitelist Works", {
+	test <- tests[['438-21']]
+	
+	#Subset rows to run quicker:
+	countData <- Seurat::Read10X(test$input, gene.column=1, strip.suffix = TRUE)
+	countData <- countData[,1:2500]
+
+	cellbarcodeWhitelist <- colnames(countData)[1:200]
+
+	mat <- ProcessCountMatrix(rawCountData = test$input, cellbarcodeWhitelist = cellbarcodeWhitelist)
+	expect_equal(colnames(mat), cellbarcodeWhitelist)
+
+	fn <- 'whitelist.txt'
+	write.table(cellbarcodeWhitelist, file = fn, row.names = FALSE, col.names = FALSE, quote = FALSE)
+	mat <- ProcessCountMatrix(rawCountData = test$input, cellbarcodeWhitelist = fn)
+	expect_equal(colnames(mat), cellbarcodeWhitelist)
+
+	unlink(fn)
+})
+
 test_that("RMarkdown Copy works", {
 	fn <- paste0(getwd(), '/foo.rmd')
 	print(paste0('saving file to: ', fn))
@@ -128,6 +148,17 @@ test_that("Workflow works", {
 	expect_true(file.exists(metricsFile))
 	metrics <- read.table(metricsFile, sep = '\t', header = FALSE)
 	expect_equal(nrow(metrics), 23)
+
+	unlink(html)
+	unlink(output)
+	unlink(metricsFile)
+	
+	# Repeat with skip normalization
+	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile, skipNormalizationQc = TRUE)
+	
+	df <- read.table(output, sep = '\t', header = TRUE)
+	expect_equal(nrow(df), 2500)
+	expect_equal(sum(df$consensuscall == 'MS-12'), 1124)
 
 	unlink(html)
 	unlink(output)

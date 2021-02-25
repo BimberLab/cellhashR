@@ -14,7 +14,8 @@ CallAndGenerateReport(
   citeSeqCountDir = NULL,
   minCountPerCell = 5,
   title = NULL,
-  metricsFile = NULL
+  metricsFile = NULL,
+  skipNormalizationQc = FALSE
 )
 }
 \arguments{
@@ -26,7 +27,7 @@ CallAndGenerateReport(
 
 \item{barcodeWhitelist}{A vector of barcode names to retain.}
 
-\item{cellbarcodeWhitelist}{Either a vector of expected barcodes (such as all cells with passing gene expression data), or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.}
+\item{cellbarcodeWhitelist}{Either a vector of expected barcodes (such as all cells with passing gene expression data), a file with one cellbarcode per line, or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.}
 
 \item{methods}{The set of methods to use for calling. See GenerateCellHashingCalls for options.}
 
@@ -37,6 +38,8 @@ CallAndGenerateReport(
 \item{title}{A title for the HTML report}
 
 \item{metricsFile}{If provided, summary metrics will be written to this file.}
+
+\item{skipNormalizationQc}{If true, the normalization/QC plots will be skipped. These can be time consuming on large input data.}
 }
 \description{
 Runs the default processing pipeline
