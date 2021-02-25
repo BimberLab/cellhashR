@@ -3,7 +3,7 @@
 #' @include Multiseq.R
 #' @include Seurat_HTO_Demux.R
 #' @include SeqND_Demux.R
-#' @include PeakND_Demux.R
+#' @include BFF_Demux.R
 #' @include Threshold_Demux.R
 #' @include DropletUtils_Demux.R
 
@@ -155,62 +155,86 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-    } else if (method == 'peaknd'){
+    } else if (method == 'bff'){
       tryCatch({
-      calls <- GenerateCellHashCallsPeakND(barcodeMatrix, optimize_cutoffs=FALSE, recover=FALSE, doublet_thresh = NULL, neg_thresh=NULL, rec_meth=1)
+      calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=FALSE, recover=FALSE, doublet_thresh = NULL, neg_thresh=NULL, rec_meth=1)
       }, error = function(e){
-        warning('Error generating peaknd calls, aborting', e)
+        warning('Error generating bff calls, aborting', e)
         return(NULL)
       })
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-		} else if (method == 'peaknd_opt_rec'){
+		} else if (method == 'bff_opt_rec'){
       tryCatch({
-        calls <- GenerateCellHashCallsPeakND(barcodeMatrix, optimize_cutoffs=TRUE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=1)
+        calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=TRUE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=1)
       }, error = function(e){
-        warning('Error generating peaknd calls, aborting', e)
+        warning('Error generating bff calls, aborting', e)
         return(NULL)
       })
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-    } else if (method == 'peaknd_opt_rec2'){
+    } else if (method == 'bff_opt_rec2'){
       tryCatch({
-        calls <- GenerateCellHashCallsPeakND(barcodeMatrix, optimize_cutoffs=TRUE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=2)
+        calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=TRUE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=2)
       }, error = function(e){
-        warning('Error generating peaknd calls, aborting', e)
+        warning('Error generating bff calls, aborting', e)
         return(NULL)
       })
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-    } else if (method == 'peaknd_opt'){
+    } else if (method == 'bff_opt'){
       tryCatch({
-        calls <- GenerateCellHashCallsPeakND(barcodeMatrix, optimize_cutoffs=TRUE, recover=FALSE, doublet_thresh = NULL, neg_thresh=NULL, rec_meth=1)
+        calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=TRUE, recover=FALSE, doublet_thresh = NULL, neg_thresh=NULL, rec_meth=1)
       }, error = function(e){
-        warning('Error generating peaknd calls, aborting', e)
+        warning('Error generating bff calls, aborting', e)
         return(NULL)
       })
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
 # } else
-    } else if (method == 'peaknd_rec'){
+    } else if (method == 'bff_rec'){
       tryCatch({
-        calls <- GenerateCellHashCallsPeakND(barcodeMatrix, optimize_cutoffs=FALSE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=1)
+        calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=FALSE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=1)
       }, error = function(e){
-        warning('Error generating peaknd calls, aborting', e)
+        warning('Error generating bff calls, aborting', e)
         return(NULL)
       })
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-    } else if (method == 'peaknd_rec2'){
+    } else if (method == 'bff_rec2'){
       tryCatch({
-        calls <- GenerateCellHashCallsPeakND(barcodeMatrix, optimize_cutoffs=FALSE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=2)
+        calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=FALSE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=2)
       }, error = function(e){
-        warning('Error generating peaknd calls, aborting')
+        warning('Error generating bff calls, aborting')
+        print(conditionMessage(e))
+        traceback()
+        return(NULL)
+      })
+      if (!is.null(calls)) {
+        callList[[method]] <- calls
+      }
+    } else if (method == 'bff_dist'){
+      tryCatch({
+        calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=FALSE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=3)
+      }, error = function(e){
+        warning('Error generating bff calls, aborting')
+        print(conditionMessage(e))
+        traceback()
+        return(NULL)
+      })
+      if (!is.null(calls)) {
+        callList[[method]] <- calls
+      }
+    } else if (method == 'bff_opt_dist'){
+      tryCatch({
+        calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=TRUE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=3)
+      }, error = function(e){
+        warning('Error generating BFF calls, aborting')
         print(conditionMessage(e))
         traceback()
         return(NULL)
