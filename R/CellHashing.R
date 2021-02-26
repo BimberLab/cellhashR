@@ -165,47 +165,47 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-		} else if (method == 'bff_opt_rec'){
-      tryCatch({
-        calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=TRUE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=1)
-      }, error = function(e){
-        warning('Error generating bff calls, aborting', e)
-        return(NULL)
-      })
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_opt_rec2'){
-      tryCatch({
-        calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=TRUE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=2)
-      }, error = function(e){
-        warning('Error generating bff calls, aborting', e)
-        return(NULL)
-      })
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_opt'){
-      tryCatch({
-        calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=TRUE, recover=FALSE, doublet_thresh = NULL, neg_thresh=NULL, rec_meth=1)
-      }, error = function(e){
-        warning('Error generating bff calls, aborting', e)
-        return(NULL)
-      })
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-# } else
-    } else if (method == 'bff_rec'){
-      tryCatch({
-        calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=FALSE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=1)
-      }, error = function(e){
-        warning('Error generating bff calls, aborting', e)
-        return(NULL)
-      })
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
+# 		} else if (method == 'bff_opt_rec'){
+#       tryCatch({
+#         calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=TRUE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=1)
+#       }, error = function(e){
+#         warning('Error generating bff calls, aborting', e)
+#         return(NULL)
+#       })
+#       if (!is.null(calls)) {
+#         callList[[method]] <- calls
+#       }
+#     } else if (method == 'bff_opt_rec2'){
+#       tryCatch({
+#         calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=TRUE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=2)
+#       }, error = function(e){
+#         warning('Error generating bff calls, aborting', e)
+#         return(NULL)
+#       })
+#       if (!is.null(calls)) {
+#         callList[[method]] <- calls
+#       }
+#     } else if (method == 'bff_opt'){
+#       tryCatch({
+#         calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=TRUE, recover=FALSE, doublet_thresh = NULL, neg_thresh=NULL, rec_meth=1)
+#       }, error = function(e){
+#         warning('Error generating bff calls, aborting', e)
+#         return(NULL)
+#       })
+#       if (!is.null(calls)) {
+#         callList[[method]] <- calls
+#       }
+# # } else
+#     } else if (method == 'bff_rec'){
+#       tryCatch({
+#         calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=FALSE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=1)
+#       }, error = function(e){
+#         warning('Error generating bff calls, aborting', e)
+#         return(NULL)
+#       })
+#       if (!is.null(calls)) {
+#         callList[[method]] <- calls
+#       }
     } else if (method == 'bff_rec2'){
       tryCatch({
         calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=FALSE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=2)
@@ -230,18 +230,18 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-    } else if (method == 'bff_opt_dist'){
-      tryCatch({
-        calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=TRUE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=3)
-      }, error = function(e){
-        warning('Error generating BFF calls, aborting')
-        print(conditionMessage(e))
-        traceback()
-        return(NULL)
-      })
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
+    # } else if (method == 'bff_opt_dist'){
+    #   tryCatch({
+    #     calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=TRUE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=3)
+    #   }, error = function(e){
+    #     warning('Error generating BFF calls, aborting')
+    #     print(conditionMessage(e))
+    #     traceback()
+    #     return(NULL)
+    #   })
+    #   if (!is.null(calls)) {
+    #     callList[[method]] <- calls
+    #   }
     } else {
       stop(paste0('Unknown method: ', method))
     }
