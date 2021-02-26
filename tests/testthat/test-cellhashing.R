@@ -43,7 +43,7 @@ tests <- list(
       MultiSeqCalled = 4547,
       Discordant = 376,
       SeuratCalled = 3038,
-			SeqNDCalled = 3959
+			BffCalled = 3959
     ),
     '449-1' = list(
       input = '../testdata/449-1-GEX/umi_count',
@@ -242,7 +242,7 @@ test_that("Cell hashing works", {
 })
 
 
-test_that("SeqND calling works", {
+test_that("BFF calling works", {
 	testName <- names(tests)[4]
 
 	print(paste0('Running test: ', testName))
@@ -254,11 +254,11 @@ test_that("SeqND calling works", {
 		summaryFile <- paste0(testName, '-summary.txt')
 	}
 
-	l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile, methods = c('dropletutils', 'threshold', 'peaknd', 'seqnd', 'multiseq', 'htodemux'), skipNormalizationQc = TRUE)
+	l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile, methods = c('dropletutils', 'threshold', 'bff', 'seqnd', 'multiseq', 'htodemux'), skipNormalizationQc = TRUE)
 	barcodeData <- l$barcodeData
 	df <- l$df
 	metricsFile <- l$metricsFile
 	unlink(metricsFile)
 	
-	expect_equal(expected = test[['SeqNDCalled']], object = sum(df$seqnd != 'Negative'), info = testName)
+	expect_equal(expected = test[['BffCalled']], object = sum(df$bff != 'Negative'), info = testName)
 })
