@@ -111,6 +111,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
   return(seuratObj)
 }
 
+
 #' @title Generate Cell Hashing Calls
 #'
 #' @param barcodeMatrix The filtered matrix of hashing count data
@@ -157,7 +158,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       }
     } else if (method == 'bff'){
       tryCatch({
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=FALSE, recover=FALSE, doublet_thresh = NULL, neg_thresh=NULL, rec_meth=1)
+      calls <- GenerateCellHashCallsBFF(barcodeMatrix, recover=FALSE, doublet_thresh = NULL, neg_thresh=NULL, rec_meth=1)
       }, error = function(e){
         warning('Error generating bff calls, aborting', e)
         return(NULL)
@@ -165,50 +166,9 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-# 		} else if (method == 'bff_opt_rec'){
-#       tryCatch({
-#         calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=TRUE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=1)
-#       }, error = function(e){
-#         warning('Error generating bff calls, aborting', e)
-#         return(NULL)
-#       })
-#       if (!is.null(calls)) {
-#         callList[[method]] <- calls
-#       }
-#     } else if (method == 'bff_opt_rec2'){
-#       tryCatch({
-#         calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=TRUE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=2)
-#       }, error = function(e){
-#         warning('Error generating bff calls, aborting', e)
-#         return(NULL)
-#       })
-#       if (!is.null(calls)) {
-#         callList[[method]] <- calls
-#       }
-#     } else if (method == 'bff_opt'){
-#       tryCatch({
-#         calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=TRUE, recover=FALSE, doublet_thresh = NULL, neg_thresh=NULL, rec_meth=1)
-#       }, error = function(e){
-#         warning('Error generating bff calls, aborting', e)
-#         return(NULL)
-#       })
-#       if (!is.null(calls)) {
-#         callList[[method]] <- calls
-#       }
-# # } else
-#     } else if (method == 'bff_rec'){
-#       tryCatch({
-#         calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=FALSE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=1)
-#       }, error = function(e){
-#         warning('Error generating bff calls, aborting', e)
-#         return(NULL)
-#       })
-#       if (!is.null(calls)) {
-#         callList[[method]] <- calls
-#       }
     } else if (method == 'bff_rec2'){
       tryCatch({
-        calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=FALSE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=2)
+        calls <- GenerateCellHashCallsBFF(barcodeMatrix, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=2)
       }, error = function(e){
         warning('Error generating bff calls, aborting')
         print(conditionMessage(e))
@@ -220,7 +180,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       }
     } else if (method == 'bff_dist'){
       tryCatch({
-        calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=FALSE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=3)
+        calls <- GenerateCellHashCallsBFF(barcodeMatrix, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=3)
       }, error = function(e){
         warning('Error generating bff calls, aborting')
         print(conditionMessage(e))
@@ -230,23 +190,10 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-    # } else if (method == 'bff_opt_dist'){
-    #   tryCatch({
-    #     calls <- GenerateCellHashCallsBFF(barcodeMatrix, optimize_cutoffs=TRUE, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=3)
-    #   }, error = function(e){
-    #     warning('Error generating BFF calls, aborting')
-    #     print(conditionMessage(e))
-    #     traceback()
-    #     return(NULL)
-    #   })
-    #   if (!is.null(calls)) {
-    #     callList[[method]] <- calls
-    #   }
     } else {
       stop(paste0('Unknown method: ', method))
     }
   }
-
   return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile))
 }
 
