@@ -289,7 +289,7 @@ BFFDemux <- function(seuratObj, assay, recover, doublet_thresh, neg_thresh, rec_
   #return a discrete matrix, with 1 equal to a call positive for that barcode
   discrete <- GetAssayData(object = seuratObj, assay = assay)
   discrete[discrete > 0] <- 0
-  cutoffs <- hash::hash()
+  cutoffs <- list()
   for (hto in rownames(barcodeMatrix)) {
     cells <- barcodeMatrix[hto, colnames(seuratObj), drop = FALSE]
     #BFF uses a log-scale to smooth higher counts, so we transform back once we find the threshold
@@ -305,7 +305,10 @@ BFFDemux <- function(seuratObj, assay, recover, doublet_thresh, neg_thresh, rec_
   }
   
   print("Thresholds:")
-  print(cutoffs)
+  for (cutoff : names(cutoffs)) {
+    print(paste0(cutoff, ': ', cutoffs[[cutoff]]))
+  }
+
   if (recover == FALSE) {
     seuratObj <- .AssignCallsToMatrix(seuratObj, as.matrix(discrete), suffix = 'bff', assay = assay)
     return(seuratObj)
@@ -328,7 +331,7 @@ BFFDemux <- function(seuratObj, assay, recover, doublet_thresh, neg_thresh, rec_
       pos_norm <- doublet_res[[4]]
       tot_normed <- pos_norm + neg_norm
       
-      normed_cutoffs <- hash::hash()
+      normed_cutoffs <- list()
       max_list <- c()
       for (hto in colnames(tot_normed)) {
         cells <- tot_normed[rownames(tot_normed), hto, drop = FALSE]
@@ -343,7 +346,7 @@ BFFDemux <- function(seuratObj, assay, recover, doublet_thresh, neg_thresh, rec_
         normed_cutoffs[[hto]] <- threshold
       }
       
-      norm_cutoff <- mean(as.numeric(hash::values(normed_cutoffs)))
+      norm_cutoff <- mean(as.numeric(normed_cutoffs))
       maxima <- colMeans(max_list)
       neg_mode <- maxima[1]
       pos_mode <- maxima[2]
