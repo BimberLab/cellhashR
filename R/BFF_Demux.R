@@ -305,7 +305,7 @@ BFFDemux <- function(seuratObj, assay, recover, doublet_thresh, neg_thresh, rec_
   }
   
   print("Thresholds:")
-  for (cutoff : names(cutoffs)) {
+  for (cutoff in names(cutoffs)) {
     print(paste0(cutoff, ': ', cutoffs[[cutoff]]))
   }
 
