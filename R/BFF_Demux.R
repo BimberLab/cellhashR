@@ -41,7 +41,7 @@ filter_lowmax <- function(mat, minval) {
 }
 
 
-top2_counts <- function(discrete, barcodeMatrix) {
+top2_negcounts <- function(discrete, barcodeMatrix) {
   negs <- colnames(discrete[, colSums(discrete)==0])
   negdiscrete <- 1 - discrete
   is.na(negdiscrete) <- negdiscrete==0
@@ -313,13 +313,13 @@ BFFDemux <- function(seuratObj, assay, recover, doublet_thresh, neg_thresh, rec_
     doublet_res <- top2_doublets(discrete, barcodeMatrix)
     top2_pos_relnormed <- doublet_res[[2]]
     if (rec_meth==2){
-      top2_negs_relnormed <- top2_counts(discrete, barcodeMatrix)[[2]]
+      top2_negs_relnormed <- top2_negcounts(discrete, barcodeMatrix)[[2]]
       discrete <- rel_Threshold(top2_negs_relnormed, discrete, doublet_thresh)
       discrete <- rel_Threshold(top2_pos_relnormed, discrete, doublet_thresh)
       seuratObj <- .AssignCallsToMatrix(seuratObj, as.matrix(discrete), suffix = 'bff_rec2', assay = assay)
       return(seuratObj)
     } else if (rec_meth==3) {
-      neg_res <- top2_counts(discrete, barcodeMatrix)
+      neg_res <- top2_negcounts(discrete, barcodeMatrix)
       top2_negs <- neg_res[[3]]
       top2_negs_log <- log10(top2_negs + 1)
       top2_multi <- doublet_res[[3]]
