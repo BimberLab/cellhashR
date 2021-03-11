@@ -89,15 +89,7 @@ SimplifyHtoNames <- function(x) {
 	classification.global[npositive == 1] <- "Singlet"
 	classification.global[npositive > 1] <- "Doublet"
 
-	hash.called <- unlist(apply(X = discrete, MARGIN = 2, FUN = function(x){
-		x <- as.logical(x)
-
-		if (sum(x) > 0) {
-			return(paste(sort(rownames(discrete)[x]), sep = ','))
-		} else {
-			return('Negative')
-		}
-	}))
+	hash.called <- apply(X = mat, MARGIN = 2, FUN = which.max)
 
 	classification <- classification.global
 	classification[classification.global == "Negative"] <- "Negative"
