@@ -131,9 +131,7 @@ HTODemux <- function(
 		}
 
 		if (sum(average.expression[hto, backgroundIndices]) == 0) {
-			#TODO: unclear what to do with this?
-			print('The background clusters have zero reads, cannot call')
-			cutoff <- 100
+			stop('The background clusters have zero reads, cannot call')
 		} else {
 			values.use <- values[WhichCells(
 				object = object,
