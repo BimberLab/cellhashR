@@ -99,7 +99,7 @@ tests <- list(
 
 test_that("Cellbarcode Whitelist Works", {
 	test <- tests[['438-21']]
-	
+
 	#Subset rows to run quicker:
 	countData <- Seurat::Read10X(test$input, gene.column=1, strip.suffix = TRUE)
 	countData <- countData[,1:2500]
@@ -152,10 +152,10 @@ test_that("Workflow works", {
 	unlink(html)
 	unlink(output)
 	unlink(metricsFile)
-	
+
 	# Repeat with skip normalization
 	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile, skipNormalizationQc = TRUE)
-	
+
 	df <- read.table(output, sep = '\t', header = TRUE)
 	expect_equal(nrow(df), 2500)
 	expect_equal(sum(df$consensuscall == 'MS-12'), 1124)
@@ -229,6 +229,7 @@ test_that("Cell hashing works", {
 				unlink(metricsFile)
 
 				print(paste0('evaluating test: ', testName))
+				expect_equal(expected = 0, object = sum(df$consensuscall == 'Not Called'), info = testName)
 				expect_equal(expected = test[['CalledCells']], object = sum(df$consensuscall != 'Discordant'), info = testName)
 				expect_equal(expected = test[['Singlet']], object = sum(df$consensuscall.global == 'Singlet'), info = testName)
 				expect_equal(expected = test[['Doublet']], object = sum(df$consensuscall.global == 'Doublet'), info = testName)
