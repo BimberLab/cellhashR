@@ -157,36 +157,17 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'mul
         callList[[method]] <- calls
       }
     } else if (method == 'bff'){
-      tryCatch({
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, recover=FALSE, doublet_thresh = NULL, neg_thresh=NULL, rec_meth=1)
-      }, error = function(e){
-        warning('Error generating bff calls, aborting', e)
-        return(NULL)
-      })
+      calls <- GenerateCellHashCallsBFF(barcodeMatrix, recover=FALSE, doublet_thresh = NULL, neg_thresh=NULL, rec_meth="none")
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-    } else if (method == 'bff_rec2'){
-      tryCatch({
-        calls <- GenerateCellHashCallsBFF(barcodeMatrix, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=2)
-      }, error = function(e){
-        warning('Error generating bff calls, aborting')
-        print(conditionMessage(e))
-        traceback()
-        return(NULL)
-      })
+    } else if (method == 'bff_ratio'){
+      calls <- GenerateCellHashCallsBFF(barcodeMatrix, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth="ratio")
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-    } else if (method == 'bff_dist'){
-      tryCatch({
-        calls <- GenerateCellHashCallsBFF(barcodeMatrix, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth=3)
-      }, error = function(e){
-        warning('Error generating bff calls, aborting')
-        print(conditionMessage(e))
-        traceback()
-        return(NULL)
-      })
+    } else if (method == 'bff_quantile'){
+      calls <- GenerateCellHashCallsBFF(barcodeMatrix, recover=TRUE, doublet_thresh = 0.6, neg_thresh=0.6666, rec_meth="quantile")
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }

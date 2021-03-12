@@ -92,7 +92,6 @@ getDiscreteFromCutoffs <- function(seuratObj, assay, cutoffs) {
   discrete[discrete > 0] <- 0
   for (hto in ls(cutoffs)) {
     cells <- barcodeMatrix[hto, colnames(seuratObj), drop = FALSE]
-    #BFF uses a log-scale to smooth higher counts, so we transform back once we find the threshold
     threshold <- cutoffs[[hto]]
     discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold, yes = 1, no = 0)
   }
@@ -102,6 +101,8 @@ getDiscreteFromCutoffs <- function(seuratObj, assay, cutoffs) {
 
 
 PlotCutoff <- function(data, smooth, label) {
+  # Function to calculate the threshold between positive and negative peaks and plot the distribution, fit, and
+  # derivative peaks.
   deriv <- numeric(length(smooth$x))
   max_list <- c()
   for (i in 2:(length(smooth$x)-1)){
@@ -117,10 +118,9 @@ PlotCutoff <- function(data, smooth, label) {
   })
   nbins <- 100
   P1 <- ggplot(data.frame(Value = data), aes(x = Value)) +
-    #geom_histogram(aes(y = stat(count / sum(count))), bins = nbins) +
     geom_histogram(aes(y = ..density..), bins = nbins) +
     ggtitle(paste0("Histogram of ", label)) +
-    xlab("log2(HTO Counts)") +
+    xlab("log10(HTO Counts)") +
     geom_line(data = data.frame(x = smooth$x, y = smooth$y), mapping = aes(x = x, y = y), color = "blue", size = 1) +
     geom_line(data = data.frame(x = smooth$x, y = 50*deriv), mapping = aes(x = x, y = y), color = "red", size = 1)
   
@@ -165,12 +165,16 @@ PlotCutoff <- function(data, smooth, label) {
 
 
 getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL) {
+  # Function to find the threshold between positive and negative peaks of a barcode's distribution
   num_peaks <- 10000
   change <- 10
   j <- 1
   max2_list <- numeric(10)
   data <- log10(as.vector(data+1))
   data <- data[data > 0]
+  # Iterate KDE over sequentially larger bandwidths until fake peaks are smoothed away.
+  # Stop when there is no change in number of peaks and there are fewer peaks than the number
+  #    specified in num_deriv_peaks.
   while ((change > 0) | (length(max2_list) > num_deriv_peaks)) {
     j <- j + 0.5
     smooth <- stats::density(data, adjust = j, kernel = 'gaussian',
@@ -216,6 +220,7 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
 
 
 getBFFBarcodeBlocklist <- function(barcodeMatrix) {
+  # Function used to find barcodes without sufficiently bimodal data to exclude these from further BFF calculation.
   barcodeBlocklist <- NULL
   for (hto in rownames(barcodeMatrix)) {
     cells <- barcodeMatrix[hto, colnames(barcodeMatrix), drop = FALSE]
@@ -257,16 +262,16 @@ GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_r
     print(paste("Recovery method: ", rec_meth))
     
     if (recover==FALSE){
-      SummarizeHashingCalls(seuratObj, label = 'bff', columnSuffix = 'bff', assay = assay, doHeatmap = FALSE)
+      SummarizeHashingCalls(seuratObj, label = 'bff', columnSuffix = 'bff', assay = assay, doHeatmap = TRUE)
       df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff', classification = seuratObj$classification.bff, classification.global = seuratObj$classification.global.bff, stringsAsFactors = FALSE)
       return(df)
-    } else if (recover==TRUE && rec_meth == 2){
-      SummarizeHashingCalls(seuratObj, label = 'bff_rec2', columnSuffix = 'bff_rec2', assay = assay, doHeatmap = FALSE)
-      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_rec2', classification = seuratObj$classification.bff_rec2, classification.global = seuratObj$classification.global.bff_rec2, stringsAsFactors = FALSE)
+    } else if (recover==TRUE && rec_meth == "ratio"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_ratio', columnSuffix = 'bff_ratio', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_ratio', classification = seuratObj$classification.bff_ratio, classification.global = seuratObj$classification.global.bff_ratio, stringsAsFactors = FALSE)
       return(df)
-    } else if (recover==TRUE && rec_meth == 3){
-      SummarizeHashingCalls(seuratObj, label = 'bff_dist', columnSuffix = 'bff_dist', assay = assay, doHeatmap = FALSE)
-      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_dist', classification = seuratObj$classification.bff_dist, classification.global = seuratObj$classification.global.bff_dist, stringsAsFactors = FALSE)
+    } else if (recover==TRUE && rec_meth == "quantile"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_quantile', columnSuffix = 'bff_quantile', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_quantile', classification = seuratObj$classification.bff_quantile, classification.global = seuratObj$classification.global.bff_quantile, stringsAsFactors = FALSE)
       return(df)
     }
   }, error = function(e){
@@ -310,18 +315,24 @@ BFFDemux <- function(seuratObj, assay, recover, doublet_thresh, neg_thresh, rec_
   }
 
   if (recover == FALSE) {
-    seuratObj <- .AssignCallsToMatrix(seuratObj, as.matrix(discrete), suffix = 'bff', assay = assay)
+    seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff', assay = assay)
     return(seuratObj)
   } else if (recover == TRUE) {
     doublet_res <- top2_doublets(discrete, barcodeMatrix)
     top2_pos_relnormed <- doublet_res[[2]]
-    if (rec_meth==2){
+    # Ratio method of recovery simply calculates the ratio between the top 2 normalized barcode counts and compares
+    #    to a threshold value.
+    if (rec_meth=="ratio"){
       top2_negs_relnormed <- top2_negcounts(discrete, barcodeMatrix)[[2]]
       discrete <- rel_Threshold(top2_negs_relnormed, discrete, doublet_thresh)
       discrete <- rel_Threshold(top2_pos_relnormed, discrete, doublet_thresh)
-      seuratObj <- .AssignCallsToMatrix(seuratObj, as.matrix(discrete), suffix = 'bff_rec2', assay = assay)
+      seuratObj <- .AssignCallsToMatrix(seuratObj, as.matrix(discrete), suffix = 'bff_ratio', assay = assay)
       return(seuratObj)
-    } else if (rec_meth==3) {
+      # Quantile method of recovery compares the distance between the top 2 normalized barcode counts to the
+      #   distance between the nearest peak and the threshold.  The bc count for a cell considered for negative 
+      #   recovery must be close to the threshold.  Likewise, the 2nd highest bc count for a cell considered for
+      #   doublet recovery must be close to the threshold.
+    } else if (rec_meth=="quantile") {
       neg_res <- top2_negcounts(discrete, barcodeMatrix)
       top2_negs <- neg_res[[3]]
       top2_negs_log <- log10(top2_negs + 1)
@@ -335,7 +346,6 @@ BFFDemux <- function(seuratObj, assay, recover, doublet_thresh, neg_thresh, rec_
       max_list <- c()
       for (hto in colnames(tot_normed)) {
         cells <- tot_normed[rownames(tot_normed), hto, drop = FALSE]
-        #BFF uses a log-scale to smooth higher counts, so we transform back once we find the threshold
         cutoffresults <- getCountCutoff(cells, hto, 4)
         if (cutoffresults[[1]] < 2) {
           print("Threshold may be placed too low, recalculating with more smoothing.")
@@ -350,7 +360,9 @@ BFFDemux <- function(seuratObj, assay, recover, doublet_thresh, neg_thresh, rec_
       maxima <- colMeans(max_list)
       neg_mode <- maxima[1]
       pos_mode <- maxima[2]
+      # d is the log-scale distance (after normalization) between the positive peak and threshold.
       d <- pos_mode - norm_cutoff
+      # w is the log-scale distance (after normalization) between the negative peak and threshold.
       w <- norm_cutoff - neg_mode
       
       called <- c()
@@ -381,7 +393,7 @@ BFFDemux <- function(seuratObj, assay, recover, doublet_thresh, neg_thresh, rec_
         row_max <- which.max(tot_normed[cell,])
         discrete[row_max, cell] <- 1
       }
-      seuratObj <- .AssignCallsToMatrix(seuratObj, as.matrix(discrete), suffix = 'bff_dist', assay = assay)
+      seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_quantile', assay = assay)
       return(seuratObj)
     }
   }
