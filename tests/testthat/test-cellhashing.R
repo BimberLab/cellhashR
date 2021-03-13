@@ -5,22 +5,22 @@ tests <- list(
         input = '../testdata/cellHashing/282-1-HTO_cellHashingRawCounts.txt',
         htos = paste0('HTO-', c(2:3, 8, 10, 12)),
         gexBarcodeFile = '../testdata/cellHashing/282-1-whitelist.txt',
-        CalledCells = 3491,
-        Singlet = 2213,
+        CalledCells = 3476,
+        Singlet = 2198,
 				Doublet = 947,
         MultiSeqCalled = 4010,
-        Discordant = 1509,
+        Discordant = 1524,
         SeuratCalled = 3179
     ),
 		'283' = list(
         input = '../testdata/cellHashing/283-cellbarcodeToHTO.calls.citeSeqCounts.txt',
         htos = paste0('HTO-', c(2:6)),
         gexBarcodeFile = '../testdata/cellHashing/283-validCellIndexes.csv',
-        CalledCells = 3715,
-        Singlet = 2362,
+        CalledCells = 3600,
+        Singlet = 2247,
 				Doublet = 723,
         MultiSeqCalled = 3223,
-        Discordant = 1285,
+        Discordant = 1400,
         SeuratCalled = 4116
     ),
     '438-21' = list(
