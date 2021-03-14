@@ -35,7 +35,7 @@ Imports:
     ggforce,
     DropletUtils,
     S4Vectors,
-    spatstat (1.64-2)
+    spatstat (== 1.64-2)
 Suggests:
     devtools,
     testthat (>= 2.1.0),
