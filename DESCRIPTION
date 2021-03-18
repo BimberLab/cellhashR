@@ -34,8 +34,7 @@ Imports:
     rmdformats,
     ggforce,
     DropletUtils,
-    S4Vectors,
-    spatstat (== 1.64-2)
+    S4Vectors
 Suggests:
     devtools,
     testthat (>= 2.1.0),
