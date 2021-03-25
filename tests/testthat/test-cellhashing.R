@@ -5,22 +5,22 @@ tests <- list(
         input = '../testdata/cellHashing/282-1-HTO_cellHashingRawCounts.txt',
         htos = paste0('HTO-', c(2:3, 8, 10, 12)),
         gexBarcodeFile = '../testdata/cellHashing/282-1-whitelist.txt',
-        CalledCells = 3491,
-        Singlet = 2213,
+        CalledCells = 3476,
+        Singlet = 2198,
 				Doublet = 947,
         MultiSeqCalled = 4010,
-        Discordant = 1509,
+        Discordant = 1524,
         SeuratCalled = 3179
     ),
 		'283' = list(
         input = '../testdata/cellHashing/283-cellbarcodeToHTO.calls.citeSeqCounts.txt',
         htos = paste0('HTO-', c(2:6)),
         gexBarcodeFile = '../testdata/cellHashing/283-validCellIndexes.csv',
-        CalledCells = 3715,
-        Singlet = 2362,
+        CalledCells = 3600,
+        Singlet = 2247,
 				Doublet = 723,
         MultiSeqCalled = 3223,
-        Discordant = 1285,
+        Discordant = 1400,
         SeuratCalled = 4116
     ),
     '438-21' = list(
@@ -99,7 +99,7 @@ tests <- list(
 
 test_that("Cellbarcode Whitelist Works", {
 	test <- tests[['438-21']]
-	
+
 	#Subset rows to run quicker:
 	countData <- Seurat::Read10X(test$input, gene.column=1, strip.suffix = TRUE)
 	countData <- countData[,1:2500]
@@ -152,10 +152,10 @@ test_that("Workflow works", {
 	unlink(html)
 	unlink(output)
 	unlink(metricsFile)
-	
+
 	# Repeat with skip normalization
 	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile, skipNormalizationQc = TRUE)
-	
+
 	df <- read.table(output, sep = '\t', header = TRUE)
 	expect_equal(nrow(df), 2500)
 	expect_equal(sum(df$consensuscall == 'MS-12'), 1124)
@@ -229,6 +229,7 @@ test_that("Cell hashing works", {
 				unlink(metricsFile)
 
 				print(paste0('evaluating test: ', testName))
+				expect_equal(expected = 0, object = sum(df$consensuscall == 'Not Called'), info = testName)
 				expect_equal(expected = test[['CalledCells']], object = sum(df$consensuscall != 'Discordant'), info = testName)
 				expect_equal(expected = test[['Singlet']], object = sum(df$consensuscall.global == 'Singlet'), info = testName)
 				expect_equal(expected = test[['Doublet']], object = sum(df$consensuscall.global == 'Doublet'), info = testName)

@@ -83,45 +83,19 @@ SimplifyHtoNames <- function(x) {
 }
 
 .AssignCallsToMatrix <- function(object, discrete, suffix, assay = 'HTO') {
-	data <- GetAssayData(object = object, assay = assay)
-
-	npositive <- colSums(x = discrete)
+	npositive <- Matrix::colSums(x = discrete)
 	classification.global <- npositive
 	classification.global[npositive == 0] <- "Negative"
 	classification.global[npositive == 1] <- "Singlet"
 	classification.global[npositive > 1] <- "Doublet"
-	donor.id = rownames(x = data)
-	hash.max <- apply(X = data, MARGIN = 2, FUN = max)
-	hash.maxID <- apply(X = data, MARGIN = 2, FUN = which.max)
-	hash.second <- apply(X = data, MARGIN = 2, FUN = MaxN, N = 2)
-	hash.maxID <- as.character(x = donor.id[sapply(
-	X = 1:ncol(x = data),
-		FUN = function(x) {
-			return(which(x = data[, x] == hash.max[x])[1])
-		}
-	)])
-	hash.secondID <- as.character(x = donor.id[sapply(
-	X = 1:ncol(x = data),
-		FUN = function(x) {
-			return(which(x = data[, x] == hash.second[x])[1])
-		}
-	)])
-	hash.margin <- hash.max - hash.second
-	doublet_id <- sapply(
-	X = 1:length(x = hash.maxID),
-		FUN = function(x) {
-			return(paste(sort(x = c(hash.maxID[x], hash.secondID[x])), collapse = "_"))
-		}
-	)
+
+	hash.called <- rownames(object)[apply(X = discrete, MARGIN = 2, FUN = which.max)]
 
 	classification <- classification.global
 	classification[classification.global == "Negative"] <- "Negative"
-	classification[classification.global == "Singlet"] <- hash.maxID[which(x = classification.global == "Singlet")]
+	classification[classification.global == "Singlet"] <- hash.called[which(x = classification.global == "Singlet")]
 	classification[classification.global == "Doublet"] <- "Doublet"
 	classification.metadata <- data.frame(
-		hash.maxID,
-		hash.secondID,
-		hash.margin,
 		classification,
 		classification.global
 	)
@@ -130,7 +104,7 @@ SimplifyHtoNames <- function(x) {
 	#classification.metadata$classification <- naturalsort::naturalfactor(as.character(classification.metadata$classification))
 	#classification.metadata$classification.global <- naturalsort::naturalfactor(as.character(classification.metadata$classification.global))
 
-	colnames(x = classification.metadata) <- paste(c('maxID', 'secondID', 'margin', 'classification', 'classification.global'), suffix, sep = '.')
+	colnames(x = classification.metadata) <- paste(c('classification', 'classification.global'), suffix, sep = '.')
 	object <- AddMetaData(object = object, metadata = classification.metadata)
 
 	return(object)
