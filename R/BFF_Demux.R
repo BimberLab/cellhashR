@@ -69,7 +69,7 @@ top2_doublets <- function(discrete, barcodeMatrix) {
   all_pos_normed <- NormalizeQuantile(all_pos_vals)
   all_pos_normed[is.na(all_pos_normed)] <- 0
   
-  multi <- colnames(discrete[, colSums(discrete)>1])
+  multi <- colnames(discrete[, colSums(discrete)>=1])
   multi_pos_normed <- pos_normed[multi,]
   multi_pos_normed[is.na(multi_pos_normed)] <- 0
   
@@ -77,7 +77,6 @@ top2_doublets <- function(discrete, barcodeMatrix) {
   top2_pos_relnormed <- t(NormalizeRelative(as.matrix(t(top2_multi_pos_normed))))
   return(list(pos_normed, top2_pos_relnormed, top2_multi_pos_normed, all_pos_normed))
 }
-
 
 getDiscreteFromCutoffs <- function(seuratObj, assay, cutoffs) {
   barcodeMatrix <- GetAssayData(
@@ -118,14 +117,14 @@ PlotCutoff <- function(data, smooth, label) {
   })
   nbins <- 100
   P1 <- ggplot(data.frame(Value = data), aes(x = Value)) +
-    geom_histogram(aes(y = ..density..), bins = nbins) +
+    geom_histogram(aes(y = sqrt(..density..)), bins = nbins) +
     ggtitle(paste0("Histogram of ", label)) +
-    xlab("log10(HTO Counts)") +
-    geom_line(data = data.frame(x = smooth$x, y = smooth$y), mapping = aes(x = x, y = y), color = "blue", size = 1) +
-    geom_line(data = data.frame(x = smooth$x, y = 50*deriv), mapping = aes(x = x, y = y), color = "red", size = 1)
+    xlab("Log(HTO Counts)") +
+    geom_line(data = data.frame(x = smooth$x, y = sqrt(smooth$y)), mapping = aes(x = x, y = y), color = "blue", size = 1) 
+  # + geom_line(data = data.frame(x = smooth$x, y = 50*deriv), mapping = aes(x = x, y = y), color = "red", size = 1)
   
   ymax <- max(graphics::hist(data, breaks = nbins, plot=FALSE)$density)
-  P1 <- P1 + ylim(c(0, ymax * 1.05))
+  # P1 <- P1 + ylim(c(0, ymax * 1.05))
   
   if (length(max_list) > 1) {
     y1 <- max(yvals)
@@ -160,7 +159,7 @@ PlotCutoff <- function(data, smooth, label) {
   }
   P1 <- P1 + geom_vline(xintercept = cutoff, size = 1)
   print(P1)
-  return(cutoff)
+  return(list(cutoff, P1))
 }
 
 
@@ -209,13 +208,16 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
     
     change <- num_peaks - length(max_list)
     num_peaks <- length(max_list)
-    outlabel <- paste(label, change, num_peaks, length(max2_list))
+    # outlabel <- paste(label, change, num_peaks, length(max2_list))
+    outlabel <- label
   }
-  cutoff <- PlotCutoff(data, smooth, outlabel)
+  cutoff_res <- PlotCutoff(data, smooth, outlabel)
+  cutoff <- cutoff_res[[1]]
+  P1 <- cutoff_res[[2]]
   if ((cutoff == max(data))) {
     barcodeBlocklist <- c(barcodeBlocklist, label)
   }
-  return(list(cutoff, barcodeBlocklist, x_vals))
+  return(list(cutoff, barcodeBlocklist, x_vals, P1))
 }
 
 
@@ -236,7 +238,7 @@ getBFFBarcodeBlocklist <- function(barcodeMatrix) {
 }
 
 
-GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_reads = 10, verbose = TRUE, methodName = 'bff', recover, doublet_thresh, neg_thresh, rec_meth){
+GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_reads = 10, verbose = TRUE, calling_paramset){
   if (verbose) {
     print('Starting BFF')
   }
@@ -255,25 +257,129 @@ GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_r
 
   tryCatch({
     seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
-    seuratObj <- BFFDemux(seuratObj = seuratObj, assay = assay, recover=recover, doublet_thresh=doublet_thresh, neg_thresh=neg_thresh, rec_meth=rec_meth)
-    print(paste("Recover: ", recover))
-    print(paste("Doublet thresh: ", doublet_thresh))
-    print(paste("Neg thresh: ", neg_thresh))
-    print(paste("Recovery method: ", rec_meth))
+    # seuratObj <- BFFDemux(seuratObj = seuratObj, assay = assay, recover=recover, doublet_thresh=doublet_thresh, neg_thresh=neg_thresh, rec_meth=rec_meth)
+    print(calling_paramset)
+    seuratObj <- BFFDemux(seuratObj = seuratObj, assay = assay, calling_paramset = calling_paramset)
     
-    if (recover==FALSE){
-      SummarizeHashingCalls(seuratObj, label = 'bff', columnSuffix = 'bff', assay = assay, doHeatmap = TRUE)
-      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff', classification = seuratObj$classification.bff, classification.global = seuratObj$classification.global.bff, stringsAsFactors = FALSE)
-      return(df)
-    } else if (recover==TRUE && rec_meth == "ratio"){
+    if (calling_paramset == "bff") {
+    SummarizeHashingCalls(seuratObj, label = "bff", columnSuffix = "bff", assay = assay, doHeatmap = TRUE)
+    df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = "bff", classification = seuratObj$classification.bff, classification.global = seuratObj$classification.global.bff, stringsAsFactors = FALSE)
+    return(df)
+    } else if (calling_paramset == "bff_ratio"){
       SummarizeHashingCalls(seuratObj, label = 'bff_ratio', columnSuffix = 'bff_ratio', assay = assay, doHeatmap = TRUE)
       df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_ratio', classification = seuratObj$classification.bff_ratio, classification.global = seuratObj$classification.global.bff_ratio, stringsAsFactors = FALSE)
       return(df)
-    } else if (recover==TRUE && rec_meth == "quantile"){
-      SummarizeHashingCalls(seuratObj, label = 'bff_quantile', columnSuffix = 'bff_quantile', assay = assay, doHeatmap = TRUE)
-      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_quantile', classification = seuratObj$classification.bff_quantile, classification.global = seuratObj$classification.global.bff_quantile, stringsAsFactors = FALSE)
+    } else if (calling_paramset == "bff_q01"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q01', columnSuffix = 'bff_q01', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q01', classification = seuratObj$classification.bff_q01, classification.global = seuratObj$classification.global.bff_q01, stringsAsFactors = FALSE)
       return(df)
-    }
+    } else if (calling_paramset == "bff_q02"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q02', columnSuffix = 'bff_q02', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q02', classification = seuratObj$classification.bff_q02, classification.global = seuratObj$classification.global.bff_q02, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q03"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q03', columnSuffix = 'bff_q03', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q03', classification = seuratObj$classification.bff_q03, classification.global = seuratObj$classification.global.bff_q03, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q04"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q04', columnSuffix = 'bff_q04', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q04', classification = seuratObj$classification.bff_q04, classification.global = seuratObj$classification.global.bff_q04, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q05"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q05', columnSuffix = 'bff_q05', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q05', classification = seuratObj$classification.bff_q05, classification.global = seuratObj$classification.global.bff_q05, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q06"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q06', columnSuffix = 'bff_q06', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q06', classification = seuratObj$classification.bff_q06, classification.global = seuratObj$classification.global.bff_q06, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q07"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q07', columnSuffix = 'bff_q07', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q07', classification = seuratObj$classification.bff_q07, classification.global = seuratObj$classification.global.bff_q07, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q08"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q08', columnSuffix = 'bff_q08', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q08', classification = seuratObj$classification.bff_q08, classification.global = seuratObj$classification.global.bff_q08, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q09"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q09', columnSuffix = 'bff_q09', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q09', classification = seuratObj$classification.bff_q09, classification.global = seuratObj$classification.global.bff_q09, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q10"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q10', columnSuffix = 'bff_q10', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q10', classification = seuratObj$classification.bff_q10, classification.global = seuratObj$classification.global.bff_q10, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q11"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q11', columnSuffix = 'bff_q11', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q11', classification = seuratObj$classification.bff_q11, classification.global = seuratObj$classification.global.bff_q11, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q12"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q12', columnSuffix = 'bff_q12', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q12', classification = seuratObj$classification.bff_q12, classification.global = seuratObj$classification.global.bff_q12, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q13"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q13', columnSuffix = 'bff_q13', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q13', classification = seuratObj$classification.bff_q13, classification.global = seuratObj$classification.global.bff_q13, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q14"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q14', columnSuffix = 'bff_q14', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q14', classification = seuratObj$classification.bff_q14, classification.global = seuratObj$classification.global.bff_q14, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q15"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q15', columnSuffix = 'bff_q15', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q15', classification = seuratObj$classification.bff_q15, classification.global = seuratObj$classification.global.bff_q15, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q16"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q16', columnSuffix = 'bff_q16', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q16', classification = seuratObj$classification.bff_q16, classification.global = seuratObj$classification.global.bff_q16, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q17"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q17', columnSuffix = 'bff_q17', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q17', classification = seuratObj$classification.bff_q17, classification.global = seuratObj$classification.global.bff_q17, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q18"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q18', columnSuffix = 'bff_q18', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q18', classification = seuratObj$classification.bff_q18, classification.global = seuratObj$classification.global.bff_q18, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q19"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q19', columnSuffix = 'bff_q19', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q19', classification = seuratObj$classification.bff_q19, classification.global = seuratObj$classification.global.bff_q19, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q20"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q20', columnSuffix = 'bff_q20', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q20', classification = seuratObj$classification.bff_q20, classification.global = seuratObj$classification.global.bff_q20, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q21"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q21', columnSuffix = 'bff_q21', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q21', classification = seuratObj$classification.bff_q21, classification.global = seuratObj$classification.global.bff_q21, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q22"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q22', columnSuffix = 'bff_q22', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q22', classification = seuratObj$classification.bff_q22, classification.global = seuratObj$classification.global.bff_q22, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q23"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q23', columnSuffix = 'bff_q23', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q23', classification = seuratObj$classification.bff_q23, classification.global = seuratObj$classification.global.bff_q23, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q24"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q24', columnSuffix = 'bff_q24', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q24', classification = seuratObj$classification.bff_q24, classification.global = seuratObj$classification.global.bff_q24, stringsAsFactors = FALSE)
+      return(df)
+    } else if (calling_paramset == "bff_q25"){
+      SummarizeHashingCalls(seuratObj, label = 'bff_q25', columnSuffix = 'bff_q25', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q25', classification = seuratObj$classification.bff_q25, classification.global = seuratObj$classification.global.bff_q25, stringsAsFactors = FALSE)
+      return(df)
+    }   
+    # } else if (recover==TRUE && rec_meth == "quantile" && doublet_thresh == 0.5 && neg_thresh ==0.5 && pos_dist==0.25 && neg_dist==0.25){
+    #   print("Made it here q1!")
+    #   SummarizeHashingCalls(seuratObj, label = 'bff_q1', columnSuffix = 'bff_q1', assay = assay, doHeatmap = TRUE)
+    #   df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q1', classification = seuratObj$classification.bff_q1, classification.global = seuratObj$classification.global.bff_q1, stringsAsFactors = FALSE)
+    #   return(df)
+    # } else if (recover==TRUE && rec_meth == "quantile" && doublet_thresh == 1 && neg_thresh ==1 && pos_dist==0.25 && neg_dist==0.25){
+    #   print("Made it here q2!")
+    #   SummarizeHashingCalls(seuratObj, label = 'bff_q2', columnSuffix = 'bff_q2', assay = assay, doHeatmap = TRUE)
+    #   df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_q2', classification = seuratObj$classification.bff_q2, classification.global = seuratObj$classification.global.bff_q2, stringsAsFactors = FALSE)
+    #   return(df)
   }, error = function(e){
     warning('Error generating BFF calls, aborting')
     print(conditionMessage(e))
@@ -283,15 +389,206 @@ GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_r
 }
 
 
-BFFDemux <- function(seuratObj, assay, recover, doublet_thresh, neg_thresh, rec_meth) {
+BFFDemux <- function(seuratObj, assay, calling_paramset) {
   barcodeMatrix <- GetAssayData(
     object = seuratObj,
     assay = assay,
     slot = 'counts'
   )[, colnames(x = seuratObj)]
+  
+  if (calling_paramset == "bff") {
+    recover = FALSE
+    doublet_thresh=NULL
+    neg_thresh=NULL
+    rec_meth = NULL
+  } else if (calling_paramset == "bff_ratio") {
+    recover = TRUE
+    rec_meth = "ratio"
+    doublet_thresh=0.75
+    neg_thresh=0.6666
+  } else if (calling_paramset == "bff_q01") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1/4
+    neg_thresh=1
+    pos_dist=1
+    neg_dist=0
+  } else if (calling_paramset == "bff_q02") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1/4
+    neg_thresh=1
+    pos_dist=1
+    neg_dist=1/4
+  } else if (calling_paramset == "bff_q03") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1/4
+    neg_thresh=1
+    pos_dist=1
+    neg_dist=1/2
+  } else if (calling_paramset == "bff_q04") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1/4
+    neg_thresh=1
+    pos_dist=1
+    neg_dist=1
+  } else if (calling_paramset == "bff_q05") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1/4
+    neg_thresh=1/2
+    pos_dist=1
+    neg_dist=1/4
+  } else if (calling_paramset == "bff_q06") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1/4
+    neg_thresh=1/2
+    pos_dist=2
+    neg_dist=1/4
+  } else if (calling_paramset == "bff_q07") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1/4
+    neg_thresh=1
+    pos_dist=1
+    neg_dist=1/4
+  } else if (calling_paramset == "bff_q08") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1/4
+    neg_thresh=1
+    pos_dist=2
+    neg_dist=1/4
+  } else if (calling_paramset == "bff_q09") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1/2
+    neg_thresh=1/2
+    pos_dist=1
+    neg_dist=1
+  } else if (calling_paramset == "bff_q10") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1/2
+    neg_thresh=1/2
+    pos_dist=2
+    neg_dist=1
+  } else if (calling_paramset == "bff_q11") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1
+    neg_thresh=1
+    pos_dist=1
+    neg_dist=0
+  } else if (calling_paramset == "bff_q12") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1
+    neg_thresh=1
+    pos_dist=1
+    neg_dist=1/4
+  } else if (calling_paramset == "bff_q13") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1
+    neg_thresh=1
+    pos_dist=1
+    neg_dist=1/2
+  } else if (calling_paramset == "bff_q14") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1
+    neg_thresh=1
+    pos_dist=1
+    neg_dist=1
+  } else if (calling_paramset == "bff_q15") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1
+    neg_thresh=1
+    pos_dist=1
+    neg_dist=2
+  } else if (calling_paramset == "bff_q16") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1
+    neg_thresh=1
+    pos_dist=0
+    neg_dist=1
+  } else if (calling_paramset == "bff_q17") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1
+    neg_thresh=1
+    pos_dist=1/4
+    neg_dist=1
+  } else if (calling_paramset == "bff_q18") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1
+    neg_thresh=1
+    pos_dist=1/2
+    neg_dist=1
+  } else if (calling_paramset == "bff_q19") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1
+    neg_thresh=1
+    pos_dist=1
+    neg_dist=1
+  } else if (calling_paramset == "bff_q20") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=1
+    neg_thresh=1
+    pos_dist=2
+    neg_dist=1
+  } else if (calling_paramset == "bff_q21") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=2
+    neg_thresh=2
+    pos_dist=0
+    neg_dist=0
+  } else if (calling_paramset == "bff_q22") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=2
+    neg_thresh=2
+    pos_dist=1/4
+    neg_dist=1/4
+  } else if (calling_paramset == "bff_q23") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=2
+    neg_thresh=2
+    pos_dist=1/2
+    neg_dist=1/2
+  } else if (calling_paramset == "bff_q24") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=2
+    neg_thresh=2
+    pos_dist=1
+    neg_dist=1
+  } else if (calling_paramset == "bff_q25") {
+    recover = TRUE
+    rec_meth = "quantile"
+    doublet_thresh=2
+    neg_thresh=2
+    pos_dist=2
+    neg_dist=2
+  }
+  print(paste("Recover: ", recover))
+  print(paste("Doublet thresh: ", doublet_thresh))
+  print(paste("Neg thresh: ", neg_thresh))
+  print(paste("Recovery method: ", rec_meth))
 
   #loop over HTOs in matrix, perform thresholding and store cells that pass the threshold
-  #return a discrete matrix, with 1 equal to a call positive for that barcode
+  #return a discrete matrix, with 1 equal to a positive call for that barcode
   discrete <- GetAssayData(object = seuratObj, assay = assay)
   discrete[discrete > 0] <- 0
   cutoffs <- list()
@@ -366,34 +663,103 @@ BFFDemux <- function(seuratObj, assay, recover, doublet_thresh, neg_thresh, rec_
       w <- norm_cutoff - neg_mode
       
       called <- c()
-      
+      # this loop classifies negatives vs. singlets (because the highest count is less than the threshold found by KDE)
       for (cell in rownames(top2_negs_log)) {
         max_val <- max(top2_negs_log[cell,])
         min_val <- min(top2_negs_log[cell,])
-        if (max_val >= norm_cutoff - w/2) {
-          if (max_val - min_val >= w/4) {
+        # if max value >= threshold - alpha (w*neg_thresh)
+        if (max_val >= norm_cutoff - w*neg_thresh) {
+          # and if diff between top 2 counts >= phi
+          if (max_val - min_val >= w*neg_dist) {
+            # add this droplet to singlet group
             called <- c(called, cell)
           }
         }
       }
       
       called_multi <- c()
-      
-      for (cell in rownames(top2_multi_log)) {
-        max_val <- max(top2_multi_log[cell,])
-        min_val <- MaxN(top2_multi_log[cell,])[[1]]
-        if (min_val <= norm_cutoff + 2*d/3) {
-          if ((max_val - min_val) >= d/3) {
+      # this loop classifies doublets vs. singlets (because the highest count is greater than the threshold found by KDE)
+      for (cell in colnames(discrete[, colSums(discrete)>=1])) {
+        # we are comparing counts on the log-scale
+        top2 <- get_Top2(log10(tot_normed[cell,]+1))
+        max_val <- max(top2)
+        min_val <- MaxN(top2)[[1]]
+        # if 2nd highest count is <= the threshold + beta (d*doublet_thresh)
+        if (min_val <= norm_cutoff + d*doublet_thresh) {
+          # and if the diff between top 2 counts is >= theta
+          if ((max_val - min_val) >= d*pos_dist) {
+            # add this droplet to the singlet group
             called_multi <- c(called_multi, cell)
           }
         }
       }
+      
+      # for (cell in rownames(top2_multi_log)) {
+      #   max_val <- max(top2_multi_log[cell,])
+      #   min_val <- MaxN(top2_multi_log[cell,])[[1]]
+      #   if (min_val <= norm_cutoff + 2*d/3) {
+      #     if ((max_val - min_val) >= d/3) {
+      #       called_multi <- c(called_multi, cell)
+      #     }
+      #   }
+      # }
       for (cell in c(called, called_multi)) {
         discrete[, cell] <- 0
         row_max <- which.max(tot_normed[cell,])
         discrete[row_max, cell] <- 1
       }
-      seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_quantile', assay = assay)
+      if (calling_paramset=="bff_q01") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q01', assay = assay)
+      } else if (calling_paramset=="bff_q02") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q02', assay = assay)
+      } else if (calling_paramset=="bff_q03") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q03', assay = assay)
+      } else if (calling_paramset=="bff_q04") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q04', assay = assay)
+      } else if (calling_paramset=="bff_q05") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q05', assay = assay)
+      } else if (calling_paramset=="bff_q06") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q06', assay = assay)
+      } else if (calling_paramset=="bff_q07") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q07', assay = assay)
+      } else if (calling_paramset=="bff_q08") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q08', assay = assay)
+      } else if (calling_paramset=="bff_q09") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q09', assay = assay)
+      } else if (calling_paramset=="bff_q10") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q10', assay = assay)
+      } else if (calling_paramset=="bff_q11") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q11', assay = assay)
+      } else if (calling_paramset=="bff_q12") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q12', assay = assay)
+      } else if (calling_paramset=="bff_q13") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q13', assay = assay)
+      } else if (calling_paramset=="bff_q14") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q14', assay = assay)
+      } else if (calling_paramset=="bff_q15") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q15', assay = assay)
+      } else if (calling_paramset=="bff_q16") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q16', assay = assay)
+      } else if (calling_paramset=="bff_q17") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q17', assay = assay)
+      } else if (calling_paramset=="bff_q18") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q18', assay = assay)
+      } else if (calling_paramset=="bff_q19") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q19', assay = assay)
+      } else if (calling_paramset=="bff_q20") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q20', assay = assay)
+      } else if (calling_paramset=="bff_q21") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q21', assay = assay)
+      } else if (calling_paramset=="bff_q22") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q22', assay = assay)
+      } else if (calling_paramset=="bff_q23") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q23', assay = assay)
+      } else if (calling_paramset=="bff_q24") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q24', assay = assay)
+      } else if (calling_paramset=="bff_q25") {
+        seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_q25', assay = assay)
+      }
+      
       return(seuratObj)
     }
   }
