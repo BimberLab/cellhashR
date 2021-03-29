@@ -51,7 +51,7 @@ DoHtoDemux <- function(seuratObj, positive.quantile, label = 'Seurat HTODemux', 
 HTODemux <- function(
 	object,
 	assay = "HTO",
-	positive.quantile = 0.98,
+	positive.quantile = 0.95,
 	nstarts = 100,
 	kfunc = "clara",
 	nsamples = 100,
