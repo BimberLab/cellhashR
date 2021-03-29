@@ -116,47 +116,59 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @param barcodeMatrix The filtered matrix of hashing count data
 #' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux and multiseq
 #' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
-#' @param htodemux.positive.quantile The positive.quantile passed to HTODemux
 #' @param metricsFile If provided, summary metrics will be written to this file.
-#' @description The primary methods to generating cell hashing calls from a filtered matrix of count data
+#' @param \dots Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).
+#' @description The primary methods to generating cell hashing calls from a filtered matrix of count data.
 #' @return A data frame of results.
 #' @export
-GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('htodemux', 'multiseq'), cellbarcodeWhitelist = NULL, htodemux.positive.quantile = 0.95, metricsFile = NULL) {
+GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('multiseq', 'dropletutils'), cellbarcodeWhitelist = NULL, metricsFile = NULL, ...) {
   callList <- list()
   for (method in methods) {
+    fnArgs <- list()
+    if (length(list(...))) {
+      vals <- unlist(list(...))
+      vals <- vals[!is.null(names(vals))]
+      vals <- vals[grepl(names(vals), pattern = paste0('^', method, '\\.'))]
+      names(vals) <- gsub(names(vals), pattern = paste0('^', method, '\\.'), replacement = '')
+      print(names(vals))
+
+      fnArgs <- vals
+    }
+
     if (method == 'htodemux') {
-      calls <- GenerateCellHashCallsSeurat(barcodeMatrix, positive.quantile = htodemux.positive.quantile, metricsFile = metricsFile)
+      fnArgs$barcodeMatrix <- barcodeMatrix
+      fnArgs$metricsFile <- metricsFile
+      calls <- do.call(GenerateCellHashCallsSeurat, fnArgs)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
     } else if (method == 'multiseq'){
-      calls <- GenerateCellHashCallsMultiSeq(barcodeMatrix)
+      fnArgs$barcodeMatrix <- barcodeMatrix
+      calls <- do.call(GenerateCellHashCallsMultiSeq, fnArgs)
       if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'multiseq-rel'){
-      calls <- GenerateCellHashCallsMultiSeq(barcodeMatrix, doRelNorm = TRUE, methodName = method, label = 'Multiseq deMULTIplex (RelNorm)')
-      if (!is.null(calls)) {
-        print(unique(calls$method))
         callList[[method]] <- calls
       }
     } else if (method == 'seqnd'){
-      calls <- GenerateCellHashCallsSeqND(barcodeMatrix)
+      fnArgs$barcodeMatrix <- barcodeMatrix
+      calls <- do.call(GenerateCellHashCallsSeqND, fnArgs)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
     } else if (method == 'peaknd'){
-      calls <- GenerateCellHashCallsPeakND(barcodeMatrix)
+      fnArgs$barcodeMatrix <- barcodeMatrix
+      calls <- do.call(GenerateCellHashCallsPeakND, fnArgs)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
     } else if (method == 'threshold'){
-      calls <- GenerateCellHashCallsThreshold(barcodeMatrix)
+      fnArgs$barcodeMatrix <- barcodeMatrix
+      calls <- do.call(GenerateCellHashCallsThreshold, fnArgs)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
     } else if (method == 'dropletutils'){
-      calls <- GenerateCellHashCallsDropletUtils(barcodeMatrix)
+      fnArgs$barcodeMatrix <- barcodeMatrix
+      calls <- do.call(GenerateCellHashCallsDropletUtils, fnArgs)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }

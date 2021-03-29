@@ -6,10 +6,10 @@
 \usage{
 GenerateCellHashingCalls(
   barcodeMatrix,
-  methods = c("htodemux", "multiseq"),
+  methods = c("multiseq", "dropletutils"),
   cellbarcodeWhitelist = NULL,
-  htodemux.positive.quantile = 0.95,
-  metricsFile = NULL
+  metricsFile = NULL,
+  ...
 )
 }
 \arguments{
@@ -19,13 +19,13 @@ GenerateCellHashingCalls(
 
 \item{cellbarcodeWhitelist}{A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.}
 
-\item{htodemux.positive.quantile}{The positive.quantile passed to HTODemux}
-
 \item{metricsFile}{If provided, summary metrics will be written to this file.}
+
+\item{\dots}{Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).}
 }
 \value{
 A data frame of results.
 }
 \description{
-The primary methods to generating cell hashing calls from a filtered matrix of count data
+The primary methods to generating cell hashing calls from a filtered matrix of count data.
 }
