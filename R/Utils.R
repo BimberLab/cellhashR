@@ -83,14 +83,14 @@ SimplifyHtoNames <- function(x) {
 }
 
 .AssignCallsToMatrix <- function(object, discrete, suffix, assay = 'HTO') {
-	npositive <- colSums(x = discrete)
+	npositive <- Matrix::colSums(x = discrete)
 	classification.global <- npositive
 	classification.global[npositive == 0] <- "Negative"
 	classification.global[npositive == 1] <- "Singlet"
 	classification.global[npositive > 1] <- "Doublet"
-	
-	hash.called <- rownames(discrete)[apply(X = discrete, MARGIN = 2, FUN = which.max)]
-	
+
+	hash.called <- rownames(object)[apply(X = discrete, MARGIN = 2, FUN = which.max)]
+
 	classification <- classification.global
 	classification[classification.global == "Negative"] <- "Negative"
 	classification[classification.global == "Singlet"] <- hash.called[which(x = classification.global == "Singlet")]
