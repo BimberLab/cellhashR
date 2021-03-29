@@ -117,7 +117,8 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux and multiseq
 #' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
 #' @param metricsFile If provided, summary metrics will be written to this file.
-#' @description The primary methods to generating cell hashing calls from a filtered matrix of count data. Note: caller-specific arguments can be passed by prefixing with the method name (i.e. htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument)
+#' @param \dots Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).
+#' @description The primary methods to generating cell hashing calls from a filtered matrix of count data.
 #' @return A data frame of results.
 #' @export
 GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('multiseq', 'dropletutils'), cellbarcodeWhitelist = NULL, metricsFile = NULL, ...) {
