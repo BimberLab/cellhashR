@@ -132,7 +132,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('multiseq', 'dro
       vals <- vals[grepl(names(vals), pattern = paste0('^', method, '\\.'))]
       names(vals) <- gsub(names(vals), pattern = paste0('^', method, '\\.'), replacement = '')
       print(names(vals))
-
+      
       fnArgs <- vals
     }
 
@@ -149,170 +149,27 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('multiseq', 'dro
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-    } else if (method == 'seqnd'){
-      fnArgs$barcodeMatrix <- barcodeMatrix
-      calls <- do.call(GenerateCellHashCallsSeqND, fnArgs)
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'peaknd'){
-      fnArgs$barcodeMatrix <- barcodeMatrix
-      calls <- do.call(GenerateCellHashCallsPeakND, fnArgs)
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'threshold'){
-      fnArgs$barcodeMatrix <- barcodeMatrix
-      calls <- do.call(GenerateCellHashCallsThreshold, fnArgs)
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
     } else if (method == 'dropletutils'){
       fnArgs$barcodeMatrix <- barcodeMatrix
       calls <- do.call(GenerateCellHashCallsDropletUtils, fnArgs)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-    } else if (method == 'bff'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff')
+    } else if (method == 'bff_threshold'){
+      fnArgs$barcodeMatrix <- barcodeMatrix
+      fnArgs$simple_threshold <- TRUE
+      calls <- do.call(GenerateCellHashCallsBFF, fnArgs)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-    } else if (method == 'bff_ratio'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_ratio')
+    } else if (method == 'bff_quantile'){
+      fnArgs$barcodeMatrix <- barcodeMatrix
+      fnArgs$simple_threshold <- FALSE
+      calls <- do.call(GenerateCellHashCallsBFF, fnArgs)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-    # } else if (method == 'bff_quantile'){
-    #   calls <- GenerateCellHashCallsBFF(barcodeMatrix, recover=TRUE, doublet_thresh = 0.75, neg_thresh=0.6666, rec_meth="quantile")
-    #   if (!is.null(calls)) {
-    #     callList[[method]] <- calls
-    #   }
-    } else if (method == 'bff_q01'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q01')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q02'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q02')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q03'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q03')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q04'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q04')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q05'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q05')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q06'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q06')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q07'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q07')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q08'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q08')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q09'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q09')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q10'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q10')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q11'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q11')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q12'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q12')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q13'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q13')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q14'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q14')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q15'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q15')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q16'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q16')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q17'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q17')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q18'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q18')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q19'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q19')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q20'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q20')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q21'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q21')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q22'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q22')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q23'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q23')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q24'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q24')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'bff_q25'){
-      calls <- GenerateCellHashCallsBFF(barcodeMatrix, calling_paramset = 'bff_q25')
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
+
     } else {
       stop(paste0('Unknown method: ', method))
     }
