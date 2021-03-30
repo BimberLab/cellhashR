@@ -257,7 +257,7 @@ GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_r
 
   tryCatch({
     seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
-    seuratObj <- BFFDemux(seuratObj = seuratObj, assay = assay, simple_threshold = as.logical(simple_threshold), doublet_thresh = doublet_thresh, neg_thresh = neg_thresh, pos_dist = pos_dist, neg_dist = neg_dist)
+    seuratObj <- BFFDemux(seuratObj = seuratObj, assay = assay, simple_threshold = simple_threshold, doublet_thresh = doublet_thresh, neg_thresh = neg_thresh, pos_dist = pos_dist, neg_dist = neg_dist)
     if (as.logical(simple_threshold) == TRUE) {
       SummarizeHashingCalls(seuratObj, label = "bff_threshold", columnSuffix = "bff_threshold", assay = assay, doHeatmap = TRUE)
       df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = "bff_threshold", classification = seuratObj$classification.bff_threshold, classification.global = seuratObj$classification.global.bff_threshold, stringsAsFactors = FALSE)
@@ -276,7 +276,7 @@ GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_r
 }
 
 
-BFFDemux <- function(seuratObj, assay, simple_threshold, doublet_thresh, neg_thresh, pos_dist, neg_dist) {
+BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, doublet_thresh=doublet_thresh, neg_thresh=neg_thresh, pos_dist=pos_dist, neg_dist=neg_dist) {
   barcodeMatrix <- GetAssayData(
     object = seuratObj,
     assay = assay,
@@ -313,7 +313,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold, doublet_thresh, neg_thr
     print(paste0(cutoff, ': ', cutoffs[[cutoff]]))
   }
 
-  if (as.logical(simple_threshold) == TRUE) {
+  if (simple_threshold == TRUE) {
     seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_threshold', assay = assay)
     return(seuratObj)
   } else {
