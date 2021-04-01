@@ -8,40 +8,34 @@ utils::globalVariables(
   add = TRUE
 )
 
-
-get_Top2 <- function(mat) {
-  outmat <- mat
-  for (barcode in rownames(outmat)) {
-    outmat[barcode,][which(outmat[barcode,] < TopN(outmat[barcode,], N = 2)[[1]])] <- 0
+SNR <- function(barcodeData) {
+  # SNR extracts the minimum data necessary from an input barcode matrix and
+  # places this info in a data frame.  Extracted data are (1) the barcode with
+  # the highest counts, (2) the highest count value, and (3) the 2nd highest
+  # count value.  SNR stands for signal to noise ratio, which the data extracted
+  # can be used to calculate.
+  df <- data.frame(barcodeData, check.names = FALSE)
+  df <- tibble::rownames_to_column(df, var = "CellID")
+  top <- c()
+  topbar <- c()
+  topval <- c()
+  second <- c()
+  for (i in 1:nrow(df)) {
+    top[i] <- which.max(df[i, 2:length(df[i,])])
+    topbar[i] <- colnames(df)[top[i]+1]
+    topval[i] <- df[i, top[i]+1]
+    df[i,top[i]+1] <- 0
+    second[i] <- max(df[i,2:length(df[i,])])
   }
-  return(outmat)
+  outdf <- data.frame("CellID" = df$CellID, check.names = FALSE)
+  outdf$barcode <- topbar
+  outdf$highest <- topval
+  outdf$second <- second
+  
+  return(outdf)
 }
 
-
-rel_Threshold <- function(top2, discrete, threshold) {
-  outdiscrete <- discrete
-  for (barcode in rownames(top2)) {
-    if (max(top2[barcode,]) >= threshold) {
-      outdiscrete[, barcode] <- 0
-      outdiscrete[which.max(top2[barcode,])[[1]], barcode] <- 1
-    }
-  }
-  return(outdiscrete)
-}
-
-
-filter_lowmax <- function(mat, minval) {
-  barcodes <- c()
-  for (barcode in rownames(mat)) {
-    if (max(mat[barcode,]) > minval) {
-      barcodes <- c(barcodes, barcode)
-    }
-  }
-  return(barcodes)
-}
-
-
-top2_negcounts <- function(discrete, barcodeMatrix) {
+getNegNormedData <- function(discrete, barcodeMatrix) {
   negs <- colnames(discrete[, colSums(discrete)==0])
   negdiscrete <- 1 - discrete
   is.na(negdiscrete) <- negdiscrete==0
@@ -49,33 +43,15 @@ top2_negcounts <- function(discrete, barcodeMatrix) {
   neg_normed <- NormalizeQuantile(t(as.matrix(negvals)))
   neg_normed_na <- neg_normed
   neg_normed[is.na(neg_normed)] <- 0
-  filtered_negs <- filter_lowmax(t(barcodeMatrix)[negs,], 10)
-  top2_negs <- get_Top2(neg_normed[filtered_negs,])
-  top2_negs_relnormed <- t(NormalizeRelative(as.matrix(t(top2_negs))))
-  top2_negs <- get_Top2(neg_normed[negs,])
-  return(list(neg_normed, top2_negs_relnormed, top2_negs))
+  return(neg_normed)
 }
 
-
-top2_doublets <- function(discrete, barcodeMatrix) {
-  called <- colnames(discrete[, colSums(discrete)>=1])
-  called_vals <- t(as.matrix(discrete[,called]* barcodeMatrix[,called]))
-  called_vals_df <- as.data.frame(called_vals)
-  is.na(called_vals_df) <- called_vals_df==0
-  pos_normed <- NormalizeQuantile(called_vals_df)
-  
+getPosNormedData <- function(discrete, barcodeMatrix) {
   all_pos_vals <- data.frame(t(as.matrix(discrete * barcodeMatrix)))
   is.na(all_pos_vals) <- all_pos_vals==0
   all_pos_normed <- NormalizeQuantile(all_pos_vals)
   all_pos_normed[is.na(all_pos_normed)] <- 0
-  
-  multi <- colnames(discrete[, colSums(discrete)>=1])
-  multi_pos_normed <- pos_normed[multi,]
-  multi_pos_normed[is.na(multi_pos_normed)] <- 0
-  
-  top2_multi_pos_normed <- get_Top2(multi_pos_normed)
-  top2_pos_relnormed <- t(NormalizeRelative(as.matrix(t(top2_multi_pos_normed))))
-  return(list(pos_normed, top2_pos_relnormed, top2_multi_pos_normed, all_pos_normed))
+  return(all_pos_normed)
 }
 
 getDiscreteFromCutoffs <- function(seuratObj, assay, cutoffs) {
@@ -321,15 +297,9 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     #   distance between the nearest peak and the threshold.  The bc count for a cell considered for negative 
     #   recovery must be close to the threshold.  Likewise, the 2nd highest bc count for a cell considered for
     #   doublet recovery must be close to the threshold.
-    doublet_res <- top2_doublets(discrete, barcodeMatrix)
-    top2_pos_relnormed <- doublet_res[[2]]
-    neg_res <- top2_negcounts(discrete, barcodeMatrix)
-    top2_negs <- neg_res[[3]]
-    top2_negs_log <- log10(top2_negs + 1)
-    top2_multi <- doublet_res[[3]]
-    top2_multi_log <- log10(top2_multi + 1)
-    neg_norm <- neg_res[[1]]
-    pos_norm <- doublet_res[[4]]
+
+    neg_norm <- getNegNormedData(discrete, barcodeMatrix)
+    pos_norm <- getPosNormedData(discrete, barcodeMatrix)
     tot_normed <- pos_norm + neg_norm
     
     normed_cutoffs <- list()
@@ -346,7 +316,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
       normed_cutoffs[[hto]] <- threshold
     }
     
-    norm_cutoff <- mean(as.numeric(normed_cutoffs))
+    norm_cutoff <- mean(unlist(normed_cutoffs))
     maxima <- colMeans(max_list)
     neg_mode <- maxima[1]
     pos_mode <- maxima[2]
@@ -355,43 +325,54 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     # w is the log-scale distance (after normalization) between the negative peak and threshold.
     w <- norm_cutoff - neg_mode
     
+    snr <- SNR(log10(tot_normed + 1))
+
     called <- c()
-    # this loop classifies negatives vs. singlets (because the highest count is less than the threshold found by KDE)
-    for (cell in rownames(top2_negs_log)) {
-      max_val <- max(top2_negs_log[cell,])
-      min_val <- min(top2_negs_log[cell,])
-      # if max value >= threshold - alpha (w*neg_thresh)
-      if (max_val >= norm_cutoff - w*neg_thresh) {
-        # and if diff between top 2 counts >= phi
-        if (max_val - min_val >= w*neg_dist) {
-          # add this droplet to singlet group
-          called <- c(called, cell)
+    print(norm_cutoff)
+    print(norm_cutoff + d*doublet_thresh)
+    print(d*pos_dist)
+    print(norm_cutoff - w*neg_thresh)
+    print(w*neg_dist)
+    
+    plotlabel <- c()
+    for (i in 1:nrow(snr)) {
+      
+      if (snr[i, "highest"] >= norm_cutoff) {
+        if (snr[i, "second"] <= norm_cutoff + d*doublet_thresh) {
+          if (snr[i, "highest"] - snr[i, "second"] >= d*pos_dist) {
+            called <- c(called, snr[i, "CellID"])
+            plotlabel[i] <- "Singlet"
+          } else {
+            plotlabel[i] <- "Doublet"
+          }
+        } else {
+          plotlabel[i] <- "Doublet"
+        }
+      } else {
+        if (snr[i, "highest"] >= norm_cutoff - w*neg_thresh) {
+          if (snr[i, "highest"] - snr[i, "second"] >= w*neg_dist) {
+            called <- c(called, snr[i, "CellID"])
+            plotlabel[i] <- "Singlet"
+          } else {
+            plotlabel[i] <- "Negative"
+          }
+        } else {
+          plotlabel[i] <- "Negative"
         }
       }
     }
-    
-    called_multi <- c()
-    # this loop classifies doublets vs. singlets (because the highest count is greater than the threshold found by KDE)
-    for (cell in colnames(discrete[, colSums(discrete)>=1])) {
-      # we are comparing counts on the log-scale
-      top2 <- get_Top2(log10(tot_normed[cell,]+1))
-      max_val <- max(top2)
-      min_val <- MaxN(top2)[[1]]
-      # if 2nd highest count is <= the threshold + beta (d*doublet_thresh)
-      if (min_val <= norm_cutoff + d*doublet_thresh) {
-        # and if the diff between top 2 counts is >= theta
-        if ((max_val - min_val) >= d*pos_dist) {
-          # add this droplet to the singlet group
-          called_multi <- c(called_multi, cell)
-        }
-      }
-    }
-    
-    for (cell in c(called, called_multi)) {
+
+    for (cell in called) {
       discrete[, cell] <- 0
       row_max <- which.max(tot_normed[cell,])
       discrete[row_max, cell] <- 1
     }
+    
+    joined <- cbind(snr, plotlabel)
+    
+    print(ggplot2::ggplot(joined, aes(x=highest, y=second, color=plotlabel)) + 
+      geom_point(cex=0.5) + geom_hline(yintercept = norm_cutoff) +
+      geom_vline(xintercept = norm_cutoff))
     
     seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_quantile', assay = assay)
     return(seuratObj)
