@@ -220,6 +220,10 @@ GenerateByRowSummary <- function(barcodeMatrix) {
 	}
 
 	barcodeMatrix <- as.matrix(barcodeMatrix)
+	if (sum(is.na(barcodeMatrix)) > 0) {
+		print(paste0('The barcodeMatrix has NAs, total: ', sum(is.na(barcodeMatrix))))
+	}
+
 	df <- data.frame(Barcode = naturalsort::naturalfactor(SimplifyHtoNames(rownames(barcodeMatrix))), BarcodeFull = naturalsort::naturalfactor(rownames(barcodeMatrix)), min = apply(barcodeMatrix, 1, min), max = apply(barcodeMatrix, 1, max), mean = apply(barcodeMatrix, 1, mean), logmean = log(apply(barcodeMatrix, 1, mean) + 1), nonzero = apply(barcodeMatrix, 1, function(x){
 		sum(x > 0)
 	}), mean_nonzero = (rowSums(barcodeMatrix) / rowSums(!!barcodeMatrix)), total_gt1 = apply(barcodeMatrix, 1, function(x){
