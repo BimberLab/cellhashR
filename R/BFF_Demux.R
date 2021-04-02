@@ -20,11 +20,11 @@ SNR <- function(barcodeData) {
   topval <- c()
   second <- c()
   for (i in 1:nrow(df)) {
-    top[i] <- which.max(df[i, 2:length(df[i,])])
-    topbar[i] <- colnames(df)[top[i]+1]
-    topval[i] <- df[i, top[i]+1]
-    df[i,top[i]+1] <- 0
-    second[i] <- max(df[i,2:length(df[i,])])
+    top[i] <- which.max(df[i, ])
+    topbar[i] <- colnames(df)[top[i]]
+    topval[i] <- df[i, top[i]]
+    df[i,top[i]] <- 0
+    second[i] <- max(df[i, ])
   }
   outdf <- data.frame("CellID" = rownames(df), check.names = FALSE)
   outdf$barcode <- topbar
