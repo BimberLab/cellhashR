@@ -238,6 +238,11 @@ GenerateByRowSummary <- function(barcodeMatrix) {
 
 	if (sum(is.na(df)) > 0) {
 		print(paste0('The barcodeMatrix had NAs after transform, total: ', sum(is.na(df))))
+		for (colName in colnames(df)) {
+			if (sum(is.na(df[[colName]])) > 0) {
+				print(paste0('Column has NAs: ', colName))
+			}
+		}
 	}
 
 	return(df)
