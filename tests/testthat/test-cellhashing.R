@@ -255,7 +255,7 @@ test_that("BFF calling works", {
 		summaryFile <- paste0(testName, '-summary.txt')
 	}
 
-	l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile, methods = c('dropletutils', 'threshold', 'bff', 'seqnd', 'multiseq', 'htodemux'), skipNormalizationQc = TRUE)
+	l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile, methods = c('dropletutils', 'bff', 'multiseq'), skipNormalizationQc = TRUE)
 	barcodeData <- l$barcodeData
 	df <- l$df
 	metricsFile <- l$metricsFile
