@@ -3,7 +3,7 @@
 #' @include Multiseq.R
 #' @include Seurat_HTO_Demux.R
 #' @include SeqND_Demux.R
-#' @include PeakND_Demux.R
+#' @include BFF_Demux.R
 #' @include Threshold_Demux.R
 #' @include DropletUtils_Demux.R
 
@@ -111,6 +111,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
   return(seuratObj)
 }
 
+
 #' @title Generate Cell Hashing Calls
 #'
 #' @param barcodeMatrix The filtered matrix of hashing count data
@@ -131,7 +132,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('multiseq', 'dro
       vals <- vals[grepl(names(vals), pattern = paste0('^', method, '\\.'))]
       names(vals) <- gsub(names(vals), pattern = paste0('^', method, '\\.'), replacement = '')
       print(names(vals))
-
+      
       fnArgs <- vals
     }
 
@@ -148,35 +149,31 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('multiseq', 'dro
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-    } else if (method == 'seqnd'){
-      fnArgs$barcodeMatrix <- barcodeMatrix
-      calls <- do.call(GenerateCellHashCallsSeqND, fnArgs)
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'peaknd'){
-      fnArgs$barcodeMatrix <- barcodeMatrix
-      calls <- do.call(GenerateCellHashCallsPeakND, fnArgs)
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
-    } else if (method == 'threshold'){
-      fnArgs$barcodeMatrix <- barcodeMatrix
-      calls <- do.call(GenerateCellHashCallsThreshold, fnArgs)
-      if (!is.null(calls)) {
-        callList[[method]] <- calls
-      }
     } else if (method == 'dropletutils'){
       fnArgs$barcodeMatrix <- barcodeMatrix
       calls <- do.call(GenerateCellHashCallsDropletUtils, fnArgs)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
+    } else if (method == 'bff_threshold'){
+      fnArgs$barcodeMatrix <- barcodeMatrix
+      fnArgs$simple_threshold <- TRUE
+      calls <- do.call(GenerateCellHashCallsBFF, fnArgs)
+      if (!is.null(calls)) {
+        callList[[method]] <- calls
+      }
+    } else if (method == 'bff_quantile'){
+      fnArgs$barcodeMatrix <- barcodeMatrix
+      fnArgs$simple_threshold <- FALSE
+      calls <- do.call(GenerateCellHashCallsBFF, fnArgs)
+      if (!is.null(calls)) {
+        callList[[method]] <- calls
+      }
+
     } else {
       stop(paste0('Unknown method: ', method))
     }
   }
-
   return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile))
 }
 

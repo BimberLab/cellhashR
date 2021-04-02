@@ -209,8 +209,8 @@ PrintRowQc <- function(barcodeMatrix) {
 			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = rel(0.5))
 		)
 
-	print(P7)
-	print(P8)
+	suppressWarnings(print(P7))
+	suppressWarnings(print(P8))
 }
 
 GenerateByRowSummary <- function(barcodeMatrix) {
@@ -220,17 +220,28 @@ GenerateByRowSummary <- function(barcodeMatrix) {
 	}
 
 	barcodeMatrix <- as.matrix(barcodeMatrix)
+	if (sum(is.na(barcodeMatrix)) > 0) {
+		print(paste0('The barcodeMatrix has NAs, total: ', sum(is.na(barcodeMatrix))))
+	}
+
 	df <- data.frame(Barcode = naturalsort::naturalfactor(SimplifyHtoNames(rownames(barcodeMatrix))), BarcodeFull = naturalsort::naturalfactor(rownames(barcodeMatrix)), min = apply(barcodeMatrix, 1, min), max = apply(barcodeMatrix, 1, max), mean = apply(barcodeMatrix, 1, mean), logmean = log(apply(barcodeMatrix, 1, mean) + 1), nonzero = apply(barcodeMatrix, 1, function(x){
 		sum(x > 0)
 	}), mean_nonzero = (rowSums(barcodeMatrix) / rowSums(!!barcodeMatrix)), total_gt1 = apply(barcodeMatrix, 1, function(x){
 		sum(x > 1)
-	}), mean_gt1 = apply(barcodeMatrix, 1, function(x){
-		mean(sapply(x, function(y){if (y > 1) y else NA}), na.rm = T)
 	}), rowSums = rowSums(barcodeMatrix))
 
 	df$mean_nonzero[is.na(df$mean_nonzero)] <- 0
 
 	df <- df[order(df$Barcode),]
+
+	if (sum(is.na(df)) > 0) {
+		print(paste0('The barcodeMatrix had NAs after transform, total: ', sum(is.na(df))))
+		for (colName in colnames(df)) {
+			if (sum(is.na(df[[colName]])) > 0) {
+				print(paste0('Column has NAs: ', colName))
+			}
+		}
+	}
 
 	return(df)
 }
@@ -314,8 +325,9 @@ PrintColumnQc <- function(barcodeMatrix) {
 	print(P2)
 
 
-	#normalize columns, print top barcode fraction:
+	#normalize columns, print top barcode fraction. note, cells with all zeros will make NAs
 	normalizedBarcodes <- sweep(barcodeMatrix, 2, colSums(barcodeMatrix),`/`)
+	normalizedBarcodes[is.na(normalizedBarcodes)] <- 0
 	topValue <- apply(normalizedBarcodes,2,function(x){
 		max(x)
 	})

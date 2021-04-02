@@ -6,6 +6,13 @@ utils::globalVariables(
 	add = TRUE
 )
 
+NormalizeQuantile <- function(mat) {
+  dat <- preprocessCore::normalize.quantiles(as.matrix(mat), copy=TRUE)
+  row.names(dat) <- row.names(mat)
+  colnames(dat) <- colnames(mat)
+  return(as.data.frame(dat))
+}
+
 NormalizeLog2 <- function(mat, mean.center = TRUE) {
 	log2Scaled <- log2(mat)
 	for (i in 1:nrow(log2Scaled)) {

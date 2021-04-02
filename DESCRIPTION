@@ -34,7 +34,8 @@ Imports:
     rmdformats,
     ggforce,
     DropletUtils,
-    S4Vectors
+    S4Vectors,
+    preprocessCore
 Suggests:
     devtools,
     testthat (>= 2.1.0),
@@ -43,14 +44,15 @@ RoxygenNote: 7.1.1
 URL: https://github.com/BimberLab/cellhashR
 BugReports: https://github.com/BimberLab/cellhashR/issues
 Remotes:
-    bioc::DropletUtils
+    bioc::DropletUtils,
+    bioc::preprocessCore
 Collate:
     'Utils.R'
     'Visualization.R'
     'Normalization.R'
+    'BFF_Demux.R'
     'DropletUtils_Demux.R'
     'Threshold_Demux.R'
-    'PeakND_Demux.R'
     'SeqND_Demux.R'
     'Seurat_HTO_Demux.R'
     'Multiseq.R'
