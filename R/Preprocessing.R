@@ -228,8 +228,6 @@ GenerateByRowSummary <- function(barcodeMatrix) {
 		sum(x > 0)
 	}), mean_nonzero = (rowSums(barcodeMatrix) / rowSums(!!barcodeMatrix)), total_gt1 = apply(barcodeMatrix, 1, function(x){
 		sum(x > 1)
-	}), mean_gt1 = apply(barcodeMatrix, 1, function(x){
-		mean(sapply(x, function(y){if (y > 1) y else NA}), na.rm = T)
 	}), rowSums = rowSums(barcodeMatrix))
 
 	df$mean_nonzero[is.na(df$mean_nonzero)] <- 0
