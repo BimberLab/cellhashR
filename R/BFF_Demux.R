@@ -3,7 +3,7 @@
 #' @include Visualization.R
 
 utils::globalVariables(
-  names = c('relative_counts', 'x', 'y', '..density..'),
+  names = c('relative_counts', 'x', 'y', '..density..', 'highest', 'second'),
   package = 'cellhashR',
   add = TRUE
 )
@@ -15,7 +15,6 @@ SNR <- function(barcodeData) {
   # count value.  SNR stands for signal to noise ratio, which the data extracted
   # can be used to calculate.
   df <- data.frame(barcodeData, check.names = FALSE)
-  df <- tibble::rownames_to_column(df, var = "CellID")
   top <- c()
   topbar <- c()
   topval <- c()
@@ -27,7 +26,7 @@ SNR <- function(barcodeData) {
     df[i,top[i]+1] <- 0
     second[i] <- max(df[i,2:length(df[i,])])
   }
-  outdf <- data.frame("CellID" = df$CellID, check.names = FALSE)
+  outdf <- data.frame("CellID" = rownames(df), check.names = FALSE)
   outdf$barcode <- topbar
   outdf$highest <- topval
   outdf$second <- second
