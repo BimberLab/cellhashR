@@ -43,7 +43,7 @@ tests <- list(
       MultiSeqCalled = 4547,
       Discordant = 376,
       SeuratCalled = 3038,
-			BffCalled = 4458
+			BffQuantile = 4458
 		),
     '449-1' = list(
       input = '../testdata/449-1-GEX/umi_count',
@@ -255,11 +255,11 @@ test_that("BFF calling works", {
 		summaryFile <- paste0(testName, '-summary.txt')
 	}
 
-	l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile, methods = c('dropletutils', 'bff', 'multiseq'), skipNormalizationQc = TRUE)
+	l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile, methods = c('dropletutils', 'bff_quantile', 'multiseq'), skipNormalizationQc = TRUE)
 	barcodeData <- l$barcodeData
 	df <- l$df
 	metricsFile <- l$metricsFile
 	unlink(metricsFile)
 	
-	expect_equal(expected = test[['BffCalled']], object = sum(df$bff != 'Negative'), info = testName)
+	expect_equal(expected = test[['BffQuantile']], object = sum(df$bff_quantile != 'Negative'), info = testName)
 })
