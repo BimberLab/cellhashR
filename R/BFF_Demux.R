@@ -115,22 +115,20 @@ PlotCutoff <- function(data, smooth, label) {
         print('Negative peak was not at least 1/10th the positive peak, using max value as cutoff')
         P1 <- P1 + geom_vline(xintercept = max(data), size = 1)
         print(P1)
-        return(max(data))
+        return(list(max(data), P1))
       }
       cutoff_indices <- index2:index1
-    }
-    else {
+    } else {
       cutoff_indices <- index1:index2
     }
     cutoff_index <- which.min(smooth$y[cutoff_indices]) + min(cutoff_indices)
     cutoff <- smooth$x[cutoff_index]
-  }
-  else {
+  } else {
     print(label)
     print('Only one peak found, using max value as cutoff')
     P1 <- P1 + geom_vline(xintercept = max(data), size = 1)
     print(P1)
-    return(max(data))
+    return(list(max(data), P1))
   }
   P1 <- P1 + geom_vline(xintercept = cutoff, size = 1)
   print(P1)
