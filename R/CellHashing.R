@@ -122,7 +122,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @description The primary methods to generating cell hashing calls from a filtered matrix of count data.
 #' @return A data frame of results.
 #' @export
-GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('multiseq', 'dropletutils'), cellbarcodeWhitelist = NULL, metricsFile = NULL, ...) {
+GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_quantile', 'multiseq', 'dropletutils'), cellbarcodeWhitelist = NULL, metricsFile = NULL, ...) {
   callList <- list()
   for (method in methods) {
     fnArgs <- list()
