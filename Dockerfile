@@ -8,7 +8,7 @@ RUN apt-get update -y \
 		libhdf5-dev \
 		libpython3-dev \
 		python3-pip \
-		openblas-dev \
+		libopenblas-dev \
 	&& pip3 install umap-learn \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
