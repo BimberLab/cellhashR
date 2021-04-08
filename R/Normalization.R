@@ -13,6 +13,41 @@ NormalizeQuantile <- function(mat) {
   return(as.data.frame(dat))
 }
 
+NormalizeBimodalQuantile <- function(mat) {
+  barcodeMatrix <- mat
+  assay = "HTO"
+  seuratObj <- Seurat::CreateSeuratObject(mat, assay = assay)
+  discrete <- GetAssayData(object = seuratObj, assay = assay)
+  discrete[discrete > 0] <- 0
+  cutoffs <- list()
+  for (hto in rownames(barcodeMatrix)) {
+    cells <- barcodeMatrix[hto, colnames(barcodeMatrix), drop = FALSE]
+    #BFF uses a log-scale to smooth higher counts, so we transform back once we find the threshold
+    cutoffresults <- getCountCutoff(cells, hto, 4)
+    if (cutoffresults[[1]] < 2) {
+      print("Threshold may be placed too low, recalculating with more smoothing.")
+      cutoffresults <- getCountCutoff(cells, hto, 2)
+    }
+    threshold <- 10^(cutoffresults[[1]])
+    discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold, yes = 1, no = 0)
+    cutoffs[[hto]] <- threshold
+  }
+
+  neg_norm <- getNegNormedData(discrete, barcodeMatrix)
+  pos_norm <- getPosNormedData(discrete, barcodeMatrix)
+  tot_normed <- pos_norm + neg_norm
+  # transposing within this function causes changes in column names upon return
+  # so we're avoiding that here.  Transpose performed elsewhere.
+  return(log10(tot_normed+1))
+}
+
+TransposeDF <- function(df) {
+  t_df <- data.table::transpose(df)
+  rownames(t_df) <- colnames(df)
+  colnames(t_df) <- rownames(df)
+  return(t_df)
+}
+
 NormalizeLog2 <- function(mat, mean.center = TRUE) {
 	log2Scaled <- log2(mat)
 	for (i in 1:nrow(log2Scaled)) {
@@ -45,9 +80,9 @@ NormalizeRelative <- function(mat) {
 #' @export
 PlotNormalizationQC <- function(barcodeData) {
 	toQC <- list(
+	  'bimodalQuantile' = TransposeDF(NormalizeBimodalQuantile(barcodeData)),
 		'log2Center' = NormalizeLog2(barcodeData, mean.center = TRUE),
-		'CLR' = NormalizeCLR(barcodeData),
-		'relative' = NormalizeRelative(barcodeData)
+		'CLR' = NormalizeCLR(barcodeData)
 	)
 
 	df <- NULL
@@ -77,6 +112,13 @@ PlotNormalizationQC <- function(barcodeData) {
 
 	for (norm in names(toQC)) {
 		PerformHashingClustering(toQC[[norm]], norm = norm)
+	  snr <- SNR(t(toQC[[norm]]))
+	  print(ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) + geom_point(cex=0.25) + ggtitle(paste0(norm, ' Normalized Count Data')))
+	  Lab.palette <- colorRampPalette(c("blue", "orange", "red"), space = "Lab")
+	  smoothScatter(snr$Highest, snr$Second, nbin = 200, bandwidth = .03, 
+	                colramp = colorRampPalette(c("white", "blue", "yellow"), space = "Lab"), 
+	                main = paste0(norm, ' Normalized Count Density'), 
+	                xlab = "Highest", ylab= "Second")
 	}
 }
 
@@ -156,7 +198,7 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 	P2 <- ggplot(df, aes(Cluster, Barcode)) +
 		geom_tile(aes(fill = AvgExpression), colour = "white") +
 		geom_text(aes(label=AvgExpression)) +
-		scale_fill_gradient2(low = "red", mid = "white", high = "green") +
+		scale_fill_gradient2(low = "red", mid = "white", high = "green", midpoint = mean(df$AvgExpression)) +
 		scale_x_discrete(position = "top") +
 		labs(x = "Barcode",y = "Cluster") +
 		egg::theme_presentation(base_size = 12) +

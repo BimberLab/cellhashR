@@ -3,7 +3,7 @@
 #' @include Visualization.R
 
 utils::globalVariables(
-  names = c('relative_counts', 'x', 'y', '..density..', 'highest', 'second'),
+  names = c('relative_counts', 'x', 'y', '..density..', 'Highest', 'Second'),
   package = 'cellhashR',
   add = TRUE
 )
@@ -27,9 +27,9 @@ SNR <- function(barcodeData) {
     second[i] <- max(df[i, ])
   }
   outdf <- data.frame("CellID" = rownames(df), check.names = FALSE)
-  outdf$barcode <- topbar
-  outdf$highest <- topval
-  outdf$second <- second
+  outdf$Barcode <- topbar
+  outdf$Highest <- topval
+  outdf$Second <- second
   
   return(outdf)
 }
@@ -325,36 +325,31 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     snr <- SNR(log10(tot_normed + 1))
 
     called <- c()
-    print(norm_cutoff)
-    print(norm_cutoff + d*doublet_thresh)
-    print(d*pos_dist)
-    print(norm_cutoff - w*neg_thresh)
-    print(w*neg_dist)
     
-    plotlabel <- c()
+    classification <- c()
     for (i in 1:nrow(snr)) {
       
-      if (snr[i, "highest"] >= norm_cutoff) {
-        if (snr[i, "second"] <= norm_cutoff + d*doublet_thresh) {
-          if (snr[i, "highest"] - snr[i, "second"] >= d*pos_dist) {
+      if (snr[i, "Highest"] >= norm_cutoff) {
+        if (snr[i, "Second"] <= norm_cutoff + d*doublet_thresh) {
+          if (snr[i, "Highest"] - snr[i, "Second"] >= d*pos_dist) {
             called <- c(called, snr[i, "CellID"])
-            plotlabel[i] <- "Singlet"
+            classification[i] <- "Singlet"
           } else {
-            plotlabel[i] <- "Doublet"
+            classification[i] <- "Doublet"
           }
         } else {
-          plotlabel[i] <- "Doublet"
+          classification[i] <- "Doublet"
         }
       } else {
-        if (snr[i, "highest"] >= norm_cutoff - w*neg_thresh) {
-          if (snr[i, "highest"] - snr[i, "second"] >= w*neg_dist) {
+        if (snr[i, "Highest"] >= norm_cutoff - w*neg_thresh) {
+          if (snr[i, "Highest"] - snr[i, "Second"] >= w*neg_dist) {
             called <- c(called, snr[i, "CellID"])
-            plotlabel[i] <- "Singlet"
+            classification[i] <- "Singlet"
           } else {
-            plotlabel[i] <- "Negative"
+            classification[i] <- "Negative"
           }
         } else {
-          plotlabel[i] <- "Negative"
+          classification[i] <- "Negative"
         }
       }
     }
@@ -365,11 +360,18 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
       discrete[row_max, cell] <- 1
     }
     
-    joined <- cbind(snr, plotlabel)
+    joined <- cbind(snr, classification)
     
-    print(ggplot2::ggplot(joined, aes(x=highest, y=second, color=plotlabel)) + 
-      geom_point(cex=0.5) + geom_hline(yintercept = norm_cutoff) +
-      geom_vline(xintercept = norm_cutoff))
+    boundaries1 <- data.frame(x = c(norm_cutoff, norm_cutoff+d*(doublet_thresh+pos_dist), max(joined$Highest) + 0.1),
+                              y = c(norm_cutoff-d*pos_dist,  norm_cutoff+d*doublet_thresh, norm_cutoff+d*doublet_thresh))
+    boundaries2 <- data.frame(x = c(norm_cutoff- w*neg_thresh, norm_cutoff- w*neg_thresh, norm_cutoff),
+                              y = c(min(joined$Second) - 0.1, norm_cutoff- w*(neg_thresh+neg_dist), norm_cutoff-w*neg_dist))
+    
+    print(ggplot2::ggplot(joined, aes(x=Highest, y=Second, color=classification)) + 
+            geom_point(cex=0.25) + geom_hline(yintercept = norm_cutoff) +
+            geom_vline(xintercept = norm_cutoff) + 
+            geom_line(aes(x=x, y=y), data = boundaries1, color="black", linetype="dashed") +
+            geom_line(aes(x=x, y=y), data = boundaries2, color="black", linetype="dashed"))
     
     seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_quantile', assay = assay)
     return(seuratObj)
