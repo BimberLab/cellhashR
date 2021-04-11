@@ -217,7 +217,7 @@ GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_r
   }
   #filter barcodes for low average expression:
   sel <- rowMeans(barcodeMatrix) > min_average_reads
-  barcodeMatrix <- barcodeMatrix[sel,]
+  barcodeMatrix <- barcodeMatrix[sel,,drop = FALSE]
   
   if (nrow(barcodeMatrix) == 0) {
     print(paste0('No passing barcodes after filter using min_average_reads: ', min_average_reads))
