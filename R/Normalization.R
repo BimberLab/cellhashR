@@ -249,7 +249,7 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 
   df <- data.frame(df, check.names=FALSE)
 	df$cell <- rownames(df)
-  df <- df %>% tidyr::pivot_longer(colnames(df)[2:length(colnames(df))], names_to = "Barcode", values_to = "count")
+  df <- df %>% tidyr::pivot_longer(colnames(df)[1:length(colnames(df)) - 1], names_to = "Barcode", values_to = "count")
   P1 <- df %>%
     dplyr::mutate(Barcode = factor(Barcode, levels=unique(df$Barcode)))  %>%
     ggplot(aes( y=count, x=Barcode)) + 
