@@ -4,7 +4,7 @@
 
 utils::globalVariables(
   names = c('relative_counts', 'x', 'y', '..density..', 'Highest', 'Second'),
-  # package = 'cellhashR',
+  package = 'cellhashR',
   add = TRUE
 )
 
@@ -95,20 +95,6 @@ PlotCutoff <- function(data, smooth, label) {
   plotdata <- data.frame(Value = data)
   linedata <- data.frame(x = smooth$x, y = sqrt(smooth$y))
   
-  
-  # P1 <- ggplot(data.frame(Value = data), aes(x = Value)) +
-  #   geom_histogram(aes(y = sqrt(..density..)), bins = nbins) +
-  #   ggtitle(label) + ylab("") + 
-  #   xlab("") +
-  #   geom_line(data = data.frame(x = smooth$x, y = sqrt(smooth$y)), mapping = aes(x = x, y = y), color = "blue", size = 1) +
-  #   egg::theme_presentation(base_size = 8)
-  
-  
-  # + geom_line(data = data.frame(x = smooth$x, y = 50*deriv), mapping = aes(x = x, y = y), color = "red", size = 1)
-  
-  # ymax <- max(graphics::hist(data, breaks = nbins, plot=FALSE)$density)
-  # P1 <- P1 + ylim(c(0, ymax * 1.05))
-  
   if (length(max_list) > 1) {
     y1 <- max(yvals)
     index1 <- max_list[which.max(yvals)]
@@ -120,9 +106,6 @@ PlotCutoff <- function(data, smooth, label) {
       #Negative peak must be at least 1/10th the positive peak
       if (y2 < (y1/10)) {
         print('Negative peak was not at least 1/10th the positive peak, using max value as cutoff')
-        # P1 <- P1 + geom_vline(xintercept = max(data), size = 1)
-        # print(P1)
-        # return(list(max(data), P1))
         cutoff <- max(data)
         return(list(cutoff, plotdata, linedata))
       }
@@ -134,14 +117,9 @@ PlotCutoff <- function(data, smooth, label) {
     cutoff <- smooth$x[cutoff_index]
   } else {
     print('Only one peak found, using max value as cutoff')
-    # P1 <- P1 + geom_vline(xintercept = max(data), size = 1)
-    # print(P1)
-    # return(list(max(data), P1))
     cutoff <- max(data)
     return(list(cutoff, plotdata, linedata))
   }
-  # P1 <- P1 + geom_vline(xintercept = cutoff, size = 1)
-  # return(list(cutoff, P1))
   return(list(cutoff, plotdata, linedata))
 }
 
@@ -191,7 +169,6 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
     
     change <- num_peaks - length(max_list)
     num_peaks <- length(max_list)
-    # outlabel <- paste(label, change, num_peaks, length(max2_list))
     outlabel <- label
   }
   cutoff_res <- PlotCutoff(data, smooth, outlabel)
@@ -210,19 +187,17 @@ generateBFFGridPlot <- function(barcodeMatrix, barcodeBlocklist = NULL, xlab, ma
   cutoffs <- NULL
   discrete <- barcodeMatrix
   discrete[discrete > 0] <- 0
+  
   for (hto in rownames(barcodeMatrix)) {
-    # i <- i+1
     cells <- barcodeMatrix[hto, colnames(barcodeMatrix), drop = FALSE]
     cutoffresults <- getCountCutoff(cells, hto, 4, barcodeBlocklist)
     cutoffval <- cutoffresults[[1]]
     x_vals <- cutoffresults[[3]]
 
-    
-    
     if (!is.null(universal_cutoff)) {
       cutoffval <- universal_cutoff
-    } else if (cutoffval< 2) {
-      # i <- i+1
+    }
+    if ((is.null(universal_cutoff)) & (cutoffval< 2)) {
       print(paste0("Threshold for ", hto, " may be placed too low, recalculating with more smoothing."))
       cutoffresults <- getCountCutoff(cells, paste0(hto, "*"), 2, barcodeBlocklist)
       cutoffval <- cutoffresults[[1]]
@@ -307,14 +282,14 @@ generateBFFGridPlot <- function(barcodeMatrix, barcodeBlocklist = NULL, xlab, ma
   }
 
   nbins <- 100
-  maxPerPlot <- 12
+  maxPerPlot <- 8
   totalPages <- GetTotalPlotPages(totalValues = length(unique(plotdata$Barcode)), perPage = maxPerPlot)
   for (i in 1:totalPages) {
     print(ggplot2::ggplot(plotdata, aes(x = Value)) + geom_line(data = linedata, mapping = aes(x = x, y = y), color = "blue", size = 1) +
             egg::theme_presentation(base_size = 12) + geom_line(data=cutoffs, aes(x=cutoff, y = y), size = 1) + 
             geom_histogram(aes(y = sqrt(..density..)), size = 1, bins = nbins) + scale_x_continuous(breaks = function(x) unique(floor(pretty(seq(0, (max(x) + 1) * 1.1))))) + 
-            labs(y = 'sqrt(Density)', x = xlab) + ggtitle(maintitle) +
-            ggforce::facet_wrap_paginate(~Barcode, scales = 'free', ncol = 4, nrow=3, strip.position = 'top', labeller = labeller(.multi_line = FALSE), page = i)
+            labs(y = 'sqrt(Density)', x = xlab) + ggtitle(maintitle)  +
+            ggforce::facet_wrap_paginate(~Barcode, scales = 'free', strip.position = 'top', labeller = labeller(.multi_line = FALSE), page = i)
     )
   }
 
@@ -371,26 +346,6 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
   print(paste("Neg thresh: ", neg_thresh))
   print(paste("Pos dist: ", pos_dist))
   print(paste("Neg dist: ", neg_dist))
-
-  #loop over HTOs in matrix, perform thresholding and store cells that pass the threshold
-  #return a discrete matrix, with 1 equal to a positive call for that barcode
-
-    # discrete <- GetAssayData(object = seuratObj, assay = assay)
-  # discrete[discrete > 0] <- 0
-  # cutoffs <- list()
-  # for (hto in rownames(barcodeMatrix)) {
-  #   cells <- barcodeMatrix[hto, colnames(seuratObj), drop = FALSE]
-  #   #BFF uses a log-scale to smooth higher counts, so we transform back once we find the threshold
-  #   cutoffresults <- getCountCutoff(cells, hto, 4)
-  #   if (cutoffresults[[1]] < 2) {
-  #     print(paste0("Threshold for ", hto, " may be placed too low, recalculating with more smoothing."))
-  #     cutoffresults <- getCountCutoff(cells, hto, 2)
-  #   }
-  #   kernel_j <- cutoffresults[[3]]
-  #   threshold <- 10^(cutoffresults[[1]])
-  #   discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold, yes = 1, no = 0)
-  #   cutoffs[[hto]] <- threshold
-  # }
   
   thresholdres <- generateBFFGridPlot(barcodeMatrix, barcodeBlocklist = NULL, "Log(Counts + 1)", "Raw Count Distributions with BQN Thresholds")
   
@@ -425,26 +380,12 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     
     normedres <- generateBFFGridPlot(t(tot_normed), barcodeBlocklist= NULL, "Log(Counts + 1)", "Normalized Count Distributions with Fitted Threshold")
     
-    # normed_cutoffs <- list()
-    # max_list <- c()
-    # for (hto in colnames(tot_normed)) {
-    #   cells <- tot_normed[rownames(tot_normed), hto, drop = FALSE]
-    #   cutoffresults <- getCountCutoff(cells, hto, 4)
-    #   if (cutoffresults[[1]] < 2) {
-    #     print(paste0("Threshold for ", hto, " may be placed too low, recalculating with more smoothing."))
-    #     cutoffresults <- getCountCutoff(cells, hto, 2)
-    #   }
-    #   threshold <- (cutoffresults[[1]])
-    #   max_list <- x_vals #rbind(max_list, cutoffresults[[3]])
-    #   normed_cutoffs[[hto]] <- threshold
-    # }
-    
-    
     x_vals <- normedres[[4]]
     normed_cutoffs <- normedres[[2]]
     max_list <- x_vals
     norm_cutoff <- mean(unlist(normed_cutoffs))
-
+    
+    foo <- generateBFFGridPlot(t(tot_normed), barcodeBlocklist= NULL, "Log(Counts + 1)", "Normalized Count Distributions with Final Threshold", universal_cutoff = norm_cutoff)
     
     maxima <- colMeans(max_list)
     neg_mode <- maxima[1]

@@ -2,7 +2,7 @@
 
 utils::globalVariables(
 	names = c('NormCount', 'Saturation', 'Cluster', 'AvgExpression'),
-	# package = 'cellhashR',
+	package = 'cellhashR',
 	add = TRUE
 )
 
@@ -112,7 +112,7 @@ PlotNormalizationQC <- function(barcodeData) {
 			egg::theme_presentation(base_size = 14) +
 			geom_density(aes(y = sqrt(..density..)), size = 1) + 
 			labs(y = 'sqrt(Density)', x = 'Value') + ggtitle('Normalized Data') +
-			ggforce::facet_wrap_paginate(Barcode ~ forcats::fct_relevel(Normalization, "Raw"), scales = 'free', ncol = length(unique(df$Normalization)), nrow = maxPerPlot, strip.position = 'top', labeller = labeller(.multi_line = FALSE), page = i)
+			ggforce::facet_wrap_paginate(Barcode ~ forcats::fct_relevel(Normalization, "Raw"), scales = 'free', ncol = length(unique(df$Normalization)), strip.position = 'top', labeller = labeller(.multi_line = FALSE), page = i)
 		)
 	}
 
@@ -252,11 +252,8 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
   df <- df %>% tidyr::pivot_longer(colnames(df)[2:length(colnames(df))], names_to = "Barcode", values_to = "count")
   P1 <- df %>%
     dplyr::mutate(Barcode = factor(Barcode, levels=unique(df$Barcode)))  %>%
-    ggplot(aes( y=count, x=Barcode)) + # stat_summary(aes(y = sqrt(..density..)), colour = "red", size = 2, geom="violin") + 
-    # geom_density(aes(y = sqrt(..density..)), geom="violin") + 
+    ggplot(aes( y=count, x=Barcode)) + 
     geom_violin(position="dodge", alpha=0.5) +
-    # geom_density(aes(y = sqrt(..density..)), size = 1) +
-
     xlab("") +
     ylab(label) + maintitle
     egg::theme_presentation(base_size = 14) +
