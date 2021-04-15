@@ -46,7 +46,7 @@ getNegNormedData <- function(discrete, barcodeMatrix) {
 }
 
 getPosNormedData <- function(discrete, barcodeMatrix) {
-  all_pos_vals <- data.frame(t(as.matrix(discrete * barcodeMatrix)))
+  all_pos_vals <- data.frame(t(as.matrix(discrete * barcodeMatrix)), check.names = FALSE)
   is.na(all_pos_vals) <- all_pos_vals==0
   all_pos_normed <- NormalizeQuantile(all_pos_vals)
   all_pos_normed[is.na(all_pos_normed)] <- 0
@@ -287,7 +287,7 @@ generateBFFGridPlot <- function(barcodeMatrix, barcodeBlocklist = NULL, xlab, ma
             egg::theme_presentation(base_size = 12) + geom_line(data=cutoffs, aes(x=cutoff, y = y), size = 1) + 
             geom_histogram(aes(y = sqrt(..density..)), size = 1, bins = nbins) + scale_x_continuous(breaks = function(x) unique(floor(pretty(seq(0, (max(x) + 1) * 1.1))))) + 
             labs(y = 'sqrt(Density)', x = xlab) + ggtitle(maintitle)  +
-            ggforce::facet_wrap_paginate(~Barcode, scales = 'free', strip.position = 'top', labeller = labeller(.multi_line = FALSE), page = i)
+            ggforce::facet_wrap_paginate(~Barcode, scales = 'free', strip.position = 'top', nrow = min(3, length(unique(plotdata$Barcode))), labeller = labeller(.multi_line = FALSE), page = i)
     )
   }
 

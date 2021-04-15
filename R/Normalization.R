@@ -32,12 +32,9 @@ NormalizeBimodalQuantile <- function(mat) {
     discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold, yes = 1, no = 0)
     cutoffs[[hto]] <- threshold
   }
-
   neg_norm <- getNegNormedData(discrete, barcodeMatrix)
   pos_norm <- getPosNormedData(discrete, barcodeMatrix)
   tot_normed <- pos_norm + neg_norm
-  # transposing within this function causes changes in column names upon return
-  # so we're avoiding that here.  Transpose performed elsewhere.
   return(log10(tot_normed+1))
 }
 
@@ -81,7 +78,7 @@ NormalizeRelative <- function(mat) {
 PlotNormalizationQC <- function(barcodeData) {
 	toQC <- list(
 	  'Raw' = data.frame(log10(barcodeData + 1), check.names = FALSE),
-	  'bimodalQuantile' = TransposeDF(NormalizeBimodalQuantile(barcodeData)),
+	  'bimodalQuantile' = TransposeDF(data.frame(NormalizeBimodalQuantile(barcodeData), check.names=FALSE)),
 	  'Quantile'= TransposeDF(data.frame(log10(NormalizeQuantile(t(barcodeData))+1), check.names = FALSE)),
 		'log2Center' = NormalizeLog2(barcodeData, mean.center = TRUE),
 		'CLR' = NormalizeCLR(barcodeData)
@@ -103,8 +100,7 @@ PlotNormalizationQC <- function(barcodeData) {
 		df$Barcode <- SimplifyHtoNames(as.character(df$Barcode))
 		df$Barcode <- naturalsort::naturalfactor(df$Barcode)
 	}
-	
-	
+
 	maxPerPlot <- 3
 	totalPages <- GetTotalPlotPages(totalValues = length(unique(df$Barcode)), perPage = maxPerPlot)
 	for (i in 1:totalPages) {
@@ -112,7 +108,7 @@ PlotNormalizationQC <- function(barcodeData) {
 			egg::theme_presentation(base_size = 14) +
 			geom_density(aes(y = sqrt(..density..)), size = 1) + 
 			labs(y = 'sqrt(Density)', x = 'Value') + ggtitle('Normalized Data') +
-			ggforce::facet_wrap_paginate(Barcode ~ forcats::fct_relevel(Normalization, "Raw"), scales = 'free', ncol = length(unique(df$Normalization)), strip.position = 'top', labeller = labeller(.multi_line = FALSE), page = i)
+			ggforce::facet_wrap_paginate(Barcode ~ forcats::fct_relevel(Normalization, "Raw"), scales = 'free', ncol = length(unique(df$Normalization)), nrow = min(3, length(unique(df$Barcode))), strip.position = 'top', labeller = labeller(.multi_line = FALSE), page = i)
 		)
 	}
 

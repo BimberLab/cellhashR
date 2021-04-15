@@ -1,0 +1,283 @@
+---
+title: "`r params$doc_title`"
+date: "`r Sys.Date()`"
+params:
+  doc_title: "Example cellhashR Report"
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    self_contained: yes
+    thumbnails: yes
+    fig_width: 12
+    code_folding: hide
+    gallery: true
+    lightbox: true
+    df_print: paged
+---
+
+```{r setup}
+
+# library(cellhashR)
+library(devtools)
+load_all()
+
+knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error=FALSE)
+
+```
+
+```{r setupVariables, include=FALSE}
+rawCountData <- "/Users/boggy/bimberlab/cellhashR/tests/testdata/438-24-GEX/umi_count"
+callFile <- "/Users/boggy/bimberlab/438-24-GEX.csv"
+
+# rawCountData <- "/Users/boggy/bimberlab/multiseq_hmec.csv"
+# callFile <- "/Users/boggy/bimberlab/multiseq_hmec_calls.csv"
+# rawCountData <- "/Users/boggy/bimberlab/cell_type_counts.csv"
+# callFile <- "/Users/boggy/bimberlab/cell_type_calls_new.csv"
+
+requiredVars <- c('rawCountData', 'callFile')
+for (v in requiredVars) {
+	if (!exists(v)) {
+		stop(paste0('Need to define variable: ', v))
+	}
+}
+
+if (!file.exists(rawCountData)) {
+  stop(paste0('Could not find rawCountData: ', rawCountData))
+}
+
+barcodeWhitelist <- NULL #c("MS-2", "MS-3", "MS-4", "MS-5", "MS-6", "MS-7", "MS-8", "MS-11", "MS-13")
+cellbarcodeWhitelist <- NULL 
+citeSeqCountDir <- NULL
+minCountPerCell <- 10
+metricsFile <- NULL
+optionalVars <- c('barcodeWhitelist', 'cellbarcodeWhitelist', 'citeSeqCountDir', 'minCountPerCell', 'metricsFile')
+for (v in requiredVars) {
+	if (!exists(v)) {
+		if (v == 'minCountPerCell') {
+			minCountPerCell <- 5
+		} else {
+			assign(v, NULL)
+		}
+	}
+}
+
+# If cellbarcodeWhitelist == inputMatrix, save/restore the set of cellbarcodes for reporting:
+saveOriginalCellBarcodeFile <- NULL
+if (!is.null(cellbarcodeWhitelist)) {
+	if (cellbarcodeWhitelist == 'inputMatrix') {
+		saveOriginalCellBarcodeFile <- 'originalBarcodes.txt'
+	}
+}
+
+# Truncate metricsFile if provided:
+metricsFile <-NULL
+if (!is.null(metricsFile)) {
+  file.create(metricsFile)
+}
+
+```
+
+# Data Loading / QC
+
+```{r QC}
+
+if (!is.null(citeSeqCountDir)) {
+  saturation <- PlotLibrarySaturation(citeSeqCountDir, metricsFile = metricsFile)
+}
+
+# barcodeData_t <- (read.csv(rawCountData, header = TRUE, row.names = 1))
+# zeros <- row.names(barcodeData_t[barcodeData_t$Bar1 == 0,])
+# barcodeData_t_fin <- barcodeData_t[!row.names(barcodeData_t) %in% zeros,]
+# barcodeData <- t(barcodeData_t_fin)
+
+barcodeData <- ProcessCountMatrix(rawCountData = rawCountData, minCountPerCell = minCountPerCell, barcodeWhitelist = barcodeWhitelist, saveOriginalCellBarcodeFile = saveOriginalCellBarcodeFile, metricsFile = metricsFile)
+```
+
+```{r}
+# barcodeData <- readRDS(rawCountData)
+# barcodeData <- t(read.csv(rawCountData, header = TRUE, row.names = 1))
+
+if (nrow(barcodeData) == 0) {
+  stop('No passing barcodes')
+}
+
+if (ncol(barcodeData) == 0) {
+  stop('No passing cells')
+}
+min_average_reads = 10
+sel <- rowMeans(barcodeData) > min_average_reads
+# sel2 <- colMeans(barcodeData) > min_average_reads
+barcodeData <- barcodeData[sel,]
+# barcodeData <- barcodeData[,sel2]
+# barcodeData <- barcodeData + 1
+# barcodeData <- barcodeData[c('MS-5', 'MS-7','MS-8'),]
+seuratObj <- Seurat::CreateSeuratObject(barcodeData, assay = 'HTO')
+print("Checking for non-bimodal distributions for HTO Barcode counts")
+res <- generateBFFGridPlot(barcodeData, barcodeBlocklist = NULL, "Log(Counts + 1)", "Raw Count Distributions with BQN Thresholds")
+BFFBarcodeBlocklist <- res[[1]]
+if (!is.null(BFFBarcodeBlocklist)) {
+  print(paste0("Barcodes ", paste0(BFFBarcodeBlocklist, collapse = ","), " will be excluded from BFF analysis because the data is not sufficiently bimodal."))
+} else {
+  print("All HTO Barcode distributions are sufficiently bimodal for BFF analysis.")
+}
+# 
+# print(row.names(barcodeData))
+
+```
+
+# Normalization / QC
+
+These plots are designed to provide visualization of potential normalizations.
+
+```{r NormalizationQC}
+
+PlotNormalizationQC(barcodeData)
+
+```
+
+# Generate Hashing Calls
+
+```{r GenerateCalls}
+
+df <- NULL
+# methods <- c()
+methods <- c("bff_quantile")
+# 
+# methods <- c("bff_quantile", "bff_threshold")
+# methods <- c("htodemux", "multiseq", "seqnd", "threshold", "bff_opt_rec", "bff_opt_rec2", "bff_opt", "bff_rec", "bff_rec2", "bff")
+# methods <- c("bff_opt_rec", "bff_opt_rec2", "bff_opt", "bff_rec2", "bff")
+# methods <- c("bff", "bff_rec2")
+# methods <- c("threshold")
+if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
+
+	if (!is.null(saveOriginalCellBarcodeFile)) {
+	  cellbarcodeWhitelist <- read.table(saveOriginalCellBarcodeFile, header = FALSE, col.names = c('cellbarcode'))
+	  cellbarcodeWhitelist <- cellbarcodeWhitelist$cellbarcode
+	}
+  
+  # seuratObj <- NormalizeData(seuratObj, assay = "HTO", normalization.method = "CLR")
+  # 
+  # seuratObj <- Seurat::HTODemux(seuratObj, assay = "HTO", positive.quantile = 0.99)
+  
+df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, bff_threshold.simple_threshold=TRUE, bff_quantile.simple_threshold=FALSE)
+# bff_quantile.doublet_thresh=0.5, bff_quantile.neg_thresh=0.5, bff_quantile.pos_dist=0.5, bff_quantile.neg_dist=0.5)
+	write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
+
+	if (!is.null(saveOriginalCellBarcodeFile)) {
+	  unlink(saveOriginalCellBarcodeFile)
+  }
+} else {
+	stop('No passing cells were found in the count matrix')
+}
+
+```
+
+# Final Calls
+
+```{r FinalCalls}
+
+if (!is.null(df)) {
+  knitr::kable(head(df, n = 10))
+}
+
+```
+
+# Summary of Negative Cells
+
+```{r SummarizeNegatives}
+
+if (!is.null(df)) {
+  SummarizeCellsByClassification(calls = df, barcodeMatrix = barcodeData)
+} else {
+  print('Something went wrong scoring cells')
+}
+
+```
+
+```{r QC2}
+# 
+# # barcodeWhitelist <- c(barcodeWhitelist, BFFBarcodeWhitelist)
+# #
+# # if (!is.null(citeSeqCountDir)) {
+# #   saturation <- PlotLibrarySaturation(citeSeqCountDir, metricsFile = metricsFile)
+# # }
+# #
+# # barcodeData <- ProcessCountMatrix(rawCountData = rawCountData, minCountPerCell = minCountPerCell, barcodeWhitelist = barcodeWhitelist, saveOriginalCellBarcodeFile = saveOriginalCellBarcodeFile, metricsFile = metricsFile)
+# 
+# 
+# barcodeData <- barcodeData[!row.names(barcodeData) %in% BFFBarcodeBlocklist,]
+# 
+# if ((nrow(barcodeData) == 0)) {
+#   stop('No passing barcodes')
+# }
+# 
+# if (ncol(barcodeData) == 0) {
+#   stop('No passing cells')
+# }
+# 
+# ```
+# 
+# # Generate Hashing Calls
+# 
+# ```{r GenerateCalls2}
+# callFile <- "/Users/boggy/bimberlab/cell_type_calls_bff.csv"
+# # callFile <- '/Users/boggy/bimberlab/457-1-GEX_bff.csv'
+# 
+# df <- NULL
+# # methods <- c("htodemux", "threshold", "multiseq", "seqnd", "bff")
+# # methods <- c("htodemux", "multiseq", "seqnd", "threshold", "bff_opt_rec", "bff_opt_rec2", "bff_opt", "bff_rec", "bff_rec2", "bff")
+# # methods <- c("bff_opt_rec", "bff_opt_rec2", "bff_opt", "bff_rec2", "bff_rec", "bff_opt_dist", "bff_dist", "bff")
+# # methods <- c("bff")
+# methods <- c("bff_rec2", "bff_dist", "bff")
+# # methods <- c("bff", "bff_rec2")
+# # methods <- c("threshold")
+# if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
+# 
+# 	if (!is.null(saveOriginalCellBarcodeFile)) {
+# 	  cellbarcodeWhitelist <- read.table(saveOriginalCellBarcodeFile, header = FALSE, col.names = c('cellbarcode'))
+# 	  cellbarcodeWhitelist <- cellbarcodeWhitelist$cellbarcode
+#   }
+# 
+# 	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile)
+# 	write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
+# 
+# 	if (!is.null(saveOriginalCellBarcodeFile)) {
+# 	  unlink(saveOriginalCellBarcodeFile)
+#   }
+# } else {
+# 	stop('No passing cels were found in the count matrix')
+# }
+# 
+# ```
+# 
+# # Final Calls
+# 
+# ```{r FinalCalls2}
+# 
+# if (!is.null(df)) {
+#   knitr::kable(head(df, n = 10))
+# }
+# 
+# ```
+# 
+# # Summary of Negative Cells
+# 
+# ```{r SummarizeNegatives2}
+# 
+# if (!is.null(df)) {
+#   SummarizeCellsByClassification(calls = df, barcodeMatrix = barcodeData)
+# } else {
+#   print('Something went wrong scoring cells')
+# }
+# 
+# ```
+# 
+# 
+# # Print Session Info
+# 
+# ```{r SessionInfo}
+# 
+# sessionInfo()
+
+```
+
