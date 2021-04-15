@@ -2,7 +2,7 @@
 
 utils::globalVariables(
 	names = c('NormCount', 'Saturation', 'Cluster', 'AvgExpression'),
-	package = 'cellhashR',
+	# package = 'cellhashR',
 	add = TRUE
 )
 
@@ -25,7 +25,7 @@ NormalizeBimodalQuantile <- function(mat) {
     #BFF uses a log-scale to smooth higher counts, so we transform back once we find the threshold
     cutoffresults <- getCountCutoff(cells, hto, 4)
     if (cutoffresults[[1]] < 2) {
-      print("Threshold may be placed too low, recalculating with more smoothing.")
+      print(paste0("Threshold for ", hto, " may be placed too low, recalculating with more smoothing."))
       cutoffresults <- getCountCutoff(cells, hto, 2)
     }
     threshold <- 10^(cutoffresults[[1]])
@@ -80,10 +80,13 @@ NormalizeRelative <- function(mat) {
 #' @export
 PlotNormalizationQC <- function(barcodeData) {
 	toQC <- list(
+	  'Raw' = data.frame(log10(barcodeData + 1), check.names = FALSE),
 	  'bimodalQuantile' = TransposeDF(NormalizeBimodalQuantile(barcodeData)),
+	  'Quantile'= TransposeDF(data.frame(log10(NormalizeQuantile(t(barcodeData))+1), check.names = FALSE)),
 		'log2Center' = NormalizeLog2(barcodeData, mean.center = TRUE),
 		'CLR' = NormalizeCLR(barcodeData)
 	)
+
 
 	df <- NULL
 	for (norm in names(toQC)) {
@@ -98,27 +101,52 @@ PlotNormalizationQC <- function(barcodeData) {
 		}
 
 		df$Barcode <- SimplifyHtoNames(as.character(df$Barcode))
+		df$Barcode <- naturalsort::naturalfactor(df$Barcode)
 	}
-
+	
+	
 	maxPerPlot <- 3
 	totalPages <- GetTotalPlotPages(totalValues = length(unique(df$Barcode)), perPage = maxPerPlot)
 	for (i in 1:totalPages) {
 		print(ggplot2::ggplot(df, aes(x = NormCount, color = Barcode)) +
 			egg::theme_presentation(base_size = 14) +
-			geom_density(size = 1) + labs(y = 'Density', x = 'Value') + ggtitle('Normalized Data') +
-			ggforce::facet_wrap_paginate(Barcode ~ Normalization, scales = 'free', ncol = length(unique(df$Normalization)), nrow = maxPerPlot, strip.position = 'top', labeller = labeller(.multi_line = FALSE), page = i)
+			geom_density(aes(y = sqrt(..density..)), size = 1) + 
+			labs(y = 'sqrt(Density)', x = 'Value') + ggtitle('Normalized Data') +
+			ggforce::facet_wrap_paginate(Barcode ~ forcats::fct_relevel(Normalization, "Raw"), scales = 'free', ncol = length(unique(df$Normalization)), nrow = maxPerPlot, strip.position = 'top', labeller = labeller(.multi_line = FALSE), page = i)
 		)
 	}
 
 	for (norm in names(toQC)) {
+	  if (norm == "Raw") {
+	    p1title <- "Raw Counts"
+	    p2title <- "Raw Count Density"
+	    announcement <- paste0("Printing Raw Count QC Plots")
+	  } else {
+	    p1title <- paste0(norm, ' Normalized Counts')
+	    p2title <- paste0(norm, ' Normalized Count Density')
+	    announcement <- paste0("Printing ", norm, " Normalization QC Plots")
+	  }
+	  print(announcement)
+	  .PlotViolin(t(toQC[[norm]]), norm = norm)
 		PerformHashingClustering(toQC[[norm]], norm = norm)
 	  snr <- SNR(t(toQC[[norm]]))
-	  print(ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) + geom_point(cex=0.25) + ggtitle(paste0(norm, ' Normalized Count Data')))
-	  Lab.palette <- colorRampPalette(c("blue", "orange", "red"), space = "Lab")
-	  smoothScatter(snr$Highest, snr$Second, nbin = 200, bandwidth = .03, 
-	                colramp = colorRampPalette(c("white", "blue", "yellow"), space = "Lab"), 
-	                main = paste0(norm, ' Normalized Count Density'), 
-	                xlab = "Highest", ylab= "Second")
+	  snr$Barcode <- naturalsort::naturalfactor(snr$Barcode)
+	  
+	  
+	  P1 <- (ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) + 
+	                geom_point(cex=0.25) + ggtitle(p1title) +
+	    egg::theme_presentation(base_size = 14))
+
+	  P2 <- ggplot(snr, aes(x=Highest, y=Second) ) +
+	    stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE) +
+	    scale_fill_distiller(palette=16, direction=-1) +
+	    scale_x_continuous(expand = c(0, 0)) +
+	    scale_y_continuous(expand = c(0, 0)) +
+	    egg::theme_presentation(base_size = 14) + ggtitle(p2title) + 
+	    theme(
+	      legend.position='none'
+	    )
+	  print(P1 | P2)
 	}
 }
 
@@ -208,3 +236,31 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 
 	return(P2)
 }
+
+.PlotViolin <- function(df, norm) {
+  if (norm=="Raw") {
+    label <- 'Log Raw Counts'
+    maintitle <- ggplot2::ggtitle(" Raw HTO Barcode Count Distributions")
+    
+  } else {
+    label <- paste0(norm, ' Normalized Counts')
+    maintitle <- ggplot2::ggtitle(paste0(norm, " Normalized HTO Barcode Count Distributions"))
+  }
+
+  df <- data.frame(df, check.names=FALSE)
+  df <- tibble::rownames_to_column(df, var = "cell")
+  df <- df %>% tidyr::pivot_longer(colnames(df)[2:length(colnames(df))], names_to = "Barcode", values_to = "count")
+  P1 <- df %>%
+    dplyr::mutate(Barcode = factor(Barcode, levels=unique(df$Barcode)))  %>%
+    ggplot(aes( y=count, x=Barcode)) + # stat_summary(aes(y = sqrt(..density..)), colour = "red", size = 2, geom="violin") + 
+    # geom_density(aes(y = sqrt(..density..)), geom="violin") + 
+    geom_violin(position="dodge", alpha=0.5) +
+    # geom_density(aes(y = sqrt(..density..)), size = 1) +
+
+    xlab("") +
+    ylab(label) + maintitle
+    egg::theme_presentation(base_size = 14) +
+    theme(axis.text.x = element_text(angle = 90))
+  print(P1)
+}
+
