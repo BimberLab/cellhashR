@@ -1,7 +1,7 @@
 #' @include Utils.R
 
 utils::globalVariables(
-	names = c('NormCount', 'Saturation', 'Cluster', 'AvgExpression'),
+	names = c('NormCount', 'Saturation', 'Cluster', 'AvgExpression', 'cutoff', 'count'),
 	package = 'cellhashR',
 	add = TRUE
 )
@@ -238,7 +238,7 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 }
 
 .PlotViolin <- function(df, norm) {
-  if (norm=="Raw") {
+  if (norm == "Raw") {
     label <- 'Log Raw Counts'
     maintitle <- ggplot2::ggtitle(" Raw HTO Barcode Count Distributions")
     
@@ -248,7 +248,7 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
   }
 
   df <- data.frame(df, check.names=FALSE)
-  df <- tibble::rownames_to_column(df, var = "cell")
+	df$cell <- rownames(df)
   df <- df %>% tidyr::pivot_longer(colnames(df)[2:length(colnames(df))], names_to = "Barcode", values_to = "count")
   P1 <- df %>%
     dplyr::mutate(Barcode = factor(Barcode, levels=unique(df$Barcode)))  %>%

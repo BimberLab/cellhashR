@@ -91,7 +91,6 @@ PlotCutoff <- function(data, smooth, label) {
     return(smooth$y[x])
   })
   
-  
   plotdata <- data.frame(Value = data)
   linedata <- data.frame(x = smooth$x, y = sqrt(smooth$y))
   
@@ -122,7 +121,6 @@ PlotCutoff <- function(data, smooth, label) {
   }
   return(list(cutoff, plotdata, linedata))
 }
-
 
 getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL) {
   # Function to find the threshold between positive and negative peaks of a barcode's distribution
@@ -363,7 +361,6 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
   for (cutoff in names(cutoffs)) {
     print(paste0(cutoff, ': ', cutoffs[[cutoff]]))
   }
-  
 
   if (simple_threshold == TRUE) {
     seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_threshold', assay = assay)

@@ -324,7 +324,6 @@ PrintColumnQc <- function(barcodeMatrix) {
 	print(P1)
 	print(P2)
 
-
 	#normalize columns, print top barcode fraction. note, cells with all zeros will make NAs
 	normalizedBarcodes <- sweep(barcodeMatrix, 2, colSums(barcodeMatrix),`/`)
 	normalizedBarcodes[is.na(normalizedBarcodes)] <- 0
