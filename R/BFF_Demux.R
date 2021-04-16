@@ -3,7 +3,7 @@
 #' @include Visualization.R
 
 utils::globalVariables(
-  names = c('relative_counts', 'x', 'y', '..density..', 'highest', 'second'),
+  names = c('relative_counts', 'x', 'y', '..density..', 'Highest', 'Second'),
   package = 'cellhashR',
   add = TRUE
 )
@@ -27,9 +27,9 @@ SNR <- function(barcodeData) {
     second[i] <- max(df[i, ])
   }
   outdf <- data.frame("CellID" = rownames(df), check.names = FALSE)
-  outdf$barcode <- topbar
-  outdf$highest <- topval
-  outdf$second <- second
+  outdf$Barcode <- topbar
+  outdf$Highest <- topval
+  outdf$Second <- second
   
   return(outdf)
 }
@@ -46,7 +46,7 @@ getNegNormedData <- function(discrete, barcodeMatrix) {
 }
 
 getPosNormedData <- function(discrete, barcodeMatrix) {
-  all_pos_vals <- data.frame(t(as.matrix(discrete * barcodeMatrix)))
+  all_pos_vals <- data.frame(t(as.matrix(discrete * barcodeMatrix)), check.names = FALSE)
   is.na(all_pos_vals) <- all_pos_vals==0
   all_pos_normed <- NormalizeQuantile(all_pos_vals)
   all_pos_normed[is.na(all_pos_normed)] <- 0
@@ -90,16 +90,9 @@ PlotCutoff <- function(data, smooth, label) {
   yvals <- sapply(max_list, FUN = function(x) {
     return(smooth$y[x])
   })
-  nbins <- 100
-  P1 <- ggplot(data.frame(Value = data), aes(x = Value)) +
-    geom_histogram(aes(y = sqrt(..density..)), bins = nbins) +
-    ggtitle(paste0("Histogram of ", label)) +
-    xlab("Log(HTO Counts)") +
-    geom_line(data = data.frame(x = smooth$x, y = sqrt(smooth$y)), mapping = aes(x = x, y = y), color = "blue", size = 1) 
-  # + geom_line(data = data.frame(x = smooth$x, y = 50*deriv), mapping = aes(x = x, y = y), color = "red", size = 1)
   
-  ymax <- max(graphics::hist(data, breaks = nbins, plot=FALSE)$density)
-  # P1 <- P1 + ylim(c(0, ymax * 1.05))
+  plotdata <- data.frame(Value = data)
+  linedata <- data.frame(x = smooth$x, y = sqrt(smooth$y))
   
   if (length(max_list) > 1) {
     y1 <- max(yvals)
@@ -111,11 +104,9 @@ PlotCutoff <- function(data, smooth, label) {
     if (x2 < x1){
       #Negative peak must be at least 1/10th the positive peak
       if (y2 < (y1/10)) {
-        print(label)
         print('Negative peak was not at least 1/10th the positive peak, using max value as cutoff')
-        P1 <- P1 + geom_vline(xintercept = max(data), size = 1)
-        print(P1)
-        return(list(max(data), P1))
+        cutoff <- max(data)
+        return(list(cutoff, plotdata, linedata))
       }
       cutoff_indices <- index2:index1
     } else {
@@ -124,17 +115,12 @@ PlotCutoff <- function(data, smooth, label) {
     cutoff_index <- which.min(smooth$y[cutoff_indices]) + min(cutoff_indices)
     cutoff <- smooth$x[cutoff_index]
   } else {
-    print(label)
     print('Only one peak found, using max value as cutoff')
-    P1 <- P1 + geom_vline(xintercept = max(data), size = 1)
-    print(P1)
-    return(list(max(data), P1))
+    cutoff <- max(data)
+    return(list(cutoff, plotdata, linedata))
   }
-  P1 <- P1 + geom_vline(xintercept = cutoff, size = 1)
-  print(P1)
-  return(list(cutoff, P1))
+  return(list(cutoff, plotdata, linedata))
 }
-
 
 getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL) {
   # Function to find the threshold between positive and negative peaks of a barcode's distribution
@@ -181,35 +167,132 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
     
     change <- num_peaks - length(max_list)
     num_peaks <- length(max_list)
-    # outlabel <- paste(label, change, num_peaks, length(max2_list))
     outlabel <- label
   }
   cutoff_res <- PlotCutoff(data, smooth, outlabel)
   cutoff <- cutoff_res[[1]]
-  P1 <- cutoff_res[[2]]
+  plotdata <- cutoff_res[[2]]
+  linedata <- cutoff_res[[3]]
   if ((cutoff == max(data))) {
     barcodeBlocklist <- c(barcodeBlocklist, label)
   }
-  return(list(cutoff, barcodeBlocklist, x_vals, P1))
+  return(list(cutoff, barcodeBlocklist, x_vals, plotdata, linedata))
 }
 
-
-getBFFBarcodeBlocklist <- function(barcodeMatrix) {
-  # Function used to find barcodes without sufficiently bimodal data to exclude these from further BFF calculation.
-  barcodeBlocklist <- NULL
+generateBFFGridPlot <- function(barcodeMatrix, barcodeBlocklist = NULL, xlab, maintitle, universal_cutoff = NULL) {
+  plotdata <- NULL
+  linedata <- NULL
+  cutoffs <- NULL
+  discrete <- barcodeMatrix
+  discrete[discrete > 0] <- 0
+  
   for (hto in rownames(barcodeMatrix)) {
     cells <- barcodeMatrix[hto, colnames(barcodeMatrix), drop = FALSE]
-    #BFF uses a log-scale to smooth higher counts, so we transform back once we find the threshold
     cutoffresults <- getCountCutoff(cells, hto, 4, barcodeBlocklist)
-    if (cutoffresults[[1]] < 2) {
-      print("Threshold may be placed too low, recalculating with more smoothing.")
-      cutoffresults <- getCountCutoff(cells, hto, 2, barcodeBlocklist)
+    cutoffval <- cutoffresults[[1]]
+    x_vals <- cutoffresults[[3]]
+
+    if (!is.null(universal_cutoff)) {
+      cutoffval <- universal_cutoff
+    }
+    if ((is.null(universal_cutoff)) & (cutoffval< 2)) {
+      print(paste0("Threshold for ", hto, " may be placed too low, recalculating with more smoothing."))
+      cutoffresults <- getCountCutoff(cells, paste0(hto, "*"), 2, barcodeBlocklist)
+      cutoffval <- cutoffresults[[1]]
+      
+      toAdd <- cutoffresults[[4]]
+      toAdd$Barcode <- hto
+
+      if (is.null(plotdata)) {
+        plotdata <- toAdd
+      } else {
+        plotdata <- rbind(toAdd, plotdata)
+      }
+      
+      toAdd <- cutoffresults[[5]]
+      toAdd$Barcode <- hto
+
+      if (is.null(linedata)) {
+        linedata <- toAdd
+      } else {
+        linedata <- rbind(toAdd, linedata)
+      }
+      
+      toAdd <- data.frame(cutoff = cutoffval)
+      toAdd$Barcode <- hto
+      toAdd$y <- max(linedata$y) * 1.1
+      
+      if (is.null(cutoffs)) {
+        cutoffs <- toAdd
+      } else {
+        cutoffs <- rbind(toAdd, cutoffs)
+      }
+      toAdd <- data.frame(cutoff = cutoffval)
+      toAdd$Barcode <- hto
+      toAdd$y <- -0.1
+      cutoffs <- rbind(toAdd, cutoffs)
+      
+    } else {
+      toAdd <- cutoffresults[[4]]
+      toAdd$Barcode <- hto
+
+      if (is.null(plotdata)) {
+        plotdata <- toAdd
+      } else {
+        plotdata <- rbind(toAdd, plotdata)
+      }
+      
+      toAdd <- cutoffresults[[5]]
+      toAdd$Barcode <- hto
+
+      if (is.null(linedata)) {
+        linedata <- toAdd
+      } else {
+        linedata <- rbind(toAdd, linedata)
+      }
+      
+      toAdd <- data.frame(cutoff = cutoffval)
+      toAdd$Barcode <- hto
+      toAdd$y <- max(linedata$y) * 1.1
+      
+      if (is.null(cutoffs)) {
+        cutoffs <- toAdd
+      } else {
+        cutoffs <- rbind(toAdd, cutoffs)
+      }
+      toAdd <- data.frame(cutoff = cutoffval)
+      toAdd$Barcode <- hto
+      toAdd$y <- -0.1
+      cutoffs <- rbind(toAdd, cutoffs)
     }
     barcodeBlocklist <- cutoffresults[[2]]
+    discrete[hto, colnames(barcodeMatrix)] <- ifelse(cells > 10^cutoffval, yes = 1, no = 0)
   }
-  return(barcodeBlocklist)
-}
+  plotdata$Barcode <- naturalsort::naturalfactor(plotdata$Barcode)
+  linedata$Barcode <- naturalsort::naturalfactor(linedata$Barcode)
+  cutoffs$Barcode <- naturalsort::naturalfactor(cutoffs$Barcode)
+  
+  cutoffsout <- unique(cutoffs[, c("cutoff", "Barcode")])
 
+  cutoffslist <- list()
+  for (i in 1:length(cutoffsout$Barcode)) {
+    cutoffslist[[as.character(cutoffsout[[i, "Barcode"]])]] <- cutoffsout[i, "cutoff"]
+  }
+
+  nbins <- 100
+  maxPerPlot <- 8
+  totalPages <- GetTotalPlotPages(totalValues = length(unique(plotdata$Barcode)), perPage = maxPerPlot)
+  for (i in 1:totalPages) {
+    print(ggplot2::ggplot(plotdata, aes(x = Value)) + geom_line(data = linedata, mapping = aes(x = x, y = y), color = "blue", size = 1) +
+            egg::theme_presentation(base_size = 12) + geom_line(data=cutoffs, aes(x=cutoff, y = y), size = 1) + 
+            geom_histogram(aes(y = sqrt(..density..)), size = 1, bins = nbins) + scale_x_continuous(breaks = function(x) unique(floor(pretty(seq(0, (max(x) + 1) * 1.1))))) + 
+            labs(y = 'sqrt(Density)', x = xlab) + ggtitle(maintitle)  +
+            ggforce::facet_wrap_paginate(~Barcode, scales = 'free', strip.position = 'top', nrow = min(3, length(unique(plotdata$Barcode))), labeller = labeller(.multi_line = FALSE), page = i)
+    )
+  }
+
+  return(list(barcodeBlocklist, cutoffslist, discrete, x_vals))
+}
 
 GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_reads = 10, verbose = TRUE, simple_threshold = FALSE, doublet_thresh = 1/4, neg_thresh = 1, pos_dist = 1, neg_dist = 1/4){
   if (verbose) {
@@ -261,25 +344,18 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
   print(paste("Neg thresh: ", neg_thresh))
   print(paste("Pos dist: ", pos_dist))
   print(paste("Neg dist: ", neg_dist))
-
-  #loop over HTOs in matrix, perform thresholding and store cells that pass the threshold
-  #return a discrete matrix, with 1 equal to a positive call for that barcode
-  discrete <- GetAssayData(object = seuratObj, assay = assay)
-  discrete[discrete > 0] <- 0
+  
+  thresholdres <- generateBFFGridPlot(barcodeMatrix, barcodeBlocklist = NULL, "Log(Counts + 1)", "Raw Count Distributions with BQN Thresholds")
+  
+  cutofflist <- thresholdres[[2]]
   cutoffs <- list()
-  for (hto in rownames(barcodeMatrix)) {
-    cells <- barcodeMatrix[hto, colnames(seuratObj), drop = FALSE]
-    #BFF uses a log-scale to smooth higher counts, so we transform back once we find the threshold
-    cutoffresults <- getCountCutoff(cells, hto, 4)
-    if (cutoffresults[[1]] < 2) {
-      print("Threshold may be placed too low, recalculating with more smoothing.")
-      cutoffresults <- getCountCutoff(cells, hto, 2)
-    }
-    kernel_j <- cutoffresults[[3]]
-    threshold <- 10^(cutoffresults[[1]])
-    discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold, yes = 1, no = 0)
-    cutoffs[[hto]] <- threshold
+  for (bar in names(cutofflist)) {
+    cutoffs[[bar]] <- 10^cutofflist[[bar]]
   }
+  
+  discrete <- thresholdres[[3]]
+  x_vals <- thresholdres[[4]]
+
   
   print("Thresholds:")
   for (cutoff in names(cutoffs)) {
@@ -299,21 +375,15 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     pos_norm <- getPosNormedData(discrete, barcodeMatrix)
     tot_normed <- pos_norm + neg_norm
     
-    normed_cutoffs <- list()
-    max_list <- c()
-    for (hto in colnames(tot_normed)) {
-      cells <- tot_normed[rownames(tot_normed), hto, drop = FALSE]
-      cutoffresults <- getCountCutoff(cells, hto, 4)
-      if (cutoffresults[[1]] < 2) {
-        print("Threshold may be placed too low, recalculating with more smoothing.")
-        cutoffresults <- getCountCutoff(cells, hto, 2)
-      }
-      threshold <- (cutoffresults[[1]])
-      max_list <- rbind(max_list, cutoffresults[[3]])
-      normed_cutoffs[[hto]] <- threshold
-    }
+    normedres <- generateBFFGridPlot(t(tot_normed), barcodeBlocklist= NULL, "Log(Counts + 1)", "Normalized Count Distributions with Fitted Threshold")
     
+    x_vals <- normedres[[4]]
+    normed_cutoffs <- normedres[[2]]
+    max_list <- x_vals
     norm_cutoff <- mean(unlist(normed_cutoffs))
+    
+    foo <- generateBFFGridPlot(t(tot_normed), barcodeBlocklist= NULL, "Log(Counts + 1)", "Normalized Count Distributions with Final Threshold", universal_cutoff = norm_cutoff)
+    
     maxima <- colMeans(max_list)
     neg_mode <- maxima[1]
     pos_mode <- maxima[2]
@@ -325,36 +395,31 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     snr <- SNR(log10(tot_normed + 1))
 
     called <- c()
-    print(norm_cutoff)
-    print(norm_cutoff + d*doublet_thresh)
-    print(d*pos_dist)
-    print(norm_cutoff - w*neg_thresh)
-    print(w*neg_dist)
     
-    plotlabel <- c()
+    classification <- c()
     for (i in 1:nrow(snr)) {
       
-      if (snr[i, "highest"] >= norm_cutoff) {
-        if (snr[i, "second"] <= norm_cutoff + d*doublet_thresh) {
-          if (snr[i, "highest"] - snr[i, "second"] >= d*pos_dist) {
+      if (snr[i, "Highest"] >= norm_cutoff) {
+        if (snr[i, "Second"] <= norm_cutoff + d*doublet_thresh) {
+          if (snr[i, "Highest"] - snr[i, "Second"] >= d*pos_dist) {
             called <- c(called, snr[i, "CellID"])
-            plotlabel[i] <- "Singlet"
+            classification[i] <- "Singlet"
           } else {
-            plotlabel[i] <- "Doublet"
+            classification[i] <- "Doublet"
           }
         } else {
-          plotlabel[i] <- "Doublet"
+          classification[i] <- "Doublet"
         }
       } else {
-        if (snr[i, "highest"] >= norm_cutoff - w*neg_thresh) {
-          if (snr[i, "highest"] - snr[i, "second"] >= w*neg_dist) {
+        if (snr[i, "Highest"] >= norm_cutoff - w*neg_thresh) {
+          if (snr[i, "Highest"] - snr[i, "Second"] >= w*neg_dist) {
             called <- c(called, snr[i, "CellID"])
-            plotlabel[i] <- "Singlet"
+            classification[i] <- "Singlet"
           } else {
-            plotlabel[i] <- "Negative"
+            classification[i] <- "Negative"
           }
         } else {
-          plotlabel[i] <- "Negative"
+          classification[i] <- "Negative"
         }
       }
     }
@@ -365,11 +430,18 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
       discrete[row_max, cell] <- 1
     }
     
-    joined <- cbind(snr, plotlabel)
+    joined <- cbind(snr, classification)
     
-    print(ggplot2::ggplot(joined, aes(x=highest, y=second, color=plotlabel)) + 
-      geom_point(cex=0.5) + geom_hline(yintercept = norm_cutoff) +
-      geom_vline(xintercept = norm_cutoff))
+    boundaries1 <- data.frame(x = c(norm_cutoff, norm_cutoff+d*(doublet_thresh+pos_dist), max(joined$Highest) + 0.1),
+                              y = c(norm_cutoff-d*pos_dist,  norm_cutoff+d*doublet_thresh, norm_cutoff+d*doublet_thresh))
+    boundaries2 <- data.frame(x = c(norm_cutoff- w*neg_thresh, norm_cutoff- w*neg_thresh, norm_cutoff),
+                              y = c(min(joined$Second) - 0.1, norm_cutoff- w*(neg_thresh+neg_dist), norm_cutoff-w*neg_dist))
+    
+    print(ggplot2::ggplot(joined, aes(x=Highest, y=Second, color=classification)) + 
+            geom_point(cex=0.25) + geom_hline(yintercept = norm_cutoff) +
+            geom_vline(xintercept = norm_cutoff) + 
+            geom_line(aes(x=x, y=y), data = boundaries1, color="black", linetype="dashed") +
+            geom_line(aes(x=x, y=y), data = boundaries2, color="black", linetype="dashed"))
     
     seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_quantile', assay = assay)
     return(seuratObj)

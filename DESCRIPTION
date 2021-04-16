@@ -35,7 +35,8 @@ Imports:
     ggforce,
     DropletUtils,
     S4Vectors,
-    preprocessCore
+    preprocessCore,
+    data.table
 Suggests:
     devtools,
     testthat (>= 2.1.0),
