@@ -131,7 +131,8 @@ PlotNormalizationQC <- function(barcodeData) {
 	  
 	  P1 <- (ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) + 
 	                geom_point(cex=0.25) + ggtitle(p1title) +
-	    egg::theme_presentation(base_size = 14))
+	    egg::theme_presentation(base_size = 14)) + theme(legend.position = c(0.1, 0.65), legend.text=element_text(size=10)) +
+	    guides(colour = guide_legend(override.aes = list(size=3)))
 
 	  P2 <- ggplot(snr, aes(x=Highest, y=Second) ) +
 	    stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE) +
@@ -142,7 +143,9 @@ PlotNormalizationQC <- function(barcodeData) {
 	    theme(
 	      legend.position='none'
 	    )
-	  print(P1 | P2)
+	  
+	  P3 <- ggExtra::ggMarginal(P1, size=4, groupColour = TRUE)
+	  print(P2|P3)
 	}
 }
 
@@ -217,7 +220,7 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 	names(df) <- c('Cluster', 'Barcode', 'AvgExpression')
 	df$Cluster <- naturalsort::naturalfactor(df$Cluster)
 	df$Barcode <- naturalsort::naturalfactor(df$Barcode)
-	df$AvgExpression <- round(df$AvgExpression, 2)
+	df$AvgExpression <- round(df$AvgExpression, 1)
 
 	P2 <- ggplot(df, aes(Cluster, Barcode)) +
 		geom_tile(aes(fill = AvgExpression), colour = "white") +
