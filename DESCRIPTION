@@ -36,7 +36,8 @@ Imports:
     DropletUtils,
     S4Vectors,
     preprocessCore,
-    data.table
+    data.table,
+    ggExtra
 Suggests:
     devtools,
     testthat (>= 2.1.0),
