@@ -43,7 +43,7 @@ tests <- list(
       MultiSeqCalled = 4547,
       Discordant = 376,
       SeuratCalled = 3038,
-			BffQuantile = 4897
+			BffQuantile = 4901
 		),
     '449-1' = list(
       input = '../testdata/449-1-GEX/umi_count',

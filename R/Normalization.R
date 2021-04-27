@@ -143,9 +143,17 @@ PlotNormalizationQC <- function(barcodeData) {
 	    theme(
 	      legend.position='none'
 	    )
-	  
-	  P3 <- ggExtra::ggMarginal(P1, size=4, groupColour = TRUE)
-	  print(P2|P3)
+
+		# NOTE: try/catch added to address "Error in bw.SJ(x, method = "ste") : sample is too sparse to find TD" errors
+		P3 <- suppressWarnings(ggExtra::ggMarginal(P1, size=4, groupColour = TRUE))
+		tryCatch({
+	  	print(P2|P3)
+		}, error = function(e) {
+			print('Error generating density plot, skipping')
+			print(conditionMessage(e))
+
+			print(P3)
+		})
 	}
 }
 

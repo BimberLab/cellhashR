@@ -17,6 +17,7 @@ SNR <- function(barcodeData) {
   df <- data.frame(barcodeData, check.names = FALSE)
   top <- c()
   topbar <- c()
+  secondbar <- c()
   topval <- c()
   second <- c()
   for (i in 1:nrow(df)) {
@@ -25,11 +26,13 @@ SNR <- function(barcodeData) {
     topval[i] <- df[i, top[i]]
     df[i,top[i]] <- -1000
     second[i] <- max(df[i, ])
+    secondbar[i] <- colnames(df)[which.max(df[i, ])]
   }
   outdf <- data.frame("CellID" = rownames(df), check.names = FALSE)
   outdf$Barcode <- topbar
   outdf$Highest <- topval
   outdf$Second <- second
+  outdf$Barcode2 <- secondbar
   
   return(outdf)
 }
@@ -280,7 +283,7 @@ generateBFFGridPlot <- function(barcodeMatrix, barcodeBlocklist = NULL, xlab, ma
   }
 
   nbins <- 100
-  maxPerPlot <- 8
+  maxPerPlot <- 12
   totalPages <- GetTotalPlotPages(totalValues = length(unique(plotdata$Barcode)), perPage = maxPerPlot)
   for (i in 1:totalPages) {
     print(ggplot2::ggplot(plotdata, aes(x = Value)) + geom_line(data = linedata, mapping = aes(x = x, y = y), color = "blue", size = 1) +
@@ -294,7 +297,7 @@ generateBFFGridPlot <- function(barcodeMatrix, barcodeBlocklist = NULL, xlab, ma
   return(list(barcodeBlocklist, cutoffslist, discrete, x_vals))
 }
 
-GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_reads = 10, verbose = TRUE, simple_threshold = FALSE, doublet_thresh = 1/4, neg_thresh = 1, pos_dist = 1, neg_dist = 1/4){
+GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_reads = 10, verbose = TRUE, simple_threshold = FALSE, doublet_thresh = 0.05, neg_thresh = 0.05, dist_frac = 0.1){
   if (verbose) {
     print('Starting BFF')
   }
@@ -313,7 +316,7 @@ GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_r
 
   tryCatch({
     seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
-    seuratObj <- BFFDemux(seuratObj = seuratObj, assay = assay, simple_threshold = simple_threshold, doublet_thresh = doublet_thresh, neg_thresh = neg_thresh, pos_dist = pos_dist, neg_dist = neg_dist)
+    seuratObj <- BFFDemux(seuratObj = seuratObj, assay = assay, simple_threshold = simple_threshold, doublet_thresh = doublet_thresh, neg_thresh = neg_thresh, dist_frac=dist_frac)
     if (as.logical(simple_threshold) == TRUE) {
       SummarizeHashingCalls(seuratObj, label = "bff_threshold", columnSuffix = "bff_threshold", assay = assay, doHeatmap = TRUE)
       df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = "bff_threshold", classification = seuratObj$classification.bff_threshold, classification.global = seuratObj$classification.global.bff_threshold, stringsAsFactors = FALSE)
@@ -332,7 +335,7 @@ GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_r
 }
 
 
-BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, doublet_thresh=doublet_thresh, neg_thresh=neg_thresh, pos_dist=pos_dist, neg_dist=neg_dist) {
+BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, doublet_thresh=doublet_thresh, neg_thresh=neg_thresh, dist_frac=dist_frac) {
   barcodeMatrix <- GetAssayData(
     object = seuratObj,
     assay = assay,
@@ -342,9 +345,8 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
   print(paste("Simple Threshold: ", simple_threshold))
   print(paste("Doublet thresh: ", doublet_thresh))
   print(paste("Neg thresh: ", neg_thresh))
-  print(paste("Pos dist: ", pos_dist))
-  print(paste("Neg dist: ", neg_dist))
-  
+  print(paste("Min distance as fraction of distance between peaks: ", dist_frac))
+
   thresholdres <- generateBFFGridPlot(barcodeMatrix, barcodeBlocklist = NULL, "Log(Counts + 1)", "Raw Count Distributions with BQN Thresholds")
   
   cutofflist <- thresholdres[[2]]
@@ -396,31 +398,30 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
 
     called <- c()
     
+    highest_dist <- stats::density(snr$Highest, adjust = 1, kernel = 'gaussian',
+                                   bw = 'SJ', give.Rkern = FALSE)
+    second_dist <- stats::density(snr$Second, adjust = 1, kernel = 'gaussian',
+                                  bw = 'SJ', give.Rkern = FALSE)
+    neg_cutoff <- highest_dist$x[[min(which((abs(highest_dist$y - doublet_thresh*max(highest_dist$y))) < 0.01))]]
+    doublet_cutoff <- second_dist$x[[max(which((abs(second_dist$y - neg_thresh*max(second_dist$y))) < 0.01))]]
+    
     classification <- c()
     for (i in 1:nrow(snr)) {
       
-      if (snr[i, "Highest"] >= norm_cutoff) {
-        if (snr[i, "Second"] <= norm_cutoff + d*doublet_thresh) {
-          if (snr[i, "Highest"] - snr[i, "Second"] >= d*pos_dist) {
+      if (snr[i, "Highest"] >= neg_cutoff) {
+        if (snr[i, "Second"] <= doublet_cutoff) {
+          if (snr[i, "Highest"] - snr[i, "Second"] >= dist_frac * (pos_mode - neg_mode)) {
             called <- c(called, snr[i, "CellID"])
             classification[i] <- "Singlet"
           } else {
             classification[i] <- "Doublet"
           }
+          
         } else {
           classification[i] <- "Doublet"
         }
       } else {
-        if (snr[i, "Highest"] >= norm_cutoff - w*neg_thresh) {
-          if (snr[i, "Highest"] - snr[i, "Second"] >= w*neg_dist) {
-            called <- c(called, snr[i, "CellID"])
-            classification[i] <- "Singlet"
-          } else {
-            classification[i] <- "Negative"
-          }
-        } else {
-          classification[i] <- "Negative"
-        }
+        classification[i] <- "Negative"
       }
     }
 
@@ -432,16 +433,15 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     
     joined <- cbind(snr, classification)
     
-    boundaries1 <- data.frame(x = c(norm_cutoff, norm_cutoff+d*(doublet_thresh+pos_dist), max(joined$Highest) + 0.1),
-                              y = c(norm_cutoff-d*pos_dist,  norm_cutoff+d*doublet_thresh, norm_cutoff+d*doublet_thresh))
-    boundaries2 <- data.frame(x = c(norm_cutoff- w*neg_thresh, norm_cutoff- w*neg_thresh, norm_cutoff),
-                              y = c(min(joined$Second) - 0.1, norm_cutoff- w*(neg_thresh+neg_dist), norm_cutoff-w*neg_dist))
-    
-    print(ggplot2::ggplot(joined, aes(x=Highest, y=Second, color=classification)) + 
-            geom_point(cex=0.25) + geom_hline(yintercept = norm_cutoff) +
-            geom_vline(xintercept = norm_cutoff) + 
-            geom_line(aes(x=x, y=y), data = boundaries1, color="black", linetype="dashed") +
-            geom_line(aes(x=x, y=y), data = boundaries2, color="black", linetype="dashed"))
+    P1 <- ggplot2::ggplot(joined, aes(x=Highest, y=Second, color=classification)) + 
+            geom_point(cex=0.25) + geom_hline(yintercept = doublet_cutoff) +
+            geom_vline(xintercept = neg_cutoff) + ggtitle("BFF Droplet Classifications") +
+      geom_segment(x=neg_cutoff, y=neg_cutoff - dist_frac * (pos_mode - neg_mode),
+                   xend= doublet_cutoff+dist_frac * (pos_mode - neg_mode), yend=doublet_cutoff,
+                   linetype="dashed", color="black") + egg::theme_presentation(base_size = 10) + theme(legend.position = c(0.1, 0.65), legend.text=element_text(size=10)) + guides(colour = guide_legend(override.aes = list(size=3)))
+    P2 <- ggExtra::ggMarginal(P1, size=4)
+    grid::grid.newpage()
+    grid::grid.draw(P2)
     
     seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_quantile', assay = assay)
     return(seuratObj)
