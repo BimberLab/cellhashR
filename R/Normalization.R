@@ -31,22 +31,22 @@ NormalizeBimodalQuantile <- function(barcodeMatrix) {
   # barcodeBlocklist, defined in the for loop above, is used to subset
   # barcodeMatrix to exclude htos w/o bimodal distributions
   mat <- barcodeMatrix[!rownames(barcodeMatrix) %in% barcodeBlocklist,]
-  
+
   if (length(rownames(mat)) == 0) {
     return()
   }
 
   seuratObj <- Seurat::CreateSeuratObject(mat, assay = "HTO")
-  
+
   discrete <- GetAssayData(object = seuratObj, assay = "HTO")
   discrete[discrete > 0] <- 0
-  
+
   for (hto in rownames(mat)) {
     cells <- mat[hto, colnames(mat), drop = FALSE]
     discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold[[hto]], yes = 1, no = 0)
     cutoffs[[hto]] <- threshold[[hto]]
   }
-  
+
   neg_norm <- getNegNormedData(discrete, mat)
   pos_norm <- getPosNormedData(discrete, mat)
   tot_normed <- pos_norm + neg_norm
@@ -99,7 +99,7 @@ PlotNormalizationQC <- function(barcodeData) {
     print(conditionMessage(e))
     traceback()
   })
-  
+
   print(bqn)
 
   if (!is.null(bqn)){
@@ -118,7 +118,7 @@ PlotNormalizationQC <- function(barcodeData) {
       'CLR' = NormalizeCLR(barcodeData)
     )
   }
-	
+
 
 	df <- NULL
 	for (norm in names(toQC)) {
@@ -167,9 +167,8 @@ PlotNormalizationQC <- function(barcodeData) {
 		PerformHashingClustering(toQC[[norm]], norm = norm)
 	  snr <- SNR(t(toQC[[norm]]))
 	  snr$Barcode <- naturalsort::naturalfactor(snr$Barcode)
-	  
-	  
-	  P1 <- (ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) + 
+
+	  P1 <- (ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) +
 	                geom_point(cex=0.25) + ggtitle(p1title) +
 	    egg::theme_presentation(base_size = 14)) + theme(legend.position = c(0.1, 0.65), legend.text=element_text(size=10)) +
 	    guides(colour = guide_legend(override.aes = list(size=3)))
@@ -183,7 +182,7 @@ PlotNormalizationQC <- function(barcodeData) {
 	    theme(
 	      legend.position='none'
 	    )
-	  
+
 	  P3 <- ggExtra::ggMarginal(P1, size=4, groupColour = TRUE)
 	  print(P2|P3)
 	}
