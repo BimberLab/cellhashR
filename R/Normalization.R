@@ -149,7 +149,9 @@ PlotNormalizationQC <- function(barcodeData) {
 		tryCatch({
 	  	print(P2|P3)
 		}, error = function(e) {
-			print('Error generating density plot, skipping')
+			print(paste0('Error generating density plot for normalization: ', norm, ', skipping'))
+			saveRDS(snr, file = paste0('./', norm, '.failDensity.rds'))
+
 			print(conditionMessage(e))
 
 			print(P3)
