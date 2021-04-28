@@ -1,3 +1,9 @@
+pkg.env <- new.env(parent=emptyenv());
+
+pkg.env$RANDOM_SEED <- 1234
+set.seed(pkg.env$RANDOM_SEED)
+
+
 # Reverse the vector x and return the value at the Nth index. If N is larger
 # than the length of the vector, return the last value in the reversed vector.
 #
@@ -116,4 +122,23 @@ SimplifyHtoNames <- function(x) {
 	}
 
 	return(mat)
+}
+
+#' @title Set random seed
+#'
+#' @description Sets the seed used for R‘s random number generator, which should be used in all internal functions
+#' @param seed The random seed
+#' @export
+SetSeed <- function(seed) {
+	pkg.env$RANDOM_SEED <- seed
+	set.seed(pkg.env$RANDOM_SEED)
+}
+
+#' @title Get random seed
+#'
+#' @description Sets a random seed, which should be used in all internal functions
+#' @param seed The random seed
+#' @export
+GetSeed <- function(seed) {
+	return(pkg.env$RANDOM_SEED)
 }

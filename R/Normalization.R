@@ -21,14 +21,8 @@ NormalizeBimodalQuantile <- function(barcodeMatrix) {
   barcodeBlocklist <- NULL
   for (hto in rownames(barcodeMatrix)) {
     cells <- barcodeMatrix[hto, colnames(barcodeMatrix), drop = FALSE]
-    #BFF uses a log-scale to smooth higher counts, so we transform back once we find the threshold
     cutoffresults <- getCountCutoff(cells, hto, 4, barcodeBlocklist)
 
-		#TODO hard coded??
-    if (cutoffresults[['cutoff']] < 2) {
-      print(paste0("Threshold for ", hto, " may be placed too low, recalculating with more smoothing."))
-      cutoffresults <- getCountCutoff(cells, hto, 2, barcodeBlocklist)
-    }
     barcodeBlocklist <- cutoffresults[['barcodeBlocklist']]
     threshold[[hto]] <- 10^(cutoffresults[['cutoff']])
   }
@@ -116,9 +110,10 @@ NormalizeRelative <- function(mat) {
 #' @description Generates QC plots related to normalization
 #' @export
 PlotNormalizationQC <- function(barcodeData) {
-  bqn <- NULL
+	bqn <- NULL
   tryCatch({
-    bqn <- TransposeDF(data.frame(NormalizeBimodalQuantile(barcodeData)[['lognormedcounts']], check.names=FALSE))
+    temp <- NormalizeBimodalQuantile(barcodeData)[['lognormedcounts']]
+    bqn <- TransposeDF(data.frame(temp, check.names=FALSE))
   }, error = function(e){
     print("No valid barcodes, skipping Bimodal quantile normalization")
     print(conditionMessage(e))
@@ -142,6 +137,20 @@ PlotNormalizationQC <- function(barcodeData) {
     )
   }
 
+	uniqueRows = c()
+	uniqueCols = c()
+	for (norm in names(toQC)) {
+		uniqueRows <- unique(c(uniqueRows, nrow(toQC[[norm]])))
+		uniqueCols <- unique(c(uniqueCols, ncol(toQC[[norm]])))
+
+		if (length(uniqueRows) != 1) {
+			print(paste0('inconsistent row size in normalized data: ', paste0(uniqueRows, collapse = ','), ', encountered for: ', norm))
+		}
+
+		if (length(uniqueCols) != 1) {
+			print(paste0('inconsistent column size in normalized data: ', paste0(uniqueCols, collapse = ','), ', encountered for: ', norm))
+		}
+	}
 
 	df <- NULL
 	for (norm in names(toQC)) {
@@ -246,12 +255,12 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 	print(P | P2)
 
 	# kmeans:
-	init.clusters <- stats::kmeans(
+	init.clusters <- suppressWarnings(stats::kmeans(
 		x = t(x = barcodeMatrix),
 		centers = ncenters,
 		nstart = 100,
-		iter.max = 30
-	)
+		iter.max = 50
+	))
 
 	if (sum(names(init.clusters$cluster) != colnames(seuratObj)) > 0) {
 		stop('Expected cluster names to match cells for kmeans!')
