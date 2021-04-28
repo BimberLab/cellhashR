@@ -13,29 +13,37 @@ NormalizeQuantile <- function(mat) {
   return(as.data.frame(dat))
 }
 
-NormalizeBimodalQuantile <- function(mat) {
-  barcodeMatrix <- mat
-  assay = "HTO"
-  seuratObj <- Seurat::CreateSeuratObject(mat, assay = assay)
-  discrete <- GetAssayData(object = seuratObj, assay = assay)
-  discrete[discrete > 0] <- 0
+NormalizeBimodalQuantile <- function(barcodeMatrix) {
   cutoffs <- list()
+  threshold <- list()
+  barcodeBlocklist <- NULL
   for (hto in rownames(barcodeMatrix)) {
     cells <- barcodeMatrix[hto, colnames(barcodeMatrix), drop = FALSE]
     #BFF uses a log-scale to smooth higher counts, so we transform back once we find the threshold
-    cutoffresults <- getCountCutoff(cells, hto, 4)
+    cutoffresults <- getCountCutoff(cells, hto, 4, barcodeBlocklist)
     if (cutoffresults[[1]] < 2) {
       print(paste0("Threshold for ", hto, " may be placed too low, recalculating with more smoothing."))
-      cutoffresults <- getCountCutoff(cells, hto, 2)
+      cutoffresults <- getCountCutoff(cells, hto, 2, barcodeBlocklist)
     }
-    threshold <- 10^(cutoffresults[[1]])
-    discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold, yes = 1, no = 0)
-    cutoffs[[hto]] <- threshold
+    barcodeBlocklist <- cutoffresults[[2]]
+    threshold[[hto]] <- 10^(cutoffresults[[1]])
   }
-  neg_norm <- getNegNormedData(discrete, barcodeMatrix)
-  pos_norm <- getPosNormedData(discrete, barcodeMatrix)
+  # barcodeBlocklist, defined in the for loop above, is used to subset
+  # barcodeMatrix to exclude htos w/o bimodal distributions
+  mat <- barcodeMatrix[!rownames(barcodeMatrix) %in% barcodeBlocklist,]
+  seuratObj <- Seurat::CreateSeuratObject(mat, assay = "HTO")
+  discrete <- GetAssayData(object = seuratObj, assay = "HTO")
+  discrete[discrete > 0] <- 0
+  
+  for (hto in rownames(mat)) {
+    cells <- mat[hto, colnames(mat), drop = FALSE]
+    discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold[[hto]], yes = 1, no = 0)
+    cutoffs[[hto]] <- threshold[[hto]]
+  }
+  neg_norm <- getNegNormedData(discrete, mat)
+  pos_norm <- getPosNormedData(discrete, mat)
   tot_normed <- pos_norm + neg_norm
-  return(log10(tot_normed+1))
+  return(list(discrete, tot_normed, log10(tot_normed+1), barcodeBlocklist))
 }
 
 TransposeDF <- function(df) {
@@ -78,11 +86,12 @@ NormalizeRelative <- function(mat) {
 PlotNormalizationQC <- function(barcodeData) {
 	toQC <- list(
 	  'Raw' = data.frame(log10(barcodeData + 1), check.names = FALSE),
-	  'bimodalQuantile' = TransposeDF(data.frame(NormalizeBimodalQuantile(barcodeData), check.names=FALSE)),
+	  'bimodalQuantile' = TransposeDF(data.frame(NormalizeBimodalQuantile(barcodeData)[[3]], check.names=FALSE)),
 	  'Quantile'= TransposeDF(data.frame(log10(NormalizeQuantile(t(barcodeData))+1), check.names = FALSE)),
 		'log2Center' = NormalizeLog2(barcodeData, mean.center = TRUE),
 		'CLR' = NormalizeCLR(barcodeData)
 	)
+	
 
 
 	df <- NULL
@@ -143,19 +152,9 @@ PlotNormalizationQC <- function(barcodeData) {
 	    theme(
 	      legend.position='none'
 	    )
-
-		# NOTE: try/catch added to address "Error in bw.SJ(x, method = "ste") : sample is too sparse to find TD" errors
-		P3 <- suppressWarnings(ggExtra::ggMarginal(P1, size=4, groupColour = TRUE))
-		tryCatch({
-	  	print(P2|P3)
-		}, error = function(e) {
-			print(paste0('Error generating density plot for normalization: ', norm, ', skipping'))
-			saveRDS(snr, file = paste0('./', norm, '.failDensity.rds'))
-
-			print(conditionMessage(e))
-
-			print(P3)
-		})
+	  
+	  P3 <- ggExtra::ggMarginal(P1, size=4, groupColour = TRUE)
+	  print(P2|P3)
 	}
 }
 

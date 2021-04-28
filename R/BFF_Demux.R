@@ -164,6 +164,7 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
     x_vals <- c()
     for (y in y_vals) {
       i <- which(smooth$y==y)
+      # x_vals is a vector containing the count values where maxima occur in the density curve
       x_vals <- c(x_vals, smooth$x[i])
     }
     x_vals <- matrix(x_vals[order(x_vals, decreasing=FALSE)], nrow = 1, ncol = 2)
@@ -182,7 +183,8 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
   return(list(cutoff, barcodeBlocklist, x_vals, plotdata, linedata))
 }
 
-generateBFFGridPlot <- function(barcodeMatrix, barcodeBlocklist = NULL, xlab, maintitle, universal_cutoff = NULL) {
+generateBFFGridPlot <- function(barcodeMatrix, xlab, maintitle, universal_cutoff = NULL) {
+  barcodeBlocklist = NULL
   plotdata <- NULL
   linedata <- NULL
   cutoffs <- NULL
@@ -347,7 +349,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
   print(paste("Neg thresh: ", neg_thresh))
   print(paste("Min distance as fraction of distance between peaks: ", dist_frac))
 
-  thresholdres <- generateBFFGridPlot(barcodeMatrix, barcodeBlocklist = NULL, "Log(Counts + 1)", "Raw Count Distributions with BQN Thresholds")
+  thresholdres <- generateBFFGridPlot(barcodeMatrix, "Log(Counts + 1)", "Raw Count Distributions with BQN Thresholds")
   
   cutofflist <- thresholdres[[2]]
   cutoffs <- list()
@@ -373,28 +375,32 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     #   recovery must be close to the threshold.  Likewise, the 2nd highest bc count for a cell considered for
     #   doublet recovery must be close to the threshold.
 
-    neg_norm <- getNegNormedData(discrete, barcodeMatrix)
-    pos_norm <- getPosNormedData(discrete, barcodeMatrix)
-    tot_normed <- pos_norm + neg_norm
+    # neg_norm <- getNegNormedData(discrete, barcodeMatrix)
+    # pos_norm <- getPosNormedData(discrete, barcodeMatrix)
+    # tot_normed <- pos_norm + neg_norm
     
-    normedres <- generateBFFGridPlot(t(tot_normed), barcodeBlocklist= NULL, "Log(Counts + 1)", "Normalized Count Distributions with Fitted Threshold")
+    #outputs from NormalizeBimodalQuantile: discrete, tot_normed, log10(tot_normed+1), barcodeBlocklist
+    normedres <- NormalizeBimodalQuantile(barcodeMatrix)
+    discrete <- normedres[[1]]
+    tot_normed <- normedres[[2]]
+    lognormedcounts <- normedres[[3]]
+    barcodeBlocklist <- normedres[[4]]
     
-    x_vals <- normedres[[4]]
-    normed_cutoffs <- normedres[[2]]
+    #generateBFFGridPlot outputs barcodeBlocklist, cutoffslist, discrete, x_vals
+    normedplotres <- generateBFFGridPlot(t(tot_normed), "Log(Counts + 1)", "Normalized Count Distributions with Fitted Threshold")
+    
+    x_vals <- normedplotres[[4]]
+    normed_cutoffs <- normedplotres[[2]]
     max_list <- x_vals
     norm_cutoff <- mean(unlist(normed_cutoffs))
     
-    foo <- generateBFFGridPlot(t(tot_normed), barcodeBlocklist= NULL, "Log(Counts + 1)", "Normalized Count Distributions with Final Threshold", universal_cutoff = norm_cutoff)
+    foo <- generateBFFGridPlot(t(tot_normed), "Log(Counts + 1)", "Normalized Count Distributions with Final Threshold", universal_cutoff = norm_cutoff)
     
     maxima <- colMeans(max_list)
     neg_mode <- maxima[1]
     pos_mode <- maxima[2]
-    # d is the log-scale distance (after normalization) between the positive peak and threshold.
-    d <- pos_mode - norm_cutoff
-    # w is the log-scale distance (after normalization) between the negative peak and threshold.
-    w <- norm_cutoff - neg_mode
     
-    snr <- SNR(log10(tot_normed + 1))
+    snr <- SNR(lognormedcounts)
 
     called <- c()
     
