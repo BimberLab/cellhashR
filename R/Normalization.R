@@ -30,7 +30,11 @@ NormalizeBimodalQuantile <- function(barcodeMatrix) {
   }
   # barcodeBlocklist, defined in the for loop above, is used to subset
   # barcodeMatrix to exclude htos w/o bimodal distributions
-  mat <- barcodeMatrix[!rownames(barcodeMatrix) %in% barcodeBlocklist,]
+  mat <- barcodeMatrix[!rownames(barcodeMatrix) %in% barcodeBlocklist,,drop = FALSE]
+
+	#TODO: remove this
+	print(str(mat))
+
   seuratObj <- Seurat::CreateSeuratObject(mat, assay = "HTO")
   discrete <- GetAssayData(object = seuratObj, assay = "HTO")
   discrete[discrete > 0] <- 0
