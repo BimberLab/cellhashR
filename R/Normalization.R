@@ -127,9 +127,8 @@ PlotNormalizationQC <- function(barcodeData) {
 		PerformHashingClustering(toQC[[norm]], norm = norm)
 	  snr <- SNR(t(toQC[[norm]]))
 	  snr$Barcode <- naturalsort::naturalfactor(snr$Barcode)
-	  
-	  
-	  P1 <- (ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) + 
+
+	  P1 <- (ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) +
 	                geom_point(cex=0.25) + ggtitle(p1title) +
 	    egg::theme_presentation(base_size = 14)) + theme(legend.position = c(0.1, 0.65), legend.text=element_text(size=10)) +
 	    guides(colour = guide_legend(override.aes = list(size=3)))
@@ -144,18 +143,9 @@ PlotNormalizationQC <- function(barcodeData) {
 	      legend.position='none'
 	    )
 
-		# NOTE: try/catch added to address "Error in bw.SJ(x, method = "ste") : sample is too sparse to find TD" errors
 		P3 <- suppressWarnings(ggExtra::ggMarginal(P1, size=4, groupColour = TRUE))
-		tryCatch({
-	  	print(P2|P3)
-		}, error = function(e) {
-			print(paste0('Error generating density plot for normalization: ', norm, ', skipping'))
-			saveRDS(snr, file = paste0('./', norm, '.failDensity.rds'))
 
-			print(conditionMessage(e))
-
-			print(P3)
-		})
+		print(P2|P3)
 	}
 }
 
