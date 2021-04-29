@@ -148,69 +148,6 @@ PrintRowQc <- function(barcodeMatrix) {
 		)
 
 	print(P3 | P4)
-
-	# Mean Counts, Non-zero
-	P5 <- ggplot(df, aes(x = Barcode, y = mean_nonzero)) +
-		geom_bar(stat = 'identity') +
-		ggtitle('Mean Counts/Cell') +
-		ylab('Mean Counts/Cell') +
-		egg::theme_presentation(base_size = 14) +
-		theme(
-			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
-		)
-
-	P6 <- ggplot(df, aes(x = Barcode, y = mean_nonzero)) +
-		geom_bar(stat = 'identity') +
-		egg::theme_presentation(base_size = 14) +
-		ylab('Mean Counts/Cell (log1p)') +
-		scale_y_continuous(trans = scales::log1p_trans()) +
-		theme(
-			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
-		)
-
-	print(P5 | P6)
-
-	# Density:
-	df <- data.frame(t(barcodeMatrix))
-	colnames(df) <- SimplifyHtoNames(rownames(barcodeMatrix))
-	df <- tidyr::gather(df, Barcode, Count, na.rm = TRUE)
-	df <- df[df$Count > 0,]
-	df$Barcode <- as.factor(as.character(df$Barcode))
-
-	P7 <- ggplot(df, aes(x = Count, color = Barcode)) +
-		geom_density() +
-		ggtitle('Non-zero Counts/Cell') +
-		egg::theme_presentation(base_size = 18) +
-		xlab('Counts/Cell') + ylab('Density') +
-		scale_x_continuous(trans = scales::log1p_trans()) +
-		theme(
-			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = rel(0.5)),
-		)
-
-	# Density, trimmed:
-	df <- data.frame(t(barcodeMatrix))
-	colnames(df) <- SimplifyHtoNames(rownames(barcodeMatrix))
-	df <- tidyr::gather(df, Barcode, Count, na.rm = TRUE)
-	out <- grDevices::boxplot.stats(df$Count)$out
-	out <- out[out > mean(df$Count[df$Count > 0])]
-	if (length(out) > 0) {
-		df <- df[df$Count < min(out),]
-	}
-	df <- df[df$Count > 0,]
-	df$Barcode <- as.factor(as.character(df$Barcode))
-
-	P8 <- ggplot(df, aes(x = Count, color = Barcode)) +
-		geom_density() +
-		ggtitle('Non-zero Counts/Cell, Outlier Trimmed') +
-		egg::theme_presentation(base_size = 18) +
-		xlab('Counts/Cell') + ylab('Density') +
-		scale_x_continuous(trans = scales::log1p_trans()) +
-		theme(
-			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = rel(0.5))
-		)
-
-	suppressWarnings(print(P7))
-	suppressWarnings(print(P8))
 }
 
 GenerateByRowSummary <- function(barcodeMatrix) {
@@ -304,25 +241,6 @@ PrintColumnQc <- function(barcodeMatrix) {
 			toPlot <- rbind(toPlot, toAdd)
 		}
 	}
-
-	P1 <- ggplot(toPlot, aes(x = Value, y = Count, color = Barcode)) +
-		geom_point() +
-		ggtitle('Counts/Cell') +
-		xlab('Count') + ylab('Total Cells') +
-		egg::theme_presentation(base_size = 18)
-	
-	out <- grDevices::boxplot.stats(df$Count)$out
-	out <- out[out > mean(df$Count[df$Count > 0])]
-	toPlot <- toPlot[toPlot$Value < min(out),]
-	
-	P2 <- ggplot(toPlot, aes(x = Value, y = Count, color = Barcode)) +
-		geom_point() +
-		ggtitle('Counts/Cell, Outlier Trimmed') +
-		xlab('Count') + ylab('Total Cells') +
-		egg::theme_presentation(base_size = 18)
-	
-	print(P1)
-	print(P2)
 
 	#normalize columns, print top barcode fraction. note, cells with all zeros will make NAs
 	normalizedBarcodes <- sweep(barcodeMatrix, 2, colSums(barcodeMatrix),`/`)
