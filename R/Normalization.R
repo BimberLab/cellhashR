@@ -136,6 +136,11 @@ PlotNormalizationQC <- function(barcodeData) {
 		df$Barcode <- naturalsort::naturalfactor(df$Barcode)
 	}
 
+	#TODO: remove
+	print(str(df))
+	print(unique(df$Normalization))
+	print(unique(df$Barcode))
+
 	maxPerPlot <- 3
 	totalPages <- GetTotalPlotPages(totalValues = length(unique(df$Barcode)), perPage = maxPerPlot)
 	for (i in 1:totalPages) {
