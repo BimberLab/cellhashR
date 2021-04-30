@@ -148,7 +148,7 @@ PlotNormalizationQC <- function(barcodeData) {
 			egg::theme_presentation(base_size = 14) +
 			geom_density(aes(y = sqrt(..density..)), size = 1) + 
 			labs(y = 'sqrt(Density)', x = 'Value') + ggtitle('Normalized Data') +
-			ggforce::facet_wrap_paginate(Barcode ~ forcats::fct_relevel(Normalization, "Raw"), scales = 'free', ncol = length(unique(df$Normalization)), nrow = min(3, length(unique(df$Barcode))), strip.position = 'top', labeller = labeller(.multi_line = FALSE), page = i)
+			ggforce::facet_wrap_paginate(Barcode ~ forcats::fct_relevel(Normalization, "Raw"), scales = 'free', ncol = length(unique(df$Normalization)), nrow = min(3, length(unique(df$Barcode))), strip.position = 'top', drop = FALSE, labeller = labeller(.multi_line = FALSE), page = i)
 		)
 	}
 
