@@ -13,29 +13,44 @@ NormalizeQuantile <- function(mat) {
   return(as.data.frame(dat))
 }
 
-NormalizeBimodalQuantile <- function(mat) {
-  barcodeMatrix <- mat
-  assay = "HTO"
-  seuratObj <- Seurat::CreateSeuratObject(mat, assay = assay)
-  discrete <- GetAssayData(object = seuratObj, assay = assay)
-  discrete[discrete > 0] <- 0
+NormalizeBimodalQuantile <- function(barcodeMatrix) {
   cutoffs <- list()
+  threshold <- list()
+  barcodeBlocklist <- NULL
   for (hto in rownames(barcodeMatrix)) {
     cells <- barcodeMatrix[hto, colnames(barcodeMatrix), drop = FALSE]
     #BFF uses a log-scale to smooth higher counts, so we transform back once we find the threshold
-    cutoffresults <- getCountCutoff(cells, hto, 4)
+    cutoffresults <- getCountCutoff(cells, hto, 4, barcodeBlocklist)
     if (cutoffresults[[1]] < 2) {
       print(paste0("Threshold for ", hto, " may be placed too low, recalculating with more smoothing."))
-      cutoffresults <- getCountCutoff(cells, hto, 2)
+      cutoffresults <- getCountCutoff(cells, hto, 2, barcodeBlocklist)
     }
-    threshold <- 10^(cutoffresults[[1]])
-    discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold, yes = 1, no = 0)
-    cutoffs[[hto]] <- threshold
+    barcodeBlocklist <- cutoffresults[[2]]
+    threshold[[hto]] <- 10^(cutoffresults[[1]])
   }
-  neg_norm <- getNegNormedData(discrete, barcodeMatrix)
-  pos_norm <- getPosNormedData(discrete, barcodeMatrix)
+  # barcodeBlocklist, defined in the for loop above, is used to subset
+  # barcodeMatrix to exclude htos w/o bimodal distributions
+  mat <- barcodeMatrix[!rownames(barcodeMatrix) %in% barcodeBlocklist,]
+  
+  if (length(rownames(mat)) == 0) {
+    return()
+  }
+
+  seuratObj <- Seurat::CreateSeuratObject(mat, assay = "HTO")
+  
+  discrete <- GetAssayData(object = seuratObj, assay = "HTO")
+  discrete[discrete > 0] <- 0
+  
+  for (hto in rownames(mat)) {
+    cells <- mat[hto, colnames(mat), drop = FALSE]
+    discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold[[hto]], yes = 1, no = 0)
+    cutoffs[[hto]] <- threshold[[hto]]
+  }
+  
+  neg_norm <- getNegNormedData(discrete, mat)
+  pos_norm <- getPosNormedData(discrete, mat)
   tot_normed <- pos_norm + neg_norm
-  return(log10(tot_normed+1))
+  return(list(discrete, tot_normed, log10(tot_normed+1), barcodeBlocklist))
 }
 
 TransposeDF <- function(df) {
@@ -76,14 +91,34 @@ NormalizeRelative <- function(mat) {
 #' @description Generates QC plots related to normalization
 #' @export
 PlotNormalizationQC <- function(barcodeData) {
-	toQC <- list(
-	  'Raw' = data.frame(log10(barcodeData + 1), check.names = FALSE),
-	  'bimodalQuantile' = TransposeDF(data.frame(NormalizeBimodalQuantile(barcodeData), check.names=FALSE)),
-	  'Quantile'= TransposeDF(data.frame(log10(NormalizeQuantile(t(barcodeData))+1), check.names = FALSE)),
-		'log2Center' = NormalizeLog2(barcodeData, mean.center = TRUE),
-		'CLR' = NormalizeCLR(barcodeData)
-	)
+  bqn <- NULL
+  tryCatch({
+    bqn <- TransposeDF(data.frame(NormalizeBimodalQuantile(barcodeData)[[3]], check.names=FALSE))
+  }, error = function(e){
+    print("No valid barcodes, skipping Bimodal quantile normalization")
+    print(conditionMessage(e))
+    traceback()
+  })
+  
+  print(bqn)
 
+  if (!is.null(bqn)){
+    toQC <- list(
+      'Raw' = data.frame(log10(barcodeData + 1), check.names = FALSE),
+      'bimodalQuantile' = bqn,
+      'Quantile'= TransposeDF(data.frame(log10(NormalizeQuantile(t(barcodeData))+1), check.names = FALSE)),
+      'log2Center' = NormalizeLog2(barcodeData, mean.center = TRUE),
+      'CLR' = NormalizeCLR(barcodeData)
+    )
+  } else {
+    toQC <- list(
+      'Raw' = data.frame(log10(barcodeData + 1), check.names = FALSE),
+      'Quantile'= TransposeDF(data.frame(log10(NormalizeQuantile(t(barcodeData))+1), check.names = FALSE)),
+      'log2Center' = NormalizeLog2(barcodeData, mean.center = TRUE),
+      'CLR' = NormalizeCLR(barcodeData)
+    )
+  }
+	
 
 	df <- NULL
 	for (norm in names(toQC)) {
@@ -101,6 +136,11 @@ PlotNormalizationQC <- function(barcodeData) {
 		df$Barcode <- naturalsort::naturalfactor(df$Barcode)
 	}
 
+	#TODO: remove
+	print(str(df))
+	print(unique(df$Normalization))
+	print(unique(df$Barcode))
+
 	maxPerPlot <- 3
 	totalPages <- GetTotalPlotPages(totalValues = length(unique(df$Barcode)), perPage = maxPerPlot)
 	for (i in 1:totalPages) {
@@ -108,7 +148,7 @@ PlotNormalizationQC <- function(barcodeData) {
 			egg::theme_presentation(base_size = 14) +
 			geom_density(aes(y = sqrt(..density..)), size = 1) + 
 			labs(y = 'sqrt(Density)', x = 'Value') + ggtitle('Normalized Data') +
-			ggforce::facet_wrap_paginate(Barcode ~ forcats::fct_relevel(Normalization, "Raw"), scales = 'free', ncol = length(unique(df$Normalization)), nrow = min(3, length(unique(df$Barcode))), strip.position = 'top', labeller = labeller(.multi_line = FALSE), page = i)
+			ggforce::facet_wrap_paginate(Barcode ~ forcats::fct_relevel(Normalization, "Raw"), scales = 'free', ncol = length(unique(df$Normalization)), nrow = min(3, length(unique(df$Barcode))), strip.position = 'top', drop = FALSE, labeller = labeller(.multi_line = FALSE), page = i)
 		)
 	}
 
@@ -127,8 +167,9 @@ PlotNormalizationQC <- function(barcodeData) {
 		PerformHashingClustering(toQC[[norm]], norm = norm)
 	  snr <- SNR(t(toQC[[norm]]))
 	  snr$Barcode <- naturalsort::naturalfactor(snr$Barcode)
-
-	  P1 <- (ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) +
+	  
+	  
+	  P1 <- (ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) + 
 	                geom_point(cex=0.25) + ggtitle(p1title) +
 	    egg::theme_presentation(base_size = 14)) + theme(legend.position = c(0.1, 0.65), legend.text=element_text(size=10)) +
 	    guides(colour = guide_legend(override.aes = list(size=3)))
@@ -142,10 +183,9 @@ PlotNormalizationQC <- function(barcodeData) {
 	    theme(
 	      legend.position='none'
 	    )
-
-		P3 <- suppressWarnings(ggExtra::ggMarginal(P1, size=4, groupColour = TRUE))
-
-		print(P2|P3)
+	  
+	  P3 <- ggExtra::ggMarginal(P1, size=4, groupColour = TRUE)
+	  print(P2|P3)
 	}
 }
 
