@@ -375,12 +375,20 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     #   recovery must be close to the threshold.  Likewise, the 2nd highest bc count for a cell considered for
     #   doublet recovery must be close to the threshold.
 
-    # neg_norm <- getNegNormedData(discrete, barcodeMatrix)
-    # pos_norm <- getPosNormedData(discrete, barcodeMatrix)
-    # tot_normed <- pos_norm + neg_norm
-    
     #outputs from NormalizeBimodalQuantile: discrete, tot_normed, log10(tot_normed+1), barcodeBlocklist
-    normedres <- NormalizeBimodalQuantile(barcodeMatrix)
+    normedres <- NULL
+    tryCatch({
+      normedres <- NormalizeBimodalQuantile(barcodeMatrix)
+    }, error = function(e){
+      print("No valid barcodes, skipping BFF")
+      print(conditionMessage(e))
+      traceback()
+    })
+    
+    if (is.null(normedres)){
+      return()
+    }
+    
     discrete <- normedres[[1]]
     tot_normed <- normedres[[2]]
     lognormedcounts <- normedres[[3]]
