@@ -220,7 +220,7 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 		stop('Expected cluster names to match cells for clara!')
 	}
 
-	seuratObj$cluster.clara <- as.factor(init.clusters$clustering)
+	seuratObj$cluster.clara <- naturalsort::naturalfactor(init.clusters$clustering)
 	P <- suppressWarnings(DimPlot(seuratObj, reduction = 'hto_tsne', group.by = 'cluster.clara', label = TRUE))
 	P <- P + ggtitle(paste0('Clusters: ', norm, ' (clara)'))
 
@@ -240,7 +240,7 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 		stop('Expected cluster names to match cells for kmeans!')
 	}
 
-	seuratObj$cluster.kmeans <- as.factor(init.clusters$cluster)
+	seuratObj$cluster.kmeans <- naturalsort::naturalfactor(init.clusters$cluster)
 	P <- suppressWarnings(DimPlot(seuratObj, group.by = 'cluster.kmeans', label = TRUE))
 	P <- P + ggtitle(paste0('Clusters: ', norm, ' (kmeans)'))
 	Idents(seuratObj) <- 'cluster.kmeans'
@@ -289,8 +289,8 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
   df <- data.frame(df, check.names=FALSE)
 	df$cell <- rownames(df)
   df <- df %>% tidyr::pivot_longer(colnames(df)[1:length(colnames(df)) - 1], names_to = "Barcode", values_to = "count")
+	df$Barcode <- naturalsort::naturalfactor(df$Barcode)
   P1 <- df %>%
-    dplyr::mutate(Barcode = factor(Barcode, levels=unique(df$Barcode)))  %>%
     ggplot(aes( y=count, x=Barcode)) + 
     geom_violin(position="dodge", alpha=0.5) +
     xlab("") +
