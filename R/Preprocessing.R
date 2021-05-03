@@ -242,6 +242,19 @@ PrintColumnQc <- function(barcodeMatrix) {
 		}
 	}
 
+	# Counts/cell:
+	df2 <- df
+	df2$Count <- log10(df2$Count + 1)
+	P1 <- ggplot(df2, aes(y = Count, x = Barcode)) +
+		geom_violin(position="dodge", alpha=0.5) +
+		xlab("") +
+		ylab(label) +
+		ggplot2::ggtitle("Raw HTO Counts/Cell") +
+		egg::theme_presentation(base_size = 14) +
+		theme(axis.text.x = element_text(angle = 90))
+
+	print(P1)
+
 	#normalize columns, print top barcode fraction. note, cells with all zeros will make NAs
 	normalizedBarcodes <- sweep(barcodeMatrix, 2, colSums(barcodeMatrix),`/`)
 	normalizedBarcodes[is.na(normalizedBarcodes)] <- 0

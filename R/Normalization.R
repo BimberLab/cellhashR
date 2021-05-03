@@ -279,11 +279,11 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 .PlotViolin <- function(df, norm) {
   if (norm == "Raw") {
     label <- 'Log Raw Counts'
-    maintitle <- ggplot2::ggtitle(" Raw HTO Barcode Count Distributions")
+    maintitle <- "Raw HTO Barcode Count Distributions"
     
   } else {
     label <- paste0(norm, ' Normalized Counts')
-    maintitle <- ggplot2::ggtitle(paste0(norm, " Normalized HTO Barcode Count Distributions"))
+    maintitle <- paste0(norm, " Normalized HTO Barcode Count Distributions")
   }
 
   df <- data.frame(df, check.names=FALSE)
@@ -294,7 +294,8 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
     ggplot(aes( y=count, x=Barcode)) + 
     geom_violin(position="dodge", alpha=0.5) +
     xlab("") +
-    ylab(label) + maintitle
+    ylab(label) +
+		ggplot2::ggtitle(maintitle) +
     egg::theme_presentation(base_size = 14) +
     theme(axis.text.x = element_text(angle = 90))
   print(P1)
