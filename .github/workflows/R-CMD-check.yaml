@@ -37,10 +37,11 @@ jobs:
       - uses: r-lib/actions/setup-pandoc@v1
 
       - name: Query dependencies
+        # NOTE: rather than force a specific version, let the R version govern this:      
         run: |
           print(R.version)
           if (!requireNamespace("BiocManager", quietly=TRUE))  install.packages("BiocManager");
-          BiocManager::install(version = "${{ matrix.config.bioc }}", ask = FALSE);
+          BiocManager::install(ask = FALSE);
           cat(append = TRUE, file = "~/.Rprofile", "options(repos = BiocManager::repositories());")
           cat(append = TRUE, file = "~/.Rprofile", "Sys.setenv(R_BIOC_VERSION=as.character(BiocManager::version()));");
           install.packages('remotes')
