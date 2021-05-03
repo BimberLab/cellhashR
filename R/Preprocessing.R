@@ -248,7 +248,7 @@ PrintColumnQc <- function(barcodeMatrix) {
 	P1 <- ggplot(df2, aes(y = Count, x = Barcode)) +
 		geom_violin(position="dodge", alpha=0.5) +
 		xlab("") +
-		ylab(label) +
+		ylab("Log Raw Counts") +
 		ggplot2::ggtitle("Raw HTO Counts/Cell") +
 		egg::theme_presentation(base_size = 14) +
 		theme(axis.text.x = element_text(angle = 90))
