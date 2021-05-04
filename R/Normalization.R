@@ -49,8 +49,8 @@ NormalizeBimodalQuantile <- function(barcodeMatrix) {
 		stop('colnames dont match')
 	}
 
-	if (identical(dim(discrete), dim(mat))) {
-		stop(paste0('discrete/mat have different dimensions, were: ', dim(discrete), ' and ', dim(mat)))
+	if (!identical(dim(discrete), dim(mat))) {
+		stop(paste0('discrete/mat have different dimensions, were: ', paste0(dim(discrete), collapse = ','), ' and ', paste0(dim(mat), collapse = ',')))
 	}
 
 	for (hto in rownames(mat)) {
@@ -59,8 +59,8 @@ NormalizeBimodalQuantile <- function(barcodeMatrix) {
     cutoffs[[hto]] <- threshold[[hto]]
   }
 
-	if (identical(dim(discrete), dim(mat))) {
-		stop(paste0('discrete/mat have different dimensions after update, were: ', dim(discrete), ' and ', dim(mat)))
+	if (!identical(dim(discrete), dim(mat))) {
+		stop(paste0('discrete/mat have different dimensions after update, were: ', paste0(dim(discrete), collapse = ','), ' and ', paste0(dim(mat), collapse = ',')))
 	}
 
 	#NOTE: these could have different dimensions if there is a barcodeBlocklist
