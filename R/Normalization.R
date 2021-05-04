@@ -41,11 +41,27 @@ NormalizeBimodalQuantile <- function(barcodeMatrix) {
   discrete <- mat
   discrete[discrete > 0] <- 0
 
-  for (hto in rownames(mat)) {
+	if (!all(rownames(discrete) == rownames(mat)) {
+		stop('rownames dont match')
+	}
+
+	if (!all(colnames(discrete) == colnames(mat)) {
+		stop('colnames dont match')
+	}
+
+	if (identical(dim(discrete), dim(mat))) {
+		stop(paste0('discrete/mat have different dimensions, were: ', dim(discrete), ' and ', dim(mat))
+	}
+
+	for (hto in rownames(mat)) {
     cells <- mat[hto, , drop = FALSE]
     discrete[hto, , drop = FALSE] <- ifelse(cells > threshold[[hto]], yes = 1, no = 0)
     cutoffs[[hto]] <- threshold[[hto]]
   }
+
+	if (identical(dim(discrete), dim(mat))) {
+		stop(paste0('discrete/mat have different dimensions after update, were: ', dim(discrete), ' and ', dim(mat))
+	}
 
 	#NOTE: these could have different dimensions if there is a barcodeBlocklist
   neg_norm <- getNegNormedData(discrete, mat)
