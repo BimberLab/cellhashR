@@ -54,8 +54,6 @@ NormalizeBimodalQuantile <- function(barcodeMatrix) {
   pos_norm <- getPosNormedData(discrete, mat)
   tot_normed <- pos_norm + neg_norm
 
-	print(3)
-	print(rownames(discrete))
   return(list(
 		discrete = discrete,
 		tot_normed = tot_normed,
@@ -110,9 +108,6 @@ PlotNormalizationQC <- function(barcodeData) {
     print(conditionMessage(e))
     traceback()
   })
-
-	print(5)
-  print(bqn)
 
   if (!is.null(bqn)){
     toQC <- list(

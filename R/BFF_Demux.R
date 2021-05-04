@@ -210,8 +210,6 @@ generateBFFGridPlot <- function(barcodeMatrix, xlab, maintitle, universal_cutoff
   discrete <- barcodeMatrix
   discrete[discrete > 0] <- 0
 
-  print(1)
-  print(rownames(barcodeMatrix))
   for (hto in rownames(barcodeMatrix)) {
     cells <- barcodeMatrix[hto, colnames(barcodeMatrix), drop = FALSE]
     cutoffresults <- getCountCutoff(cells, hto, 4, barcodeBlocklist)
@@ -436,11 +434,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     neg_mode <- maxima[1]
     pos_mode <- maxima[2]
 
-    print(6)
-    print(rownames(lognormedcounts))
-
     snr <- SNR(lognormedcounts)
-
     called <- c()
     
     highest_dist <- stats::density(snr$Highest, adjust = 1, kernel = 'gaussian',
@@ -469,11 +463,6 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
       }
     }
 
-    #TODO: this is just using row index, not name, right? could this be the problem?
-    print(7)
-    print(rownames(discrete))
-    print(rownames(tot_normed))
-
     for (cell in called) {
       discrete[, cell] <- 0
       row_max_name <- rownames(tot_normed)[which.max(tot_normed[cell,])]
@@ -492,8 +481,6 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     grid::grid.newpage()
     grid::grid.draw(P2)
 
-    print(2)
-    print(rownames(discrete))
     seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_quantile', assay = assay)
     return(seuratObj)
   }
