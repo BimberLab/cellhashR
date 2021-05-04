@@ -261,5 +261,6 @@ test_that("BFF calling works", {
 	metricsFile <- l$metricsFile
 	unlink(metricsFile)
 	
-	expect_equal(expected = test[['BffQuantile']], object = sum(df$bff_quantile != 'Negative'), info = testName)
+	print(unique(df$bff_quantile))
+	expect_equal(expected = test[['BffQuantile']], object = sum(df$bff_quantile != 'Negative' & df$bff_quantile != 'ND'), info = testName)
 })
