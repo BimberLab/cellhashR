@@ -38,14 +38,12 @@ NormalizeBimodalQuantile <- function(barcodeMatrix) {
     return()
   }
 
-  seuratObj <- Seurat::CreateSeuratObject(mat, assay = "HTO")
-
-  discrete <- GetAssayData(object = seuratObj, assay = "HTO")
+  discrete <- mat
   discrete[discrete > 0] <- 0
 
   for (hto in rownames(mat)) {
-    cells <- mat[hto, colnames(mat), drop = FALSE]
-    discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold[[hto]], yes = 1, no = 0)
+    cells <- mat[hto, , drop = FALSE]
+    discrete[hto, , drop = FALSE] <- ifelse(cells > threshold[[hto]], yes = 1, no = 0)
     cutoffs[[hto]] <- threshold[[hto]]
   }
 
@@ -191,7 +189,7 @@ PlotNormalizationQC <- function(barcodeData) {
 	    )
 
 	  P3 <- ggExtra::ggMarginal(P1, size=4, groupColour = TRUE)
-	  print(P2|P3)
+	  print(suppressWarnings(P2 | P3))
 	}
 }
 
