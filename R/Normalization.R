@@ -21,12 +21,14 @@ NormalizeBimodalQuantile <- function(barcodeMatrix) {
     cells <- barcodeMatrix[hto, colnames(barcodeMatrix), drop = FALSE]
     #BFF uses a log-scale to smooth higher counts, so we transform back once we find the threshold
     cutoffresults <- getCountCutoff(cells, hto, 4, barcodeBlocklist)
-    if (cutoffresults[[1]] < 2) {
+
+		#TODO hard coded??
+    if (cutoffresults[['cutoff']] < 2) {
       print(paste0("Threshold for ", hto, " may be placed too low, recalculating with more smoothing."))
       cutoffresults <- getCountCutoff(cells, hto, 2, barcodeBlocklist)
     }
-    barcodeBlocklist <- cutoffresults[[2]]
-    threshold[[hto]] <- 10^(cutoffresults[[1]])
+    barcodeBlocklist <- cutoffresults[['barcodeBlocklist']]
+    threshold[[hto]] <- 10^(cutoffresults[['cutoff']])
   }
   # barcodeBlocklist, defined in the for loop above, is used to subset
   # barcodeMatrix to exclude htos w/o bimodal distributions
@@ -47,10 +49,19 @@ NormalizeBimodalQuantile <- function(barcodeMatrix) {
     cutoffs[[hto]] <- threshold[[hto]]
   }
 
+	#NOTE: these could have different dimensions if there is a barcodeBlocklist
   neg_norm <- getNegNormedData(discrete, mat)
   pos_norm <- getPosNormedData(discrete, mat)
   tot_normed <- pos_norm + neg_norm
-  return(list(discrete, tot_normed, log10(tot_normed+1), barcodeBlocklist))
+
+	print(3)
+	print(rownames(discrete))
+  return(list(
+		discrete = discrete,
+		tot_normed = tot_normed,
+		lognormedcounts = log10(tot_normed+1),
+		barcodeBlocklist = barcodeBlocklist)
+	)
 }
 
 TransposeDF <- function(df) {
@@ -93,13 +104,14 @@ NormalizeRelative <- function(mat) {
 PlotNormalizationQC <- function(barcodeData) {
   bqn <- NULL
   tryCatch({
-    bqn <- TransposeDF(data.frame(NormalizeBimodalQuantile(barcodeData)[[3]], check.names=FALSE))
+    bqn <- TransposeDF(data.frame(NormalizeBimodalQuantile(barcodeData)[['lognormedcounts']], check.names=FALSE))
   }, error = function(e){
     print("No valid barcodes, skipping Bimodal quantile normalization")
     print(conditionMessage(e))
     traceback()
   })
 
+	print(5)
   print(bqn)
 
   if (!is.null(bqn)){
