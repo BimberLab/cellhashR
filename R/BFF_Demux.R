@@ -38,7 +38,7 @@ SNR <- function(barcodeData) {
 }
 
 getNegNormedData <- function(discrete, barcodeMatrix) {
-  if (dim(discrete) != dim(barcodeMatrix)) {
+  if (identical(dim(discrete), dim(barcodeMatrix))) {
     warning('getNegNormedData being passed inputs with different dimensions')
   }
 
@@ -53,7 +53,7 @@ getNegNormedData <- function(discrete, barcodeMatrix) {
 }
 
 getPosNormedData <- function(discrete, barcodeMatrix) {
-  if (dim(discrete) != dim(barcodeMatrix)) {
+  if (identical(dim(discrete), dim(barcodeMatrix))) {
     warning('getPosNormedData being passed inputs with different dimensions')
   }
 

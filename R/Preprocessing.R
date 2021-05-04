@@ -277,10 +277,14 @@ PrintColumnQc <- function(barcodeMatrix) {
 	# Top/Second:
 	snr <- SNR(t(barcodeMatrix))
 	snr$Barcode <- naturalsort::naturalfactor(snr$Barcode)
+	snr$Highest <- log10(snr$Highest + 1)
+	snr$Second <- log10(snr$Second + 1)
 	P1 <- ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) +
-		geom_point(cex=0.25) +
+		geom_point(cex = 0.25, alpha = 0.5) +
 		ggtitle("Ratio of Top Two Barcodes") +
-		egg::theme_presentation(base_size = 10)
+		egg::theme_presentation(base_size = 10) +
+		xlab('Highest (log10p)') +
+		ylab('Second (log10p)')
 	print(P1)
 
 	#MA-plot
