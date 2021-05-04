@@ -204,8 +204,8 @@ PlotNormalizationQC <- function(barcodeData) {
 	      legend.position='none'
 	    )
 
-	  P3 <- ggExtra::ggMarginal(P1, size=4, groupColour = TRUE)
-	  print(suppressWarnings(P2 | P3))
+	  P3 <- suppressWarnings(ggExtra::ggMarginal(P1, size=4, groupColour = TRUE))
+	  print(P2 | P3)
 	}
 }
 
