@@ -274,6 +274,15 @@ PrintColumnQc <- function(barcodeMatrix) {
 
 	print(P3)
 
+	# Top/Second:
+	snr <- SNR(t(barcodeMatrix))
+	snr$Barcode <- naturalsort::naturalfactor(snr$Barcode)
+	P1 <- ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) +
+		geom_point(cex=0.25) +
+		ggtitle("Ratio of Top Two Barcodes") +
+		egg::theme_presentation(base_size = 10)
+	print(P1)
+
 	#MA-plot
 	if (nrow(barcodeMatrix) == 2){
 		tryCatch({

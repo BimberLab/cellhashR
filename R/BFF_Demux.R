@@ -473,9 +473,6 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     print(7)
     print(rownames(discrete))
     print(rownames(tot_normed))
-    if (rownames(discrete) != rownames(tot_normed)) {
-			stop('rownames not equal!')
-    }
 
     for (cell in called) {
       discrete[, cell] <- 0
