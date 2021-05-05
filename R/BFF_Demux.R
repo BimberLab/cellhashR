@@ -443,7 +443,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
                                   bw = 'SJ', give.Rkern = FALSE)
     neg_cutoff <- highest_dist$x[[min(which((abs(highest_dist$y - doublet_thresh*max(highest_dist$y))) < 0.01))]]
     doublet_cutoff <- second_dist$x[[max(which((abs(second_dist$y - neg_thresh*max(second_dist$y))) < 0.01))]]
-    
+
     classification <- c()
     for (i in 1:nrow(snr)) {
       if (snr[i, "Highest"] >= neg_cutoff) {
@@ -465,10 +465,10 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
 
     for (cell in called) {
       discrete[, cell] <- 0
-      row_max_name <- rownames(tot_normed)[which.max(tot_normed[cell,])]
+      row_max_name <- colnames(tot_normed)[which.max(tot_normed[cell,])]
       discrete[row_max_name, cell] <- 1
     }
-    
+
     joined <- cbind(snr, classification)
     
     P1 <- ggplot2::ggplot(joined, aes(x=Highest, y=Second, color=classification)) + 
@@ -476,7 +476,10 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
             geom_vline(xintercept = neg_cutoff) + ggtitle("BFF Droplet Classifications") +
             geom_segment(x=neg_cutoff, y=neg_cutoff - dist_frac * (pos_mode - neg_mode),
                    xend= doublet_cutoff+dist_frac * (pos_mode - neg_mode), yend=doublet_cutoff,
-                   linetype="dashed", color="black") + egg::theme_presentation(base_size = 10) + theme(legend.position = c(0.1, 0.65), legend.text=element_text(size=10)) + guides(colour = guide_legend(override.aes = list(size=3)))
+                   linetype="dashed", color="black") +
+            egg::theme_presentation(base_size = 10) +
+            theme(legend.position = c(0.1, 0.65), legend.text=element_text(size=10)) +
+            guides(colour = guide_legend(override.aes = list(size=3)))
     P2 <- ggExtra::ggMarginal(P1, size=4)
     grid::grid.newpage()
     grid::grid.draw(P2)
