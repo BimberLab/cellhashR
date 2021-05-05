@@ -21,36 +21,59 @@ NormalizeBimodalQuantile <- function(barcodeMatrix) {
     cells <- barcodeMatrix[hto, colnames(barcodeMatrix), drop = FALSE]
     #BFF uses a log-scale to smooth higher counts, so we transform back once we find the threshold
     cutoffresults <- getCountCutoff(cells, hto, 4, barcodeBlocklist)
-    if (cutoffresults[[1]] < 2) {
+
+		#TODO hard coded??
+    if (cutoffresults[['cutoff']] < 2) {
       print(paste0("Threshold for ", hto, " may be placed too low, recalculating with more smoothing."))
       cutoffresults <- getCountCutoff(cells, hto, 2, barcodeBlocklist)
     }
-    barcodeBlocklist <- cutoffresults[[2]]
-    threshold[[hto]] <- 10^(cutoffresults[[1]])
+    barcodeBlocklist <- cutoffresults[['barcodeBlocklist']]
+    threshold[[hto]] <- 10^(cutoffresults[['cutoff']])
   }
   # barcodeBlocklist, defined in the for loop above, is used to subset
   # barcodeMatrix to exclude htos w/o bimodal distributions
   mat <- barcodeMatrix[!rownames(barcodeMatrix) %in% barcodeBlocklist,]
-  
+
   if (length(rownames(mat)) == 0) {
     return()
   }
 
-  seuratObj <- Seurat::CreateSeuratObject(mat, assay = "HTO")
-  
-  discrete <- GetAssayData(object = seuratObj, assay = "HTO")
+  discrete <- mat
   discrete[discrete > 0] <- 0
-  
-  for (hto in rownames(mat)) {
-    cells <- mat[hto, colnames(mat), drop = FALSE]
-    discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold[[hto]], yes = 1, no = 0)
+
+	if (!all(rownames(discrete) == rownames(mat))) {
+		stop('rownames dont match')
+	}
+
+	if (!all(colnames(discrete) == colnames(mat))) {
+		stop('colnames dont match')
+	}
+
+	if (!identical(dim(discrete), dim(mat))) {
+		stop(paste0('discrete/mat have different dimensions, were: ', paste0(dim(discrete), collapse = ','), ' and ', paste0(dim(mat), collapse = ',')))
+	}
+
+	for (hto in rownames(mat)) {
+    cells <- mat[hto, , drop = FALSE]
+    discrete[hto, , drop = FALSE] <- ifelse(cells > threshold[[hto]], yes = 1, no = 0)
     cutoffs[[hto]] <- threshold[[hto]]
   }
-  
+
+	if (!identical(dim(discrete), dim(mat))) {
+		stop(paste0('discrete/mat have different dimensions after update, were: ', paste0(dim(discrete), collapse = ','), ' and ', paste0(dim(mat), collapse = ',')))
+	}
+
+	#NOTE: these could have different dimensions if there is a barcodeBlocklist
   neg_norm <- getNegNormedData(discrete, mat)
   pos_norm <- getPosNormedData(discrete, mat)
   tot_normed <- pos_norm + neg_norm
-  return(list(discrete, tot_normed, log10(tot_normed+1), barcodeBlocklist))
+
+  return(list(
+		discrete = discrete,
+		tot_normed = tot_normed,
+		lognormedcounts = log10(tot_normed+1),
+		barcodeBlocklist = barcodeBlocklist)
+	)
 }
 
 TransposeDF <- function(df) {
@@ -93,14 +116,12 @@ NormalizeRelative <- function(mat) {
 PlotNormalizationQC <- function(barcodeData) {
   bqn <- NULL
   tryCatch({
-    bqn <- TransposeDF(data.frame(NormalizeBimodalQuantile(barcodeData)[[3]], check.names=FALSE))
+    bqn <- TransposeDF(data.frame(NormalizeBimodalQuantile(barcodeData)[['lognormedcounts']], check.names=FALSE))
   }, error = function(e){
     print("No valid barcodes, skipping Bimodal quantile normalization")
     print(conditionMessage(e))
     traceback()
   })
-  
-  print(bqn)
 
   if (!is.null(bqn)){
     toQC <- list(
@@ -118,7 +139,7 @@ PlotNormalizationQC <- function(barcodeData) {
       'CLR' = NormalizeCLR(barcodeData)
     )
   }
-	
+
 
 	df <- NULL
 	for (norm in names(toQC)) {
@@ -167,9 +188,8 @@ PlotNormalizationQC <- function(barcodeData) {
 		PerformHashingClustering(toQC[[norm]], norm = norm)
 	  snr <- SNR(t(toQC[[norm]]))
 	  snr$Barcode <- naturalsort::naturalfactor(snr$Barcode)
-	  
-	  
-	  P1 <- (ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) + 
+
+	  P1 <- (ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) +
 	                geom_point(cex=0.25) + ggtitle(p1title) +
 	    egg::theme_presentation(base_size = 14)) + theme(legend.position = c(0.1, 0.65), legend.text=element_text(size=10)) +
 	    guides(colour = guide_legend(override.aes = list(size=3)))
@@ -183,9 +203,9 @@ PlotNormalizationQC <- function(barcodeData) {
 	    theme(
 	      legend.position='none'
 	    )
-	  
-	  P3 <- ggExtra::ggMarginal(P1, size=4, groupColour = TRUE)
-	  print(P2|P3)
+
+	  P3 <- suppressWarnings(ggExtra::ggMarginal(P1, size=4, groupColour = TRUE))
+	  print(P2 | P3)
 	}
 }
 
