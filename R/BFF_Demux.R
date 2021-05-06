@@ -427,8 +427,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     max_list <- x_vals
     norm_cutoff <- mean(unlist(normed_cutoffs))
 
-    #TODO: why result ignored?
-    foo <- generateBFFGridPlot(t(tot_normed), "Log(Counts + 1)", "Normalized Count Distributions with Final Threshold", universal_cutoff = norm_cutoff)
+    invisible(generateBFFGridPlot(t(tot_normed), "Log(Counts + 1)", "Normalized Count Distributions with Final Threshold", universal_cutoff = norm_cutoff))
     
     maxima <- colMeans(max_list)
     neg_mode <- maxima[1]

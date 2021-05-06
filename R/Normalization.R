@@ -14,6 +14,8 @@ NormalizeQuantile <- function(mat) {
 }
 
 NormalizeBimodalQuantile <- function(barcodeMatrix) {
+	barcodeMatrix <- .EnsureNonSparse(barcodeMatrix)
+
   cutoffs <- list()
   threshold <- list()
   barcodeBlocklist <- NULL
@@ -54,8 +56,8 @@ NormalizeBimodalQuantile <- function(barcodeMatrix) {
 	}
 
 	for (hto in rownames(mat)) {
-    cells <- mat[hto, , drop = FALSE]
-    discrete[hto, , drop = FALSE] <- ifelse(cells > threshold[[hto]], yes = 1, no = 0)
+    cells <- mat[hto,]
+    discrete[hto,] <- ifelse(cells > threshold[[hto]], yes = 1, no = 0)
     cutoffs[[hto]] <- threshold[[hto]]
   }
 
@@ -156,11 +158,6 @@ PlotNormalizationQC <- function(barcodeData) {
 		df$Barcode <- SimplifyHtoNames(as.character(df$Barcode))
 		df$Barcode <- naturalsort::naturalfactor(df$Barcode)
 	}
-
-	#TODO: remove
-	print(str(df))
-	print(unique(df$Normalization))
-	print(unique(df$Barcode))
 
 	maxPerPlot <- 3
 	totalPages <- GetTotalPlotPages(totalValues = length(unique(df$Barcode)), perPage = maxPerPlot)
