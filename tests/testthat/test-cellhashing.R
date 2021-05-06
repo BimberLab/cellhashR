@@ -34,6 +34,7 @@ test_that("Workflow works", {
 	html <- paste0(getwd(), '/test.html')
 	output <- paste0(getwd(), '/test.txt')
 	metricsFile <- paste0(getwd(), '/metrics.txt')
+	rawCountsExport <- paste0(getwd(), '/rawCountsFile.rds')
 
 	test <- tests[['438-21']]
 	
@@ -44,7 +45,7 @@ test_that("Workflow works", {
 	subsetCountDir = normalizePath('./subsetCounts/', mustWork = FALSE)
 	DropletUtils::write10xCounts(path = subsetCountDir, countData, overwrite = TRUE)
 
-	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile)
+	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile, rawCountsExport = rawCountsExport)
 
 	df <- read.table(output, sep = '\t', header = TRUE)
 	expect_equal(nrow(df), 2500)
@@ -54,9 +55,15 @@ test_that("Workflow works", {
 	metrics <- read.table(metricsFile, sep = '\t', header = FALSE)
 	expect_equal(nrow(metrics), 23)
 
+	expect_true(file.exists(rawCountsExport))
+	rawCountsMat <- readRDS(file = rawCountsExport)
+	expect_equal(nrow(rawCountsMat), 2)
+	expect_equal(ncol(rawCountsMat), 2500)
+
 	unlink(html)
 	unlink(output)
 	unlink(metricsFile)
+	unlink(rawCountsExport)
 
 	# Repeat with skip normalization
 	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile, skipNormalizationQc = TRUE)

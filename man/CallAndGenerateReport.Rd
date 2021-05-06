@@ -15,6 +15,7 @@ CallAndGenerateReport(
   minCountPerCell = 5,
   title = NULL,
   metricsFile = NULL,
+  rawCountsExport = NULL,
   skipNormalizationQc = FALSE
 )
 }
@@ -38,6 +39,8 @@ CallAndGenerateReport(
 \item{title}{A title for the HTML report}
 
 \item{metricsFile}{If provided, summary metrics will be written to this file.}
+
+\item{rawCountsExport}{If provided, the raw count matrix, after processing, will be written as an RDS object to this file. This can be useful for debugging.}
 
 \item{skipNormalizationQc}{If true, the normalization/QC plots will be skipped. These can be time consuming on large input data.}
 }
