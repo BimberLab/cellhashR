@@ -14,6 +14,8 @@ NormalizeQuantile <- function(mat) {
 }
 
 NormalizeBimodalQuantile <- function(barcodeMatrix) {
+	barcodeMatrix <- .EnsureNonSparse(barcodeMatrix)
+
   cutoffs <- list()
   threshold <- list()
   barcodeBlocklist <- NULL

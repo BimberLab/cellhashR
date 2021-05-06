@@ -109,3 +109,11 @@ SimplifyHtoNames <- function(x) {
 
 	return(object)
 }
+
+.EnsureNonSparse <- function(mat) {
+	if (class(mat)[1] == 'dgCMatrix') {
+		mat <- as.matrix(mat)
+	}
+
+	return(mat)
+}
