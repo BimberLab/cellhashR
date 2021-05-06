@@ -57,8 +57,8 @@ test_that("Workflow works", {
 
 	expect_true(file.exists(rawCountsExport))
 	rawCountsMat <- readRDS(file = rawCountsExport)
-	expect_equal(nrow(rawCountsMat), 8)
-	expect_equal(ncol(rawCountsMat), 1124)
+	expect_equal(nrow(rawCountsMat), 2)
+	expect_equal(ncol(rawCountsMat), 2500)
 
 	unlink(html)
 	unlink(output)
