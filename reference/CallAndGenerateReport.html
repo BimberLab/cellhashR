@@ -140,6 +140,7 @@
   minCountPerCell <span class='op'>=</span> <span class='fl'>5</span>,
   title <span class='op'>=</span> <span class='cn'>NULL</span>,
   metricsFile <span class='op'>=</span> <span class='cn'>NULL</span>,
+  rawCountsExport <span class='op'>=</span> <span class='cn'>NULL</span>,
   skipNormalizationQc <span class='op'>=</span> <span class='cn'>FALSE</span>
 <span class='op'>)</span></pre>
 
@@ -185,6 +186,10 @@
     <tr>
       <th>metricsFile</th>
       <td><p>If provided, summary metrics will be written to this file.</p></td>
+    </tr>
+    <tr>
+      <th>rawCountsExport</th>
+      <td><p>If provided, the raw count matrix, after processing, will be written as an RDS object to this file. This can be useful for debugging.</p></td>
     </tr>
     <tr>
       <th>skipNormalizationQc</th>
