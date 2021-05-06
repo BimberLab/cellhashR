@@ -63,7 +63,7 @@ test_that("Workflow works", {
 	unlink(html)
 	unlink(output)
 	unlink(metricsFile)
-	unlink(rawCountsFile)
+	unlink(rawCountsExport)
 
 	# Repeat with skip normalization
 	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile, skipNormalizationQc = TRUE)
