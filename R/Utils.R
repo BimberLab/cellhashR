@@ -56,7 +56,7 @@ LocalMaxima <- function(x) {
 }
 
 GetPlotColors <- function(total, palette = 'Set1') {
- 	return(grDevices::colorRampPalette(RColorBrewer::brewer.pal(max(3, min(9, total)), palette))(total))
+	return(grDevices::colorRampPalette(RColorBrewer::brewer.pal(max(3, min(9, total)), palette))(total))
 }
 
 GetTotalPlotPages <- function(totalValues, perPage = 4) {
