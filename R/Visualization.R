@@ -10,6 +10,16 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 	htoClassificationField = paste0('classification.', columnSuffix)
 	globalClassificationField <- paste0('classification.global.', columnSuffix)
 
+	if (!(htoClassificationField %in% names(seuratObj@meta.data))) {
+		print(paste0('Unable to find calls in metadata, expected field: ', htoClassificationField))
+		return()
+	}
+
+	if (!(globalClassificationField %in% names(seuratObj@meta.data))) {
+		print(paste0('Unable to find calls in metadata, expected field: ', globalClassificationField))
+		return()
+	}
+
 	#report outcome
 	df <- data.frame(prop.table(table(Barcode = seuratObj[[htoClassificationField]])))
 	df$Barcode <- naturalsort::naturalfactor(df$Barcode)

@@ -29,3 +29,16 @@ test_that("BFF Works", {
 		expect_equal(sum(df$consensuscall == hto), expectedCalls[[hto]], info = hto, tolerance = 5)
 	}
 })
+
+test_that("563-3 Works", {
+	barcodeData <- readRDS('../testdata/563-3-TCR.hashing.rawCounts.rds')
+	
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('bff_quantile'))
+})
+
+test_that("568-1 Works", {
+	barcodeData <- readRDS('../testdata/568-1-TCR.hashing.rawCounts.rds')
+
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('bff_quantile'))
+})
+
