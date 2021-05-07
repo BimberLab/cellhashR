@@ -116,9 +116,13 @@ PlotCutoff <- function(data, smooth, label) {
     if (x2 < x1){
       #Negative peak must be at least 1/10th the positive peak
       if (y2 < (y1/10)) {
-        print('Negative peak was not at least 1/10th the positive peak, using max value as cutoff')
+        print(paste0('Negative peak was not at least 1/10th the positive peak, using max value as cutoff: ', label))
         cutoff <- max(data)
-        return(list(cutoff, plotdata, linedata))
+        return(list(
+          cutoff = cutoff,
+          plotdata = plotdata,
+          linedata = linedata
+        ))
       }
       cutoff_indices <- index2:index1
     } else {
@@ -127,24 +131,35 @@ PlotCutoff <- function(data, smooth, label) {
     cutoff_index <- which.min(smooth$y[cutoff_indices]) + min(cutoff_indices)
     cutoff <- smooth$x[cutoff_index]
   } else {
-    print('Only one peak found, using max value as cutoff')
+    print(paste0('Only one peak found, using max value as cutoff: ', label))
     cutoff <- max(data)
-    return(list(cutoff, plotdata, linedata))
+    return(list(
+      cutoff = cutoff,
+      plotdata = plotdata,
+      linedata = linedata
+    ))
   }
+
   return(list(
-  	cutoff = cutoff,
-  	plotdata = plotdata,
-  	linedata = linedata
+    cutoff = cutoff,
+    plotdata = plotdata,
+    linedata = linedata
   ))
 }
 
-getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL) {
+getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL, random.seed = GetSeed()) {
+  if (!is.null(random.seed)) {
+    set.seed(random.seed)
+  }
+
   # Function to find the threshold between positive and negative peaks of a barcode's distribution
   num_peaks <- 10000
   change <- 10
   j <- 1
   max2_list <- numeric(10)
-  data <- log10(as.vector(data+1))
+
+  # adding a small amount of noise (0-1) to count data removes distortions from the log-scale count histogram
+  data <- log10(as.vector(data+1) + matrix(stats::runif(dim(data)[[1]]*dim(data)[[2]]), nrow=dim(data)[[1]]))
   data <- data[data > 0]
   # Iterate KDE over sequentially larger bandwidths until fake peaks are smoothed away.
   # Stop when there is no change in number of peaks and there are fewer peaks than the number
@@ -172,7 +187,7 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
         max2_list <- c(max2_list, i)
       }
     }
-    
+
     y_vals <- y_vals[order(y_vals, decreasing = TRUE)][1:2]
     x_vals <- c()
     for (y in y_vals) {
@@ -184,25 +199,26 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
     
     change <- num_peaks - length(max_list)
     num_peaks <- length(max_list)
-    outlabel <- label
   }
-  cutoff_res <- PlotCutoff(data, smooth, outlabel)
+
+  cutoff_res <- PlotCutoff(data, smooth, label)
   cutoff <- cutoff_res[['cutoff']]
   plotdata <- cutoff_res[['plotdata']]
   linedata <- cutoff_res[['linedata']]
   if ((cutoff == max(data))) {
     barcodeBlocklist <- c(barcodeBlocklist, label)
   }
+
   return(list(
-		cutoff = cutoff,
-		barcodeBlocklist = barcodeBlocklist,
-  	x_vals = x_vals,
-  	plotdata = plotdata,
-  	linedata = linedata
+    cutoff = cutoff,
+    barcodeBlocklist = barcodeBlocklist,
+    x_vals = x_vals,
+    plotdata = plotdata,
+    linedata = linedata
   ))
 }
 
-generateBFFGridPlot <- function(barcodeMatrix, xlab, maintitle, universal_cutoff = NULL, smoothingThreshold = 2) {
+generateBFFGridPlot <- function(barcodeMatrix, xlab, maintitle, universal_cutoff = NULL) {
   barcodeBlocklist = NULL
   plotdata <- NULL
   linedata <- NULL
@@ -220,77 +236,38 @@ generateBFFGridPlot <- function(barcodeMatrix, xlab, maintitle, universal_cutoff
       cutoffval <- universal_cutoff
     }
 
-    #TODO: should this be tunable??
-    if ((is.null(universal_cutoff)) & (cutoffval < smoothingThreshold)) {
-      print(paste0("Threshold for ", hto, " may be placed too low, recalculating with more smoothing."))
-      cutoffresults <- getCountCutoff(cells, paste0(hto, "*"), 2, barcodeBlocklist)
-      cutoffval <- cutoffresults[['cutoff']]
-      
-      toAdd <- cutoffresults[['plotdata']]
-      toAdd$Barcode <- hto
+    toAdd <- cutoffresults[['plotdata']]
+    toAdd$Barcode <- hto
 
-      if (is.null(plotdata)) {
-        plotdata <- toAdd
-      } else {
-        plotdata <- rbind(toAdd, plotdata)
-      }
-      
-      toAdd <- cutoffresults[['linedata']]
-      toAdd$Barcode <- hto
-
-      if (is.null(linedata)) {
-        linedata <- toAdd
-      } else {
-        linedata <- rbind(toAdd, linedata)
-      }
-      
-      toAdd <- data.frame(cutoff = cutoffval)
-      toAdd$Barcode <- hto
-      toAdd$y <- max(linedata$y) * 1.1
-      
-      if (is.null(cutoffs)) {
-        cutoffs <- toAdd
-      } else {
-        cutoffs <- rbind(toAdd, cutoffs)
-      }
-      toAdd <- data.frame(cutoff = cutoffval)
-      toAdd$Barcode <- hto
-      toAdd$y <- -0.1
-      cutoffs <- rbind(toAdd, cutoffs)
-      
+    if (is.null(plotdata)) {
+      plotdata <- toAdd
     } else {
-      toAdd <- cutoffresults[['plotdata']]
-      toAdd$Barcode <- hto
+      plotdata <- rbind(toAdd, plotdata)
+    }
 
-      if (is.null(plotdata)) {
-        plotdata <- toAdd
-      } else {
-        plotdata <- rbind(toAdd, plotdata)
-      }
-      
-      toAdd <- cutoffresults[['linedata']]
-      toAdd$Barcode <- hto
+    toAdd <- cutoffresults[['linedata']]
+    toAdd$Barcode <- hto
 
-      if (is.null(linedata)) {
-        linedata <- toAdd
-      } else {
-        linedata <- rbind(toAdd, linedata)
-      }
-      
-      toAdd <- data.frame(cutoff = cutoffval)
-      toAdd$Barcode <- hto
-      toAdd$y <- max(linedata$y) * 1.1
-      
-      if (is.null(cutoffs)) {
-        cutoffs <- toAdd
-      } else {
-        cutoffs <- rbind(toAdd, cutoffs)
-      }
-      toAdd <- data.frame(cutoff = cutoffval)
-      toAdd$Barcode <- hto
-      toAdd$y <- -0.1
+    if (is.null(linedata)) {
+      linedata <- toAdd
+    } else {
+      linedata <- rbind(toAdd, linedata)
+    }
+
+    toAdd <- data.frame(cutoff = cutoffval)
+    toAdd$Barcode <- hto
+    toAdd$y <- max(linedata$y) * 1.1
+
+    if (is.null(cutoffs)) {
+      cutoffs <- toAdd
+    } else {
       cutoffs <- rbind(toAdd, cutoffs)
     }
+    toAdd <- data.frame(cutoff = cutoffval)
+    toAdd$Barcode <- hto
+    toAdd$y <- -0.1
+    cutoffs <- rbind(toAdd, cutoffs)
+
     barcodeBlocklist <- cutoffresults[['barcodeBlocklist']]
     discrete[hto, colnames(barcodeMatrix)] <- ifelse(cells > 10^cutoffval, yes = 1, no = 0)
   }
@@ -318,10 +295,10 @@ generateBFFGridPlot <- function(barcodeMatrix, xlab, maintitle, universal_cutoff
   }
 
   return(list(
-		barcodeBlocklist = barcodeBlocklist,
-  	cutoffslist = cutoffslist,
-  	discrete = discrete,
-  	x_vals = x_vals
+    barcodeBlocklist = barcodeBlocklist,
+    cutoffslist = cutoffslist,
+    discrete = discrete,
+    x_vals = x_vals
   ))
 }
 
@@ -409,9 +386,9 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
       print(conditionMessage(e))
       traceback()
     })
-    
+
     if (is.null(normedres)){
-      return()
+      return(NULL)
     }
     
     discrete <- normedres[['discrete']]
@@ -421,7 +398,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     
     #generateBFFGridPlot outputs barcodeBlocklist, cutoffslist, discrete, x_vals
     normedplotres <- generateBFFGridPlot(t(tot_normed), "Log(Counts + 1)", "Normalized Count Distributions with Fitted Threshold")
-    
+
     x_vals <- normedplotres[['x_vals']]
     normed_cutoffs <- normedplotres[['cutoffslist']]
     max_list <- x_vals

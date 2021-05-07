@@ -1,9 +1,9 @@
 #' @include Utils.R
 
 utils::globalVariables(
-	names = c('NormCount', 'Saturation', 'Cluster', 'AvgExpression', 'cutoff', 'count'),
-	package = 'cellhashR',
-	add = TRUE
+  names = c('NormCount', 'Saturation', 'Cluster', 'AvgExpression', 'cutoff', 'count'),
+  package = 'cellhashR',
+  add = TRUE
 )
 
 NormalizeQuantile <- function(mat) {
@@ -14,21 +14,15 @@ NormalizeQuantile <- function(mat) {
 }
 
 NormalizeBimodalQuantile <- function(barcodeMatrix) {
-	barcodeMatrix <- .EnsureNonSparse(barcodeMatrix)
+  barcodeMatrix <- .EnsureNonSparse(barcodeMatrix)
 
   cutoffs <- list()
   threshold <- list()
   barcodeBlocklist <- NULL
   for (hto in rownames(barcodeMatrix)) {
     cells <- barcodeMatrix[hto, colnames(barcodeMatrix), drop = FALSE]
-    #BFF uses a log-scale to smooth higher counts, so we transform back once we find the threshold
     cutoffresults <- getCountCutoff(cells, hto, 4, barcodeBlocklist)
 
-		#TODO hard coded??
-    if (cutoffresults[['cutoff']] < 2) {
-      print(paste0("Threshold for ", hto, " may be placed too low, recalculating with more smoothing."))
-      cutoffresults <- getCountCutoff(cells, hto, 2, barcodeBlocklist)
-    }
     barcodeBlocklist <- cutoffresults[['barcodeBlocklist']]
     threshold[[hto]] <- 10^(cutoffresults[['cutoff']])
   }
@@ -43,39 +37,39 @@ NormalizeBimodalQuantile <- function(barcodeMatrix) {
   discrete <- mat
   discrete[discrete > 0] <- 0
 
-	if (!all(rownames(discrete) == rownames(mat))) {
-		stop('rownames dont match')
-	}
+  if (!all(rownames(discrete) == rownames(mat))) {
+    stop('rownames dont match')
+  }
 
-	if (!all(colnames(discrete) == colnames(mat))) {
-		stop('colnames dont match')
-	}
+  if (!all(colnames(discrete) == colnames(mat))) {
+    stop('colnames dont match')
+  }
 
-	if (!identical(dim(discrete), dim(mat))) {
-		stop(paste0('discrete/mat have different dimensions, were: ', paste0(dim(discrete), collapse = ','), ' and ', paste0(dim(mat), collapse = ',')))
-	}
+  if (!identical(dim(discrete), dim(mat))) {
+    stop(paste0('discrete/mat have different dimensions, were: ', paste0(dim(discrete), collapse = ','), ' and ', paste0(dim(mat), collapse = ',')))
+  }
 
-	for (hto in rownames(mat)) {
+  for (hto in rownames(mat)) {
     cells <- mat[hto,]
     discrete[hto,] <- ifelse(cells > threshold[[hto]], yes = 1, no = 0)
     cutoffs[[hto]] <- threshold[[hto]]
   }
 
-	if (!identical(dim(discrete), dim(mat))) {
-		stop(paste0('discrete/mat have different dimensions after update, were: ', paste0(dim(discrete), collapse = ','), ' and ', paste0(dim(mat), collapse = ',')))
-	}
+  if (!identical(dim(discrete), dim(mat))) {
+    stop(paste0('discrete/mat have different dimensions after update, were: ', paste0(dim(discrete), collapse = ','), ' and ', paste0(dim(mat), collapse = ',')))
+  }
 
-	#NOTE: these could have different dimensions if there is a barcodeBlocklist
+  #NOTE: these could have different dimensions if there is a barcodeBlocklist
   neg_norm <- getNegNormedData(discrete, mat)
   pos_norm <- getPosNormedData(discrete, mat)
   tot_normed <- pos_norm + neg_norm
 
   return(list(
-		discrete = discrete,
-		tot_normed = tot_normed,
-		lognormedcounts = log10(tot_normed+1),
-		barcodeBlocklist = barcodeBlocklist)
-	)
+    discrete = discrete,
+    tot_normed = tot_normed,
+    lognormedcounts = log10(tot_normed+1),
+    barcodeBlocklist = barcodeBlocklist)
+  )
 }
 
 TransposeDF <- function(df) {
@@ -86,28 +80,28 @@ TransposeDF <- function(df) {
 }
 
 NormalizeLog2 <- function(mat, mean.center = TRUE) {
-	log2Scaled <- log2(mat)
-	for (i in 1:nrow(log2Scaled)) {
-		ind <- which(is.finite(log2Scaled[i,]) == FALSE)
-		log2Scaled[i,ind] <- 0
+  log2Scaled <- log2(mat)
+  for (i in 1:nrow(log2Scaled)) {
+    ind <- which(is.finite(log2Scaled[i,]) == FALSE)
+    log2Scaled[i,ind] <- 0
 
-		if (mean.center) {
-			log2Scaled[i,] <- log2Scaled[i,] - mean(log2Scaled[i,])
-		}
-	}
+    if (mean.center) {
+      log2Scaled[i,] <- log2Scaled[i,] - mean(log2Scaled[i,])
+    }
+  }
 
-	return(as.matrix(log2Scaled))
+  return(as.matrix(log2Scaled))
 }
 
 NormalizeCLR <- function(mat) {
-	seuratObj <- Seurat::CreateSeuratObject(mat, assay = 'Hashing')
-	seuratObj <- Seurat::NormalizeData(seuratObj, assay = 'Hashing', normalization.method = "CLR", verbose = FALSE)
+  seuratObj <- Seurat::CreateSeuratObject(mat, assay = 'Hashing')
+  seuratObj <- Seurat::NormalizeData(seuratObj, assay = 'Hashing', normalization.method = "CLR", verbose = FALSE)
 
-	return(seuratObj@assays$Hashing@data)
+  return(seuratObj@assays$Hashing@data)
 }
 
 NormalizeRelative <- function(mat) {
-	return(prop.table(mat, 2))
+  return(prop.table(mat, 2))
 }
 
 #' @title Plot Normalization QC
@@ -118,7 +112,8 @@ NormalizeRelative <- function(mat) {
 PlotNormalizationQC <- function(barcodeData) {
   bqn <- NULL
   tryCatch({
-    bqn <- TransposeDF(data.frame(NormalizeBimodalQuantile(barcodeData)[['lognormedcounts']], check.names=FALSE))
+    temp <- NormalizeBimodalQuantile(barcodeData)[['lognormedcounts']]
+    bqn <- TransposeDF(data.frame(temp, check.names=FALSE))
   }, error = function(e){
     print("No valid barcodes, skipping Bimodal quantile normalization")
     print(conditionMessage(e))
@@ -142,155 +137,169 @@ PlotNormalizationQC <- function(barcodeData) {
     )
   }
 
+  uniqueRows = c()
+  uniqueCols = c()
+  for (norm in names(toQC)) {
+    uniqueRows <- unique(c(uniqueRows, nrow(toQC[[norm]])))
+    uniqueCols <- unique(c(uniqueCols, ncol(toQC[[norm]])))
 
-	df <- NULL
-	for (norm in names(toQC)) {
-		toAdd <- reshape2::melt(t(toQC[[norm]]))
-		names(toAdd) <- c('CellBarcode', 'Barcode', 'NormCount')
-		toAdd$Normalization <- norm
+    if (length(uniqueRows) != 1) {
+      print(paste0('inconsistent row size in normalized data: ', paste0(uniqueRows, collapse = ','), ', encountered for: ', norm))
+    }
 
-		if (is.null(df)) {
-			df <- toAdd
-		} else {
-			df <- rbind(toAdd, df)
-		}
+    if (length(uniqueCols) != 1) {
+      print(paste0('inconsistent column size in normalized data: ', paste0(uniqueCols, collapse = ','), ', encountered for: ', norm))
+    }
+  }
 
-		df$Barcode <- SimplifyHtoNames(as.character(df$Barcode))
-		df$Barcode <- naturalsort::naturalfactor(df$Barcode)
-	}
+  df <- NULL
+  for (norm in names(toQC)) {
+    toAdd <- reshape2::melt(t(toQC[[norm]]))
+    names(toAdd) <- c('CellBarcode', 'Barcode', 'NormCount')
+    toAdd$Normalization <- norm
 
-	maxPerPlot <- 3
-	totalPages <- GetTotalPlotPages(totalValues = length(unique(df$Barcode)), perPage = maxPerPlot)
-	for (i in 1:totalPages) {
-		print(ggplot2::ggplot(df, aes(x = NormCount, color = Barcode)) +
-			egg::theme_presentation(base_size = 14) +
-			geom_density(aes(y = sqrt(..density..)), size = 1) + 
-			labs(y = 'sqrt(Density)', x = 'Value') + ggtitle('Normalized Data') +
-			ggforce::facet_wrap_paginate(Barcode ~ forcats::fct_relevel(Normalization, "Raw"), scales = 'free', ncol = length(unique(df$Normalization)), nrow = min(3, length(unique(df$Barcode))), strip.position = 'top', drop = FALSE, labeller = labeller(.multi_line = FALSE), page = i)
-		)
-	}
+    if (is.null(df)) {
+      df <- toAdd
+    } else {
+      df <- rbind(toAdd, df)
+    }
 
-	for (norm in names(toQC)) {
-	  if (norm == "Raw") {
-	    p1title <- "Raw Counts"
-	    p2title <- "Raw Count Density"
-	    announcement <- paste0("Printing Raw Count QC Plots")
-	  } else {
-	    p1title <- paste0(norm, ' Normalized Counts')
-	    p2title <- paste0(norm, ' Normalized Count Density')
-	    announcement <- paste0("Printing ", norm, " Normalization QC Plots")
-	  }
-	  print(announcement)
-	  .PlotViolin(t(toQC[[norm]]), norm = norm)
-		PerformHashingClustering(toQC[[norm]], norm = norm)
-	  snr <- SNR(t(toQC[[norm]]))
-	  snr$Barcode <- naturalsort::naturalfactor(snr$Barcode)
+    df$Barcode <- SimplifyHtoNames(as.character(df$Barcode))
+    df$Barcode <- naturalsort::naturalfactor(df$Barcode)
+  }
 
-	  P1 <- (ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) +
-	                geom_point(cex=0.25) + ggtitle(p1title) +
-	    egg::theme_presentation(base_size = 14)) + theme(legend.position = c(0.1, 0.65), legend.text=element_text(size=10)) +
-	    guides(colour = guide_legend(override.aes = list(size=3)))
+  maxPerPlot <- 3
+  totalPages <- GetTotalPlotPages(totalValues = length(unique(df$Barcode)), perPage = maxPerPlot)
+  for (i in 1:totalPages) {
+    print(ggplot2::ggplot(df, aes(x = NormCount, color = Barcode)) +
+      egg::theme_presentation(base_size = 14) +
+      geom_density(aes(y = sqrt(..density..)), size = 1) + 
+      labs(y = 'sqrt(Density)', x = 'Value') + ggtitle('Normalized Data') +
+      ggforce::facet_wrap_paginate(Barcode ~ forcats::fct_relevel(Normalization, "Raw"), scales = 'free', ncol = length(unique(df$Normalization)), nrow = min(3, length(unique(df$Barcode))), strip.position = 'top', drop = FALSE, labeller = labeller(.multi_line = FALSE), page = i)
+    )
+  }
 
-	  P2 <- ggplot(snr, aes(x=Highest, y=Second) ) +
-	    stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE) +
-	    scale_fill_distiller(palette=16, direction=-1) +
-	    scale_x_continuous(expand = c(0, 0)) +
-	    scale_y_continuous(expand = c(0, 0)) +
-	    egg::theme_presentation(base_size = 14) + ggtitle(p2title) + 
-	    theme(
-	      legend.position='none'
-	    )
+  for (norm in names(toQC)) {
+    if (norm == "Raw") {
+      p1title <- "Raw Counts"
+      p2title <- "Raw Count Density"
+      announcement <- paste0("Printing Raw Count QC Plots")
+    } else {
+      p1title <- paste0(norm, ' Normalized Counts')
+      p2title <- paste0(norm, ' Normalized Count Density')
+      announcement <- paste0("Printing ", norm, " Normalization QC Plots")
+    }
+    print(announcement)
+    .PlotViolin(t(toQC[[norm]]), norm = norm)
+    PerformHashingClustering(toQC[[norm]], norm = norm)
+    snr <- SNR(t(toQC[[norm]]))
+    snr$Barcode <- naturalsort::naturalfactor(snr$Barcode)
 
-	  P3 <- suppressWarnings(ggExtra::ggMarginal(P1, size=4, groupColour = TRUE))
-	  print(P2 | P3)
-	}
+    P1 <- (ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) +
+                  geom_point(cex=0.25) + ggtitle(p1title) +
+      egg::theme_presentation(base_size = 14)) + theme(legend.position = c(0.1, 0.65), legend.text=element_text(size=10)) +
+      guides(colour = guide_legend(override.aes = list(size=3)))
+
+    P2 <- ggplot(snr, aes(x=Highest, y=Second) ) +
+      stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE) +
+      scale_fill_distiller(palette=16, direction=-1) +
+      scale_x_continuous(expand = c(0, 0)) +
+      scale_y_continuous(expand = c(0, 0)) +
+      egg::theme_presentation(base_size = 14) + ggtitle(p2title) + 
+      theme(
+        legend.position='none'
+      )
+
+    P3 <- suppressWarnings(ggExtra::ggMarginal(P1, size=4, groupColour = TRUE))
+    print(P2 | P3)
+  }
 }
 
 PerformHashingClustering <- function(barcodeMatrix, norm) {
-	seuratObj <- CreateSeuratObject(barcodeMatrix, assay = norm)
+  seuratObj <- CreateSeuratObject(barcodeMatrix, assay = norm)
 
-	# Calculate tSNE embeddings with a distance matrix
-	success <- FALSE
-	tryCatch({
-		perplexity <- .InferPerplexityFromSeuratObj(seuratObj, 100)
-		print(paste0('Running tSNE with perplexity: ', perplexity, ' for normalization: ', norm))
-		seuratObj[['hto_tsne']] <- RunTSNE(stats::dist(Matrix::t(barcodeMatrix)), assay = norm, perplexity = perplexity)
+  # Calculate tSNE embeddings with a distance matrix
+  success <- FALSE
+  tryCatch({
+    perplexity <- .InferPerplexityFromSeuratObj(seuratObj, 100)
+    print(paste0('Running tSNE with perplexity: ', perplexity, ' for normalization: ', norm))
+    seuratObj[['hto_tsne']] <- RunTSNE(stats::dist(Matrix::t(barcodeMatrix)), assay = norm, perplexity = perplexity)
 
-		.PlotClusters(barcodeMatrix, seuratObj, norm)
-	}, error = function(e){
-		print('Error generating tSNE, skipping')
-		print(conditionMessage(e))
-		traceback()
-	})
+    .PlotClusters(barcodeMatrix, seuratObj, norm)
+  }, error = function(e){
+    print('Error generating tSNE, skipping')
+    print(conditionMessage(e))
+    traceback()
+  })
 }
 
 .PlotClusters <- function(barcodeMatrix, seuratObj, norm) {
-	# clara:
-	ncenters <- (nrow(x = barcodeMatrix) + 1)
-	init.clusters <- clara(
-		x = t(x = barcodeMatrix),
-		k = ncenters,
-		samples = 100
-	)
+  # clara:
+  ncenters <- (nrow(x = barcodeMatrix) + 1)
+  init.clusters <- clara(
+    x = t(x = barcodeMatrix),
+    k = ncenters,
+    samples = 100
+  )
 
-	if (sum(names(init.clusters$clustering) != colnames(seuratObj)) > 0) {
-		stop('Expected cluster names to match cells for clara!')
-	}
+  if (sum(names(init.clusters$clustering) != colnames(seuratObj)) > 0) {
+    stop('Expected cluster names to match cells for clara!')
+  }
 
-	seuratObj$cluster.clara <- naturalsort::naturalfactor(init.clusters$clustering)
-	P <- suppressWarnings(DimPlot(seuratObj, reduction = 'hto_tsne', group.by = 'cluster.clara', label = TRUE))
-	P <- P + ggtitle(paste0('Clusters: ', norm, ' (clara)'))
+  seuratObj$cluster.clara <- naturalsort::naturalfactor(init.clusters$clustering)
+  P <- suppressWarnings(DimPlot(seuratObj, reduction = 'hto_tsne', group.by = 'cluster.clara', label = TRUE))
+  P <- P + ggtitle(paste0('Clusters: ', norm, ' (clara)'))
 
-	Idents(seuratObj) <- 'cluster.clara'
-	P2 <- .CreateClusterTilePlot(seuratObj, assay = norm)
-	print(P | P2)
+  Idents(seuratObj) <- 'cluster.clara'
+  P2 <- .CreateClusterTilePlot(seuratObj, assay = norm)
+  print(P | P2)
 
-	# kmeans:
-	init.clusters <- stats::kmeans(
-		x = t(x = barcodeMatrix),
-		centers = ncenters,
-		nstart = 100,
-		iter.max = 30
-	)
+  # kmeans:
+  init.clusters <- suppressWarnings(stats::kmeans(
+    x = t(x = barcodeMatrix),
+    centers = ncenters,
+    nstart = 100,
+    iter.max = 50
+  ))
 
-	if (sum(names(init.clusters$cluster) != colnames(seuratObj)) > 0) {
-		stop('Expected cluster names to match cells for kmeans!')
-	}
+  if (sum(names(init.clusters$cluster) != colnames(seuratObj)) > 0) {
+    stop('Expected cluster names to match cells for kmeans!')
+  }
 
-	seuratObj$cluster.kmeans <- naturalsort::naturalfactor(init.clusters$cluster)
-	P <- suppressWarnings(DimPlot(seuratObj, group.by = 'cluster.kmeans', label = TRUE))
-	P <- P + ggtitle(paste0('Clusters: ', norm, ' (kmeans)'))
-	Idents(seuratObj) <- 'cluster.kmeans'
-	P2 <- .CreateClusterTilePlot(seuratObj, assay = norm)
-	print(P | P2)
+  seuratObj$cluster.kmeans <- naturalsort::naturalfactor(init.clusters$cluster)
+  P <- suppressWarnings(DimPlot(seuratObj, group.by = 'cluster.kmeans', label = TRUE))
+  P <- P + ggtitle(paste0('Clusters: ', norm, ' (kmeans)'))
+  Idents(seuratObj) <- 'cluster.kmeans'
+  P2 <- .CreateClusterTilePlot(seuratObj, assay = norm)
+  print(P | P2)
 }
 
 .CreateClusterTilePlot <- function(seuratObj, assay) {
-	average.expression <- AverageExpression(
-		object = seuratObj,
-		assays = c(assay),
-		verbose = FALSE,
-		return.seurat = TRUE
-	)
+  average.expression <- AverageExpression(
+    object = seuratObj,
+    assays = c(assay),
+    verbose = FALSE,
+    return.seurat = TRUE
+  )
 
-	df <- reshape2::melt(GetAssayData(average.expression, assay = assay))
-	names(df) <- c('Cluster', 'Barcode', 'AvgExpression')
-	df$Cluster <- naturalsort::naturalfactor(df$Cluster)
-	df$Barcode <- naturalsort::naturalfactor(df$Barcode)
-	df$AvgExpression <- round(df$AvgExpression, 1)
+  df <- reshape2::melt(GetAssayData(average.expression, assay = assay))
+  names(df) <- c('Cluster', 'Barcode', 'AvgExpression')
+  df$Cluster <- naturalsort::naturalfactor(df$Cluster)
+  df$Barcode <- naturalsort::naturalfactor(df$Barcode)
+  df$AvgExpression <- round(df$AvgExpression, 1)
 
-	P2 <- ggplot(df, aes(Cluster, Barcode)) +
-		geom_tile(aes(fill = AvgExpression), colour = "white") +
-		geom_text(aes(label=AvgExpression)) +
-		scale_fill_gradient2(low = "red", mid = "white", high = "green", midpoint = mean(df$AvgExpression)) +
-		scale_x_discrete(position = "top") +
-		labs(x = "Barcode",y = "Cluster") +
-		egg::theme_presentation(base_size = 12) +
-		theme(
-			legend.position = 'none'
-		)
+  P2 <- ggplot(df, aes(Cluster, Barcode)) +
+    geom_tile(aes(fill = AvgExpression), colour = "white") +
+    geom_text(aes(label=AvgExpression)) +
+    scale_fill_gradient2(low = "red", mid = "white", high = "green", midpoint = mean(df$AvgExpression)) +
+    scale_x_discrete(position = "top") +
+    labs(x = "Barcode",y = "Cluster") +
+    egg::theme_presentation(base_size = 12) +
+    theme(
+      legend.position = 'none'
+    )
 
-	return(P2)
+  return(P2)
 }
 
 .PlotViolin <- function(df, norm) {
@@ -304,15 +313,15 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
   }
 
   df <- data.frame(df, check.names=FALSE)
-	df$cell <- rownames(df)
+  df$cell <- rownames(df)
   df <- df %>% tidyr::pivot_longer(colnames(df)[1:length(colnames(df)) - 1], names_to = "Barcode", values_to = "count")
-	df$Barcode <- naturalsort::naturalfactor(df$Barcode)
+  df$Barcode <- naturalsort::naturalfactor(df$Barcode)
   P1 <- df %>%
     ggplot(aes( y=count, x=Barcode)) + 
     geom_violin(position="dodge", alpha=0.5) +
     xlab("") +
     ylab(label) +
-		ggplot2::ggtitle(maintitle) +
+    ggplot2::ggtitle(maintitle) +
     egg::theme_presentation(base_size = 14) +
     theme(axis.text.x = element_text(angle = 90))
   print(P1)
