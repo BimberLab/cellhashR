@@ -242,6 +242,19 @@ PrintColumnQc <- function(barcodeMatrix) {
 		}
 	}
 
+	# Counts/cell:
+	df2 <- df
+	df2$Count <- log10(df2$Count + 1)
+	P1 <- ggplot(df2, aes(y = Count, x = Barcode)) +
+		geom_violin(position="dodge", alpha=0.5) +
+		xlab("") +
+		ylab("Log Raw Counts") +
+		ggplot2::ggtitle("Raw HTO Counts/Cell") +
+		egg::theme_presentation(base_size = 14) +
+		theme(axis.text.x = element_text(angle = 90))
+
+	print(P1)
+
 	#normalize columns, print top barcode fraction. note, cells with all zeros will make NAs
 	normalizedBarcodes <- sweep(barcodeMatrix, 2, colSums(barcodeMatrix),`/`)
 	normalizedBarcodes[is.na(normalizedBarcodes)] <- 0
@@ -260,6 +273,22 @@ PrintColumnQc <- function(barcodeMatrix) {
 	P3 <- P3 + plot_annotation(caption = paste0('Total cells where top barcode is >0.75 of counts: ', sum(topValue > 0.75), ' of ', length(topValue))) & theme(plot.caption = element_text(size = 14))
 
 	print(P3)
+
+	# Top/Second:
+	snr <- SNR(t(barcodeMatrix))
+	snr$Barcode <- naturalsort::naturalfactor(snr$Barcode)
+	snr$Highest <- log10(snr$Highest + 1)
+	snr$Second <- log10(snr$Second + 1)
+	P1 <- ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) +
+		geom_point(cex = 0.5, alpha = 0.5) +
+		ggtitle("Ratio of Top Two Barcodes") +
+		egg::theme_presentation(base_size = 10) +
+		xlab('Highest (log10p)') +
+		ylab('Second (log10p)') +
+		ylim(0, NA) +
+		xlim(0, NA)
+
+	print(P1)
 
 	#MA-plot
 	if (nrow(barcodeMatrix) == 2){

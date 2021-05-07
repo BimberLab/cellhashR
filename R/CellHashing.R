@@ -484,11 +484,12 @@ GetExampleMarkdown <- function(dest) {
 #' @param citeSeqCountDir This is the root folder of the Cite-seq-Count output, containing umi_count and read_count folders. If provided, this will be used to generate a library saturation plot
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
 #' @param metricsFile If provided, summary metrics will be written to this file.
+#' @param rawCountsExport If provided, the raw count matrix, after processing, will be written as an RDS object to this file. This can be useful for debugging.
 #' @param skipNormalizationQc If true, the normalization/QC plots will be skipped. These can be time consuming on large input data.
 #' @param title A title for the HTML report
 #' @importFrom rmdformats html_clean
 #' @export
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), citeSeqCountDir = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, skipNormalizationQc = FALSE) {
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), citeSeqCountDir = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE) {
   rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
   if (!file.exists(rmd)) {
     stop(paste0('Unable to find file: ', rmd))
@@ -510,6 +511,10 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhi
   callFile <- normalizePath(callFile, mustWork = F)
   if (!is.null(metricsFile)) {
     metricsFile <- normalizePath(metricsFile, mustWork = F)
+  }
+
+  if (!is.null(rawCountsExport)) {
+    rawCountsExport <- normalizePath(rawCountsExport, mustWork = F)
   }
 
   # Use suppressWarnings() to avoid 'MathJax doesn't work with self_contained' warning:
