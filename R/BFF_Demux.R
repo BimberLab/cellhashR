@@ -119,9 +119,9 @@ PlotCutoff <- function(data, smooth, label) {
         print(paste0('Negative peak was not at least 1/10th the positive peak, using max value as cutoff: ', label))
         cutoff <- max(data)
         return(list(
-					cutoff = cutoff,
-					plotdata = plotdata,
-					linedata = linedata
+          cutoff = cutoff,
+          plotdata = plotdata,
+          linedata = linedata
         ))
       }
       cutoff_indices <- index2:index1
@@ -141,18 +141,23 @@ PlotCutoff <- function(data, smooth, label) {
   }
 
   return(list(
-  	cutoff = cutoff,
-  	plotdata = plotdata,
-  	linedata = linedata
+    cutoff = cutoff,
+    plotdata = plotdata,
+    linedata = linedata
   ))
 }
 
-getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL) {
+getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL, random.seed = GetSeed()) {
+  if (!is.null(random.seed)) {
+    set.seed(random.seed)
+  }
+
   # Function to find the threshold between positive and negative peaks of a barcode's distribution
   num_peaks <- 10000
   change <- 10
   j <- 1
   max2_list <- numeric(10)
+
   # adding a small amount of noise (0-1) to count data removes distortions from the log-scale count histogram
   data <- log10(as.vector(data+1) + matrix(stats::runif(dim(data)[[1]]*dim(data)[[2]]), nrow=dim(data)[[1]]))
   data <- data[data > 0]
@@ -205,11 +210,11 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
   }
 
   return(list(
-		cutoff = cutoff,
-		barcodeBlocklist = barcodeBlocklist,
-  	x_vals = x_vals,
-  	plotdata = plotdata,
-  	linedata = linedata
+    cutoff = cutoff,
+    barcodeBlocklist = barcodeBlocklist,
+    x_vals = x_vals,
+    plotdata = plotdata,
+    linedata = linedata
   ))
 }
 
