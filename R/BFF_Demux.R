@@ -274,7 +274,7 @@ generateBFFGridPlot <- function(barcodeMatrix, xlab, maintitle, universal_cutoff
   plotdata$Barcode <- naturalsort::naturalfactor(plotdata$Barcode)
   linedata$Barcode <- naturalsort::naturalfactor(linedata$Barcode)
   cutoffs$Barcode <- naturalsort::naturalfactor(cutoffs$Barcode)
-  
+
   cutoffsout <- unique(cutoffs[, c("cutoff", "Barcode")])
 
   cutoffslist <- list()
@@ -286,9 +286,12 @@ generateBFFGridPlot <- function(barcodeMatrix, xlab, maintitle, universal_cutoff
   maxPerPlot <- 12
   totalPages <- GetTotalPlotPages(totalValues = length(unique(plotdata$Barcode)), perPage = maxPerPlot)
   for (i in 1:totalPages) {
-    print(ggplot2::ggplot(plotdata, aes(x = Value)) + geom_line(data = linedata, mapping = aes(x = x, y = y), color = "blue", size = 1) +
-            egg::theme_presentation(base_size = 12) + geom_line(data=cutoffs, aes(x=cutoff, y = y), size = 1) + 
-            geom_histogram(aes(y = sqrt(..density..)), size = 1, bins = nbins) + scale_x_continuous(breaks = function(x) unique(floor(pretty(seq(0, (max(x) + 1) * 1.1))))) + 
+    print(ggplot2::ggplot(plotdata, aes(x = Value)) +
+            geom_line(data = linedata, mapping = aes(x = x, y = y), color = "blue", size = 1) +
+            egg::theme_presentation(base_size = 12) +
+            geom_line(data=cutoffs, aes(x=cutoff, y = y), size = 1, color = "red") +
+            geom_histogram(aes(y = sqrt(..density..)), size = 1, bins = nbins) +
+            scale_x_continuous(breaks = function(x) unique(floor(pretty(seq(0, (max(x) + 1) * 1.1))))) +
             labs(y = 'sqrt(Density)', x = xlab) + ggtitle(maintitle)  +
             ggforce::facet_wrap_paginate(~Barcode, scales = 'free', strip.position = 'top', nrow = min(3, length(unique(plotdata$Barcode))), labeller = labeller(.multi_line = FALSE), page = i)
     )
@@ -359,15 +362,14 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     cutoffs[[bar]] <- 10^cutofflist[[bar]]
   }
   
-  discrete <- thresholdres[['discrete']]
-  x_vals <- thresholdres[['x_vals']]
-
-  
   print("Thresholds:")
   for (cutoff in names(cutoffs)) {
     print(paste0(cutoff, ': ', cutoffs[[cutoff]]))
   }
-
+  
+  discrete <- thresholdres[['discrete']]
+  x_vals <- thresholdres[['x_vals']]
+  
   if (simple_threshold == TRUE) {
     seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_threshold', assay = assay)
     return(seuratObj)
@@ -401,23 +403,34 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
 
     x_vals <- normedplotres[['x_vals']]
     normed_cutoffs <- normedplotres[['cutoffslist']]
+
     max_list <- x_vals
     norm_cutoff <- mean(unlist(normed_cutoffs))
 
     invisible(generateBFFGridPlot(t(tot_normed), "Log(Counts + 1)", "Normalized Count Distributions with Final Threshold", universal_cutoff = norm_cutoff))
-    
+
     maxima <- colMeans(max_list)
     neg_mode <- maxima[1]
     pos_mode <- maxima[2]
 
     snr <- SNR(lognormedcounts)
     called <- c()
-    
+
     highest_dist <- stats::density(snr$Highest, adjust = 1, kernel = 'gaussian',
                                    bw = 'SJ', give.Rkern = FALSE)
     second_dist <- stats::density(snr$Second, adjust = 1, kernel = 'gaussian',
                                   bw = 'SJ', give.Rkern = FALSE)
-    neg_cutoff <- highest_dist$x[[min(which((abs(highest_dist$y - doublet_thresh*max(highest_dist$y))) < 0.01))]]
+
+    vals <- which((abs(highest_dist$y - doublet_thresh*max(highest_dist$y))) < 0.01)
+
+    if (length(vals) == 0) {
+      print('Cannot find negative threshold.  Exiting BFF')
+      return(NULL)
+    }
+
+    val <- min(vals)
+
+    neg_cutoff <- highest_dist$x[[val]]
     doublet_cutoff <- second_dist$x[[max(which((abs(second_dist$y - neg_thresh*max(second_dist$y))) < 0.01))]]
 
     classification <- c()
