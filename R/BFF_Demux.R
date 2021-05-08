@@ -365,12 +365,6 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
   discrete <- thresholdres[['discrete']]
   x_vals <- thresholdres[['x_vals']]
 
-  
-  print("Thresholds:")
-  for (cutoff in names(cutoffs)) {
-    print(paste0(cutoff, ': ', cutoffs[[cutoff]]))
-  }
-
   if (simple_threshold == TRUE) {
     seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_threshold', assay = assay)
     return(seuratObj)
@@ -404,10 +398,6 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
 
     x_vals <- normedplotres[['x_vals']]
     normed_cutoffs <- normedplotres[['cutoffslist']]
-    print("Normalized Thresholds:")
-    for (cutoff in names(normed_cutoffs)) {
-      print(paste0(cutoff, ': ', normed_cutoffs[[cutoff]]))
-    }
 
     max_list <- x_vals
     norm_cutoff <- mean(unlist(normed_cutoffs))
@@ -426,18 +416,14 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     second_dist <- stats::density(snr$Second, adjust = 1, kernel = 'gaussian',
                                   bw = 'SJ', give.Rkern = FALSE)
 
-    print(1)
-    #Consider: save.image()
     vals <- which((abs(highest_dist$y - doublet_thresh*max(highest_dist$y))) < 0.01)
 
-    ## TODO: fix/remove this:
-    print(vals)
     if (length(vals) == 0) {
-      stop('No values returned')
+      print('Cannot find negative threshold.  Exiting BFF')
+      return(NULL)
     }
 
     val <- min(vals)
-    print(val)
 
     neg_cutoff <- highest_dist$x[[val]]
     doublet_cutoff <- second_dist$x[[max(which((abs(second_dist$y - neg_thresh*max(second_dist$y))) < 0.01))]]
