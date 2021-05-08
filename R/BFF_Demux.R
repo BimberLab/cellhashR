@@ -362,9 +362,14 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     cutoffs[[bar]] <- 10^cutofflist[[bar]]
   }
   
+  print("Thresholds:")
+  for (cutoff in names(cutoffs)) {
+    print(paste0(cutoff, ': ', cutoffs[[cutoff]]))
+  }
+  
   discrete <- thresholdres[['discrete']]
   x_vals <- thresholdres[['x_vals']]
-
+  
   if (simple_threshold == TRUE) {
     seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_threshold', assay = assay)
     return(seuratObj)
