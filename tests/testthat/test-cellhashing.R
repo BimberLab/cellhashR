@@ -80,7 +80,7 @@ test_that("Workflow works", {
 	unlink(output)
 	unlink(subsetCountDir, recursive = TRUE)
 	unlink(metricsFile)
-	unlnk(md)
+	unlink(md)
 	unlink(paste0(getwd(), '/test_files'), recursive = TRUE)
 })
 
