@@ -141,7 +141,8 @@
   title <span class='op'>=</span> <span class='cn'>NULL</span>,
   metricsFile <span class='op'>=</span> <span class='cn'>NULL</span>,
   rawCountsExport <span class='op'>=</span> <span class='cn'>NULL</span>,
-  skipNormalizationQc <span class='op'>=</span> <span class='cn'>FALSE</span>
+  skipNormalizationQc <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  keepMarkdown <span class='op'>=</span> <span class='cn'>FALSE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -194,6 +195,10 @@
     <tr>
       <th>skipNormalizationQc</th>
       <td><p>If true, the normalization/QC plots will be skipped. These can be time consuming on large input data.</p></td>
+    </tr>
+    <tr>
+      <th>keepMarkdown</th>
+      <td><p>If true, the markdown file will be saved, in addition to the HTML file</p></td>
     </tr>
     </table>
 
