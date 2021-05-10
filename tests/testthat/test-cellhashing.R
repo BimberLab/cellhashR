@@ -81,6 +81,7 @@ test_that("Workflow works", {
 	unlink(subsetCountDir, recursive = TRUE)
 	unlink(metricsFile)
 	unlnk(md)
+	unlink(paste0(getwd(), '/test_files'), recursive = TRUE)
 })
 
 test_that("Saturation plot works", {
