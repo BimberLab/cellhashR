@@ -16,7 +16,8 @@ CallAndGenerateReport(
   title = NULL,
   metricsFile = NULL,
   rawCountsExport = NULL,
-  skipNormalizationQc = FALSE
+  skipNormalizationQc = FALSE,
+  keepMarkdown = FALSE
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ CallAndGenerateReport(
 \item{rawCountsExport}{If provided, the raw count matrix, after processing, will be written as an RDS object to this file. This can be useful for debugging.}
 
 \item{skipNormalizationQc}{If true, the normalization/QC plots will be skipped. These can be time consuming on large input data.}
+
+\item{keepMarkdown}{If true, the markdown file will be saved, in addition to the HTML file}
 }
 \description{
 Runs the default processing pipeline

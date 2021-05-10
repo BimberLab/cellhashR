@@ -35,7 +35,8 @@ test_that("Workflow works", {
 	output <- paste0(getwd(), '/test.txt')
 	metricsFile <- paste0(getwd(), '/metrics.txt')
 	rawCountsExport <- paste0(getwd(), '/rawCountsFile.rds')
-
+	md  <- paste0(getwd(), '/test.md')
+	
 	test <- tests[['438-21']]
 	
 	#Subset rows to run quicker:
@@ -59,6 +60,7 @@ test_that("Workflow works", {
 	rawCountsMat <- readRDS(file = rawCountsExport)
 	expect_equal(nrow(rawCountsMat), 2)
 	expect_equal(ncol(rawCountsMat), 2500)
+	expect_false(file.exists(md))
 
 	unlink(html)
 	unlink(output)
@@ -66,8 +68,10 @@ test_that("Workflow works", {
 	unlink(rawCountsExport)
 
 	# Repeat with skip normalization
-	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile, skipNormalizationQc = TRUE)
+	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile, skipNormalizationQc = TRUE, keepMarkdown = TRUE)
 
+	expect_true(file.exists(md))
+	
 	df <- read.table(output, sep = '\t', header = TRUE)
 	expect_equal(nrow(df), 2500)
 	expect_equal(sum(df$consensuscall == 'MS-12'), 1124)
@@ -76,6 +80,7 @@ test_that("Workflow works", {
 	unlink(output)
 	unlink(subsetCountDir, recursive = TRUE)
 	unlink(metricsFile)
+	unlnk(md)
 })
 
 test_that("Saturation plot works", {
