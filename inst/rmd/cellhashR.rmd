@@ -8,6 +8,7 @@ output:
   rmdformats::html_clean:
     highlight: kate
     self_contained: yes
+    keep_md: false
     thumbnails: yes
     fig_width: 12
     code_folding: hide
@@ -133,6 +134,18 @@ if (!is.null(df)) {
   SummarizeCellsByClassification(calls = df, barcodeMatrix = barcodeData)
 } else {
   print('Something went wrong scoring cells')
+}
+
+```
+
+# Metrics
+
+```{r Metrics}
+
+if (!is.null(metricsFile)) {
+  metrics <- read.table(metricsFile, sep = '\t')
+  names(metrics) <- c('Category', 'Metric', 'Value')
+  knitr::kable(metrics[c('Metric', 'Value')])
 }
 
 ```

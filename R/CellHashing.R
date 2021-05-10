@@ -115,7 +115,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @title Generate Cell Hashing Calls
 #'
 #' @param barcodeMatrix The filtered matrix of hashing count data
-#' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux and multiseq
+#' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux, multiseq, dropletutils, bff_threshold, and bff_quantile
 #' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
 #' @param metricsFile If provided, summary metrics will be written to this file.
 #' @param \dots Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).
@@ -486,10 +486,11 @@ GetExampleMarkdown <- function(dest) {
 #' @param metricsFile If provided, summary metrics will be written to this file.
 #' @param rawCountsExport If provided, the raw count matrix, after processing, will be written as an RDS object to this file. This can be useful for debugging.
 #' @param skipNormalizationQc If true, the normalization/QC plots will be skipped. These can be time consuming on large input data.
+#' @param keepMarkdown If true, the markdown file will be saved, in addition to the HTML file
 #' @param title A title for the HTML report
 #' @importFrom rmdformats html_clean
 #' @export
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), citeSeqCountDir = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE) {
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), citeSeqCountDir = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE) {
   rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
   if (!file.exists(rmd)) {
     stop(paste0('Unable to find file: ', rmd))
@@ -501,6 +502,9 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhi
   }
 
   paramList[['skipNormalizationQc']] <- skipNormalizationQc
+
+  outputOptions <- list()
+  outputOptions[['keep_md']] <- keepMarkdown
 
   rawCountData <- normalizePath(rawCountData)
   if (!is.null(citeSeqCountDir)) {
@@ -517,8 +521,10 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhi
     rawCountsExport <- normalizePath(rawCountsExport, mustWork = F)
   }
 
+  id <- ifelse(keepMarkdown, yes = dirname(reportFile), no = tempdir())
+
   # Use suppressWarnings() to avoid 'MathJax doesn't work with self_contained' warning:
-  suppressWarnings(rmarkdown::render(output_file = reportFile, input = rmd, params = paramList, intermediates_dir  = tempdir()))
+  suppressWarnings(rmarkdown::render(output_file = reportFile, input = rmd, params = paramList, intermediates_dir  = id, output_options = outputOptions))
 
   return(reportFile)
 }
