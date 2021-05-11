@@ -145,7 +145,7 @@ if (!is.null(df)) {
 if (!is.null(metricsFile)) {
   metrics <- read.table(metricsFile, sep = '\t')
   names(metrics) <- c('Category', 'Metric', 'Value')
-  knitr::kable(metrics[c('Metric', 'Value')])
+  knitr::kable(metrics[c('Metric', 'Value')], format.args = list(big.mark = ",", scientific = FALSE))
 }
 
 ```
