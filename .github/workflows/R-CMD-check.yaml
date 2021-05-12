@@ -36,6 +36,12 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v1
 
+      - name: Install packages
+        if: runner.os != 'Windows'
+        # libharfbuzz-dev libfribidi-dev are added to fix textshaping install error
+        run: |
+          sudo apt-get update && sudo apt-get install -yq libharfbuzz-dev libfribidi-dev
+
       - name: Query dependencies
         run: |
           print(R.version)
@@ -66,7 +72,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get install -yq libharfbuzz-dev libfribidi-dev
           remotes::install_deps(dependencies = TRUE, upgrade = "always")
           install.packages("pkgdown")
           remotes::install_cran("rcmdcheck")
