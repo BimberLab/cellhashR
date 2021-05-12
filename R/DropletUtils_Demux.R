@@ -9,14 +9,14 @@ utils::globalVariables(
 )
 
 
-GenerateCellHashCallsDropletUtils <- function(barcodeMatrix, verbose = TRUE, assay = 'HTO', methodName = 'dropletutils', label = 'DropletUtils hashedDrops', runEmptyDrops = FALSE) {
+GenerateCellHashCallsDropletUtils <- function(barcodeMatrix, verbose = TRUE, assay = 'HTO', methodName = 'dropletutils', label = 'DropletUtils hashedDrops', runEmptyDrops = FALSE, metricsFile = NULL) {
 	if (verbose) {
 		print(paste0('Starting ', label))
 	}
 
 	tryCatch({
 		seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
-		seuratObj <- ThresholdHashedDrops(seuratObj = seuratObj, assay = assay, columnSuffix = 'dropletutils', runEmptyDrops = runEmptyDrops)
+		seuratObj <- ThresholdHashedDrops(seuratObj = seuratObj, assay = assay, columnSuffix = 'dropletutils', runEmptyDrops = runEmptyDrops, metricsFile = metricsFile)
 
 		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'dropletutils', assay = assay, doTSNE = FALSE, doHeatmap = FALSE)
 
@@ -31,7 +31,7 @@ GenerateCellHashCallsDropletUtils <- function(barcodeMatrix, verbose = TRUE, ass
 	})
 }
 
-ThresholdHashedDrops <- function(seuratObj, assay, columnSuffix, runEmptyDrops = FALSE, seed = 1234) {
+ThresholdHashedDrops <- function(seuratObj, assay, columnSuffix, runEmptyDrops = FALSE, seed = 1234, metricsFile = NULL) {
 	barcodeMatrix <- Seurat::GetAssayData(
 		object = seuratObj,
 		assay = assay,
@@ -40,6 +40,8 @@ ThresholdHashedDrops <- function(seuratObj, assay, columnSuffix, runEmptyDrops =
 
 	set.seed(seed)
 
+	ambience <- NULL
+	hash.stats <- NULL
 	if (runEmptyDrops) {
 		hash.calls <- DropletUtils::emptyDrops(barcodeMatrix, by.rank=min(ncol(barcodeMatrix), 40000))
 		is.cell <- which(hash.calls$FDR <= 0.001)
@@ -60,14 +62,17 @@ ThresholdHashedDrops <- function(seuratObj, assay, columnSuffix, runEmptyDrops =
 
 		print(P1 | P2)
 
-		hash.stats <- DropletUtils::hashedDrops(barcodeMatrix[,is.cell], ambient=S4Vectors::metadata(hash.calls)$ambient)
+		ambience <- S4Vectors::metadata(hash.calls)$ambient
+		hash.stats <- DropletUtils::hashedDrops(barcodeMatrix[,is.cell], ambient = ambience)
 	} else {
-
 		ambience <- DropletUtils::inferAmbience(barcodeMatrix)
-		print('Inferred Ambience:')
-		print(ambience)
-
 		hash.stats <- DropletUtils::hashedDrops(barcodeMatrix, ambient = ambience)
+	}
+
+	print('Inferred Ambience:')
+	for (hto in names(ambience)) {
+		print(paste0(hto, ': ', ambience[[hto]]))
+		.LogMetric(metricsFile, paste0('ambience.dropletutils.', hto), ambience[[hto]])
 	}
 
 	df <- data.frame(LogFC = hash.stats$LogFC, LogFC2 = hash.stats$LogFC2)
@@ -111,6 +116,7 @@ ThresholdHashedDrops <- function(seuratObj, assay, columnSuffix, runEmptyDrops =
 	}
 
 	seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = columnSuffix, assay = assay)
+	seuratObj@misc[['cutoffs']] <- ambience
 
 	return(seuratObj)
 }

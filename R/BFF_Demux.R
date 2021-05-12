@@ -305,7 +305,7 @@ generateBFFGridPlot <- function(barcodeMatrix, xlab, maintitle, universal_cutoff
   ))
 }
 
-GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_reads = 10, verbose = TRUE, simple_threshold = FALSE, doublet_thresh = 0.05, neg_thresh = 0.05, dist_frac = 0.1){
+GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_reads = 10, verbose = TRUE, simple_threshold = FALSE, doublet_thresh = 0.05, neg_thresh = 0.05, dist_frac = 0.1, metricsFile = NULL){
   if (verbose) {
     print('Starting BFF')
   }
@@ -324,7 +324,7 @@ GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_r
 
   tryCatch({
     seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
-    seuratObj <- BFFDemux(seuratObj = seuratObj, assay = assay, simple_threshold = simple_threshold, doublet_thresh = doublet_thresh, neg_thresh = neg_thresh, dist_frac=dist_frac)
+    seuratObj <- BFFDemux(seuratObj = seuratObj, assay = assay, simple_threshold = simple_threshold, doublet_thresh = doublet_thresh, neg_thresh = neg_thresh, dist_frac=dist_frac, metricsFile = metricsFile)
     if (as.logical(simple_threshold) == TRUE) {
       SummarizeHashingCalls(seuratObj, label = "bff_threshold", columnSuffix = "bff_threshold", assay = assay, doHeatmap = TRUE)
       df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = "bff_threshold", classification = seuratObj$classification.bff_threshold, classification.global = seuratObj$classification.global.bff_threshold, stringsAsFactors = FALSE)
@@ -342,7 +342,7 @@ GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_r
   })
 }
 
-BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, doublet_thresh=doublet_thresh, neg_thresh=neg_thresh, dist_frac=dist_frac) {
+BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, doublet_thresh=doublet_thresh, neg_thresh=neg_thresh, dist_frac=dist_frac, metricsFile = NULL) {
   barcodeMatrix <- GetAssayData(
     object = seuratObj,
     assay = assay,
@@ -363,8 +363,9 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
   }
   
   print("Thresholds:")
-  for (cutoff in names(cutoffs)) {
-    print(paste0(cutoff, ': ', cutoffs[[cutoff]]))
+  for (hto in names(cutoffs)) {
+    print(paste0(hto, ': ', cutoffs[[hto]]))
+    .LogMetric(metricsFile, paste0('cutoff.bff.', hto), cutoffs[[hto]])
   }
   
   discrete <- thresholdres[['discrete']]
@@ -474,6 +475,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     grid::grid.draw(P2)
 
     seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_quantile', assay = assay)
+    seuratObj@misc[['cutoffs']] <- cutoffs
     return(seuratObj)
   }
 }
