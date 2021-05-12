@@ -132,50 +132,50 @@ HTODemux <- function(
 
 		if (sum(average.expression[hto, backgroundIndices]) == 0) {
 			stop('The background clusters have zero reads, cannot call')
-		} else {
-			values.use <- values[WhichCells(
-				object = object,
-				idents = levels(x = Idents(object = object))[backgroundIndices]
-			)]
-
-			if (verbose) {
-				print(paste0('total cells for background: ', length(values.use)))
-			}
-
-			cutoff <- NULL
-			tryCatch(expr = {
-				fit <- suppressWarnings(fitdist(data = values.use, distr = "nbinom"))
-				if (plotDist) {
-					print(plot(fit))
-				}
-
-				cutoff <- as.numeric(x = quantile(x = fit, probs = positive.quantile)$quantiles[1])
-			}, error = function(e) {
-				saveRDS(values.use, file = paste0('./', hto, '.fail.nbinom.rds'))
-			})
-
-			if (is.null(cutoff)) {
-				print(paste0('Skipping HTO due to failure to fit distribution: ', hto))
-				next
-			}
 		}
+
+		cutoff <- NULL
+		values.use <- values[WhichCells(
+			object = object,
+			idents = levels(x = Idents(object = object))[backgroundIndices]
+		)]
+
+		if (verbose) {
+			print(paste0('total cells for background: ', length(values.use)))
+		}
+
+		tryCatch(expr = {
+			fit <- suppressWarnings(fitdist(data = values.use, distr = "nbinom"))
+			if (plotDist) {
+				print(plot(fit))
+			}
+
+			cutoff <- as.numeric(x = quantile(x = fit, probs = positive.quantile)$quantiles[1])
+		}, error = function(e) {
+			saveRDS(values.use, file = paste0('./', hto, '.fail.nbinom.rds'))
+		})
+
+		if (is.null(cutoff)) {
+			print(paste0('Skipping HTO due to failure to fit distribution: ', hto))
+			next
+		}
+
+		thresholds[[hto]] <- cutoff
 
 		if (verbose) {
 			print(paste0("Cutoff for ", hto, " : ", cutoff, " reads"))
 		}
 		discrete[hto, names(x = which(x = values > cutoff))] <- 1
-
-		.LogMetric(metricsFile, paste0('cutoff.htodemux.', hto), cutoff)
-
-		if (verbose) {
-			#P1 <- VlnPlot(average.expression, features = c(hto))
-			#P1 <- P1 + geom_hline(intercept = cutoff) + ggtitle(paste0('HTODemux Cutoff: ', hto))
-			#print(P1)
-		}
 	}
 
 	# now assign cells to HTO based on discretized values
 	object <- .AssignCallsToMatrix(object, discrete, suffix = 'htodemux', assay = assay)
+
+	print("Thresholds:")
+	for (hto in names(thresholds)) {
+		print(paste0(hto, ': ', thresholds[[hto]]))
+		.LogMetric(metricsFile, paste0('cutoff.htodemux.', hto), thresholds[[hto]])
+	}
 
 	return(object)
 }

@@ -8,7 +8,7 @@ utils::globalVariables(
 	add = TRUE
 )
 
-GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO', autoThresh = TRUE, quantile = NULL, maxiter = 20, qrange = seq(from = 0.2, to = 0.95, by = 0.05), doRelNorm = FALSE, methodName = 'multiseq', label = 'Multiseq deMULTIplex', verbose = TRUE) {
+GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO', autoThresh = TRUE, quantile = NULL, maxiter = 20, qrange = seq(from = 0.2, to = 0.95, by = 0.05), doRelNorm = FALSE, methodName = 'multiseq', label = 'Multiseq deMULTIplex', verbose = TRUE, metricsFile = NULL) {
 	if (verbose) {
 		print(paste0('Starting ', label))
 	}
@@ -22,7 +22,7 @@ GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO', autoThre
 			seuratObj[[assay]]@data <- NormalizeLog2(barcodeMatrix)
 		}
 
-		seuratObj <- MULTIseqDemux(seuratObj, assay = assay, quantile = quantile, verbose = verbose, autoThresh = autoThresh, maxiter = maxiter, qrange = qrange)
+		seuratObj <- MULTIseqDemux(seuratObj, assay = assay, quantile = quantile, verbose = verbose, autoThresh = autoThresh, maxiter = maxiter, qrange = qrange, metricsFile = metricsFile)
 
 		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'multiseq', assay = assay)
 
@@ -45,7 +45,8 @@ MULTIseqDemux <- function(
 	autoThresh = FALSE,
 	maxiter = 5,
 	qrange = seq(from = 0.1, to = 0.9, by = 0.05),
-	verbose = TRUE
+	verbose = TRUE,
+	metricsFile = NULL
 ) {
 	if (is.na(assay) || is.null(assay)) {
 		assay <- DefaultAssay(object = object)
@@ -56,6 +57,7 @@ MULTIseqDemux <- function(
 		assay = assay
 	))
 
+	thresholds <- list()
 	if (autoThresh) {
 		iter <- 1
 		negatives <- c()
@@ -67,7 +69,8 @@ MULTIseqDemux <- function(
 			for (q in qrange) {
 				n <- n + 1
 				# Generate list of singlet/doublet/negative classifications across q sweep
-				bar.table_sweep.list[[n]] <- ClassifyCells(data = multi_data_norm, q = q)
+				cr <- ClassifyCells(data = multi_data_norm, q = q)
+				bar.table_sweep.list[[n]] <- cr[['calls']]
 				names(x = bar.table_sweep.list)[n] <- paste0("q=" , q)
 			}
 
@@ -77,7 +80,9 @@ MULTIseqDemux <- function(
 			res.use <- res_round[res_round$Subset == "pSinglet", ]
 			q.use <- res.use[which.max(res.use$Proportion),"q"]
 
-			round.calls <- ClassifyCells(data = multi_data_norm, q = q.use)
+			cr <- ClassifyCells(data = multi_data_norm, q = q.use)
+			round.calls <- cr[['calls']]
+			thresholds <- cr[['thresholds']]
 			#remove negative cells
 			neg.cells <- names(x = round.calls)[which(x = round.calls == "Negative")]
 			called.cells <- sum(round.calls != "Negative")
@@ -106,27 +111,15 @@ MULTIseqDemux <- function(
 		demux_result <- c(round.calls,neg.vector)
 		demux_result <- demux_result[rownames(x = object[[]])]
 	} else{
-		demux_result <- ClassifyCells(data = multi_data_norm, q = quantile)
+		cr <- ClassifyCells(data = multi_data_norm, q = quantile)
+		demux_result <- cr[['calls']]
+		thresholds <- cr[['thresholds']]
 	}
 
 	demux_result <- demux_result[rownames(x = object[[]])]
 	object[['classification.multiseq']] <- factor(x = demux_result)
 	Idents(object = object) <- "classification.multiseq"
-	bcs <- colnames(x = multi_data_norm)
-	bc.max <- bcs[apply(X = multi_data_norm, MARGIN = 1, FUN = which.max)]
-	bc.second <- bcs[unlist(x = apply(
-	X = multi_data_norm,
-	MARGIN = 1,
-	FUN = function(x) {
-		return(which(x == MaxN(x)))
-	}
-	))]
-	doublet.names <- unlist(x = lapply(
-	X = 1:length(x = bc.max),
-	FUN = function(x) {
-		return(paste(sort(x = c(bc.max[x], bc.second[x])), collapse =  "_"))
-	}
-	))
+
 	doublet.id <- which(x = demux_result == 'Doublet')
 	classification.multiseq <- as.character(object$classification.multiseq)
 	classification.multiseq[doublet.id] <- 'Doublet'
@@ -135,6 +128,15 @@ MULTIseqDemux <- function(
 	object$classification.global.multiseq <- as.character(object$classification.multiseq)
 	object$classification.global.multiseq[!(object$classification.multiseq %in% c('Negative', 'Doublet'))] <- 'Singlet'
 	object$classification.global.multiseq <- naturalsort::naturalfactor(object$classification.global.multiseq)
+
+	if (!is.null(thresholds)) {
+		print("Thresholds:")
+		for (hto in names(thresholds)) {
+			print(paste0(hto, ': ', thresholds[[hto]]))
+			.LogMetric(metricsFile, paste0('cutoff.multiseq.', hto), thresholds[[hto]])
+		}
+	}
+	object@misc[['cutoffs']] <- thresholds
 
 	return(object)
 }
@@ -182,10 +184,11 @@ ClassifyCells <- function(data, q) {
 	n_cells <- nrow(x = data)
 	if (n_cells == 0) {
 		print('No cells passed to ClassifyCells')
-		return(character(length = n_cells))
+		return(list(calls = character(length = n_cells), thresholds = NULL))
 	}
 	bc_calls <- vector(mode = "list", length = n_cells)
 	n_bc_calls <- numeric(length = n_cells)
+	thresholds <- list()
 	for (i in 1:ncol(x = data)) {
 		model <- NULL
 		tryCatch(expr = {
@@ -219,6 +222,7 @@ ClassifyCells <- function(data, q) {
 		low.extremae <- extrema[which(x = x[extrema] <= thresh)]
 		new.low.extremum <- low.extremae[which.max(x = model(x)[low.extremae])]
 		thresh <- quantile(x = c(x[high.extremum], x[new.low.extremum]), probs = q)
+		thresholds[colnames(x = data)[i]] <- thresh
 
 		## Find which cells are above the ith threshold
 		cell_i <- which(x = data[, i] >= thresh)
@@ -246,7 +250,7 @@ ClassifyCells <- function(data, q) {
 		if (n_bc_calls[i] == 1) { calls[i] <- bc_calls[[i]] }
 	}
 	names(x = calls) <- rownames(x = data)
-	return(calls)
+	return(list(calls = calls, thresholds = thresholds))
 }
 
 Melt <- function(x) {
