@@ -418,6 +418,10 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     singlets <- c()
     negs <- c()
     doublets <- c()
+    singlethi <- c()
+    doublethi <- c()
+    doubletsecond <- c()
+    
 
     highest_dist <- stats::density(snr$Highest, adjust = 1, kernel = 'gaussian',
                                    bw = 'SJ', give.Rkern = FALSE)
@@ -443,19 +447,19 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
           if (snr[i, "Highest"] - snr[i, "Second"] >= dist_frac * (pos_mode - neg_mode)) {
             singlets <- c(singlets, snr[i, "CellID"])
             classification[i] <- "Singlet"
-            singlethi <- snr[i, "Barcode"]
+            singlethi <- c(singlethi, snr[i, "Barcode"])
           } else {
             classification[i] <- "Doublet"
             doublets <- c(doublets, snr[i, "CellID"])
-            doublethi <- snr[i, "Barcode"]
-            doubletsecond <- snr[i, "Barcode2"]
+            doublethi <- c(doublethi, snr[i, "Barcode"])
+            doubletsecond <- c(doubletsecond, snr[i, "Barcode2"])
           }
           
         } else {
           classification[i] <- "Doublet"
           doublets <- c(doublets, snr[i, "CellID"])
-          doublethi <- snr[i, "Barcode"]
-          doubletsecond <- snr[i, "Barcode2"]
+          doublethi <- c(doublethi, snr[i, "Barcode"])
+          doubletsecond <- c(doubletsecond, snr[i, "Barcode2"])
         }
       } else {
         classification[i] <- "Negative"
@@ -463,14 +467,18 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
       }
     }
     
+    i <- 0
     for (cell in singlets) {
+      i <- i+1
       discrete[, cell] <- 0
-      discrete[singlethi, cell] <- 1
+      discrete[singlethi[i], cell] <- 1
     }
     
+    i <- 0
     for (cell in doublets) {
+      i <- i+1
       discrete[, cell] <- 0
-      discrete[c(doublethi, doubletsecond), cell] <- 1
+      discrete[c(doublethi[i], doubletsecond[i]), cell] <- 1
     }
     
     for (cell in negs) {
