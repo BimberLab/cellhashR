@@ -415,7 +415,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     pos_mode <- maxima[2]
 
     snr <- SNR(lognormedcounts)
-    called <- c()
+    singlets <- c()
     negs <- c()
     doublets <- c()
 
@@ -441,8 +441,9 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
       if (snr[i, "Highest"] >= neg_cutoff) {
         if (snr[i, "Second"] <= doublet_cutoff) {
           if (snr[i, "Highest"] - snr[i, "Second"] >= dist_frac * (pos_mode - neg_mode)) {
-            called <- c(called, snr[i, "CellID"])
+            singlets <- c(singlets, snr[i, "CellID"])
             classification[i] <- "Singlet"
+            singlethi <- snr[i, "Barcode"]
           } else {
             classification[i] <- "Doublet"
             doublets <- c(doublets, snr[i, "CellID"])
@@ -462,9 +463,9 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
       }
     }
     
-    for (cell in called) {
+    for (cell in singlets) {
       discrete[, cell] <- 0
-      discrete[doublethi, cell] <- 1
+      discrete[singlethi, cell] <- 1
     }
     
     for (cell in doublets) {
