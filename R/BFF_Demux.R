@@ -416,6 +416,8 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
 
     snr <- SNR(lognormedcounts)
     called <- c()
+    negs <- c()
+    doublets <- c()
 
     highest_dist <- stats::density(snr$Highest, adjust = 1, kernel = 'gaussian',
                                    bw = 'SJ', give.Rkern = FALSE)
@@ -443,22 +445,37 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
             classification[i] <- "Singlet"
           } else {
             classification[i] <- "Doublet"
+            doublets <- c(doublets, snr[i, "CellID"])
+            doublethi <- snr[i, "Barcode"]
+            doubletsecond <- snr[i, "Barcode2"]
           }
           
         } else {
           classification[i] <- "Doublet"
+          doublets <- c(doublets, snr[i, "CellID"])
+          doublethi <- snr[i, "Barcode"]
+          doubletsecond <- snr[i, "Barcode2"]
         }
       } else {
         classification[i] <- "Negative"
+        negs <- c(negs, snr[i, "CellID"])
       }
     }
-
+    
     for (cell in called) {
       discrete[, cell] <- 0
-      row_max_name <- colnames(tot_normed)[which.max(tot_normed[cell,])]
-      discrete[row_max_name, cell] <- 1
+      discrete[doublethi, cell] <- 1
     }
-
+    
+    for (cell in doublets) {
+      discrete[, cell] <- 0
+      discrete[c(doublethi, doubletsecond), cell] <- 1
+    }
+    
+    for (cell in negs) {
+      discrete[, cell] <- 0
+    }
+    
     joined <- cbind(snr, classification)
     
     P1 <- ggplot2::ggplot(joined, aes(x=Highest, y=Second, color=classification)) + 
