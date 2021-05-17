@@ -427,18 +427,33 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
                                    bw = 'SJ', give.Rkern = FALSE)
     second_dist <- stats::density(snr$Second, adjust = 1, kernel = 'gaussian',
                                   bw = 'SJ', give.Rkern = FALSE)
-
-    vals <- which((abs(highest_dist$y - doublet_thresh*max(highest_dist$y))) < 0.01)
-
+    
+    vals <- c()
+    for (i in 2:length(highest_dist$y)) {
+      if (highest_dist$y[[i-1]] <= doublet_thresh*max(highest_dist$y) & highest_dist$y[[i]] > doublet_thresh*max(highest_dist$y)) {
+        vals <- c(vals, i)
+      }
+    }
     if (length(vals) == 0) {
       print('Cannot find negative threshold.  Exiting BFF')
       return(NULL)
     }
-
     val <- min(vals)
-
     neg_cutoff <- highest_dist$x[[val]]
-    doublet_cutoff <- second_dist$x[[max(which((abs(second_dist$y - neg_thresh*max(second_dist$y))) < 0.01))]]
+    
+    
+    vals <- c()
+    for (i in 2:length(second_dist$y)) {
+      if (second_dist$y[[i-1]] > neg_thresh*max(second_dist$y) & second_dist$y[[i]] <= neg_thresh*max(second_dist$y)) {
+        vals <- c(vals, i)
+      }
+    }
+    if (length(vals) == 0) {
+      print('Cannot find doublet threshold.  Exiting BFF')
+      return(NULL)
+    }
+    val <- max(vals)
+    doublet_cutoff <- second_dist$x[[val]]
 
     classification <- c()
     for (i in 1:nrow(snr)) {
