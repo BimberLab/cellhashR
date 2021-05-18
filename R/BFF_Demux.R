@@ -415,50 +415,91 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     pos_mode <- maxima[2]
 
     snr <- SNR(lognormedcounts)
-    called <- c()
+    singlets <- c()
+    negs <- c()
+    doublets <- c()
+    singlethi <- c()
+    doublethi <- c()
+    doubletsecond <- c()
+    
 
     highest_dist <- stats::density(snr$Highest, adjust = 1, kernel = 'gaussian',
                                    bw = 'SJ', give.Rkern = FALSE)
     second_dist <- stats::density(snr$Second, adjust = 1, kernel = 'gaussian',
                                   bw = 'SJ', give.Rkern = FALSE)
-
-    vals <- which((abs(highest_dist$y - doublet_thresh*max(highest_dist$y))) < 0.01)
-
+    
+    vals <- c()
+    for (i in 2:length(highest_dist$y)) {
+      if (highest_dist$y[[i-1]] <= doublet_thresh*max(highest_dist$y) & highest_dist$y[[i]] > doublet_thresh*max(highest_dist$y)) {
+        vals <- c(vals, i)
+      }
+    }
     if (length(vals) == 0) {
       print('Cannot find negative threshold.  Exiting BFF')
       return(NULL)
     }
-
     val <- min(vals)
-
     neg_cutoff <- highest_dist$x[[val]]
-    doublet_cutoff <- second_dist$x[[max(which((abs(second_dist$y - neg_thresh*max(second_dist$y))) < 0.01))]]
+    
+    
+    vals <- c()
+    for (i in 2:length(second_dist$y)) {
+      if (second_dist$y[[i-1]] > neg_thresh*max(second_dist$y) & second_dist$y[[i]] <= neg_thresh*max(second_dist$y)) {
+        vals <- c(vals, i)
+      }
+    }
+    if (length(vals) == 0) {
+      print('Cannot find doublet threshold.  Exiting BFF')
+      return(NULL)
+    }
+    val <- max(vals)
+    doublet_cutoff <- second_dist$x[[val]]
 
     classification <- c()
     for (i in 1:nrow(snr)) {
       if (snr[i, "Highest"] >= neg_cutoff) {
         if (snr[i, "Second"] <= doublet_cutoff) {
           if (snr[i, "Highest"] - snr[i, "Second"] >= dist_frac * (pos_mode - neg_mode)) {
-            called <- c(called, snr[i, "CellID"])
+            singlets <- c(singlets, snr[i, "CellID"])
             classification[i] <- "Singlet"
+            singlethi <- c(singlethi, snr[i, "Barcode"])
           } else {
             classification[i] <- "Doublet"
+            doublets <- c(doublets, snr[i, "CellID"])
+            doublethi <- c(doublethi, snr[i, "Barcode"])
+            doubletsecond <- c(doubletsecond, snr[i, "Barcode2"])
           }
           
         } else {
           classification[i] <- "Doublet"
+          doublets <- c(doublets, snr[i, "CellID"])
+          doublethi <- c(doublethi, snr[i, "Barcode"])
+          doubletsecond <- c(doubletsecond, snr[i, "Barcode2"])
         }
       } else {
         classification[i] <- "Negative"
+        negs <- c(negs, snr[i, "CellID"])
       }
     }
-
-    for (cell in called) {
+    
+    i <- 0
+    for (cell in singlets) {
+      i <- i+1
       discrete[, cell] <- 0
-      row_max_name <- colnames(tot_normed)[which.max(tot_normed[cell,])]
-      discrete[row_max_name, cell] <- 1
+      discrete[singlethi[i], cell] <- 1
     }
-
+    
+    i <- 0
+    for (cell in doublets) {
+      i <- i+1
+      discrete[, cell] <- 0
+      discrete[c(doublethi[i], doubletsecond[i]), cell] <- 1
+    }
+    
+    for (cell in negs) {
+      discrete[, cell] <- 0
+    }
+    
     joined <- cbind(snr, classification)
     
     P1 <- ggplot2::ggplot(joined, aes(x=Highest, y=Second, color=classification)) + 
