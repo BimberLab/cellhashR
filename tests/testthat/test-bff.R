@@ -25,7 +25,6 @@ test_that("BFF Works", {
 	)
 
 	for (hto in unique(df$consensuscall)) {
-		#TODO: review why non-deterministic?
 		expect_equal(sum(df$consensuscall == hto), expectedCalls[[hto]], info = hto)
 	}
 })
