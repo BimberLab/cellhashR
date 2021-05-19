@@ -8,25 +8,24 @@ test_that("BFF Works", {
 	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('bff_quantile'))
 
 	expectedCalls <- list(
-		Bar1 = 197,
-		Bar2 = 155,
-		Bar3 = 440,
-		Bar4 = 488,
-		Bar5 = 151,
-		Bar6 = 533,
-		Bar7 = 602,
-		Bar8 = 576,
-		Bar9 = 489,
-		Bar10 = 545,
-		Bar11 = 520,
-		Bar12 = 693,
-		Doublet = 315,
-		Negative = 92
+		Bar1 = 193,
+		Bar2 = 151,
+		Bar3 = 429,
+		Bar4 = 483,
+		Bar5 = 147,
+		Bar6 = 526,
+		Bar7 = 600,
+		Bar8 = 564,
+		Bar9 = 482,
+		Bar10 = 535,
+		Bar11 = 507,
+		Bar12 = 683,
+		Doublet = 428,
+		Negative = 68
 	)
 
 	for (hto in unique(df$consensuscall)) {
-		#TODO: review why non-deterministic?
-		expect_equal(sum(df$consensuscall == hto), expectedCalls[[hto]], info = hto, tolerance = 5)
+		expect_equal(sum(df$consensuscall == hto), expectedCalls[[hto]], info = hto)
 	}
 })
 
