@@ -3,6 +3,9 @@ pkg.env <- new.env(parent=emptyenv());
 pkg.env$RANDOM_SEED <- 1234
 set.seed(pkg.env$RANDOM_SEED)
 
+.onLoad <- function(libname, pkgname) {
+	reticulate::py_config()
+}
 
 # Reverse the vector x and return the value at the Nth index. If N is larger
 # than the length of the vector, return the last value in the reversed vector.
