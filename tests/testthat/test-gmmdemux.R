@@ -3,6 +3,8 @@ context("scRNAseq")
 source('testing-data.R')
 
 test_that("GMM-Demux Works", {
+	ConfigureGMMDemux()
+	
 	barcodeMatrix <- t(as.matrix(read.csv('../testdata/MS/cell_type_counts.csv', row.names = 1)))
 	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeMatrix, methods = c('gmm_demux'))
 	print(table(df$consensuscall))

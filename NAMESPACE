@@ -2,6 +2,7 @@
 
 export(AppendCellHashing)
 export(CallAndGenerateReport)
+export(ConfigureGMMDemux)
 export(GenerateCellHashingCalls)
 export(GetExampleMarkdown)
 export(GetSeed)
