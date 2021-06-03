@@ -41,7 +41,9 @@ jobs:
         if: runner.os != 'Windows'
         # libharfbuzz-dev libfribidi-dev are added to fix textshaping install error
         run: |
-          sudo apt-get update && sudo apt-get install -yq libharfbuzz-dev libfribidi-dev
+          sudo apt-get update && sudo apt-get install -yq libharfbuzz-dev libfribidi-dev python3 python3-pip
+          python3 -m pip install --upgrade pip
+          python3 -m pip install --user GMM_Demux
 
       - name: Query dependencies
         run: |

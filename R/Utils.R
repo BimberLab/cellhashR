@@ -4,25 +4,6 @@ pkg.env$RANDOM_SEED <- 1234
 set.seed(pkg.env$RANDOM_SEED)
 
 
-#' @title Configure GMMDemux
-#'
-#' @description GMMDemux is a python package used for calling cell hashing. If not already present, this function will automatically create a virtualenv and install GMM_Demux into it. Note: you need to call reticulate::py_config() prior to using this.
-#' @export
-ConfigureGMMDemux <- function() {
-	if (!reticulate::py_available()) {
-		stop(paste0('Python/reticulate not configured. Run "reticulate::py_config()" to initialize python'))
-	}
-
-	if (reticulate::py_module_available('GMM_Demux')) {
-		return()
-	}
-
-	reticulate::virtualenv_create()
-	reticulate::configure_environment(pkgname)
-
-	return()
-}
-
 # Reverse the vector x and return the value at the Nth index. If N is larger
 # than the length of the vector, return the last value in the reversed vector.
 #
