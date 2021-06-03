@@ -21,8 +21,9 @@ GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux
 		inputFile <- tempfile(fileext = '.csv')
 		write.table(t(barcodeMatrix), file = inputFile, sep = ',')
 
-		reportPath <- tempfile(tmpdir = '/Users/bimber/Downloads/cellhashR')
-		pyOut = system2(reticulate::py_exe(), c("-m", "GMM_Demux.GMM_Demux", inputFile, paste0(rownames(barcodeMatrix), collapse=','), '-c', '-f', reportPath), stdout = TRUE, stderr = TRUE)
+		reportPath <- tempfile()
+		outPath <- tempfile()
+		pyOut = system2(reticulate::py_exe(), c("-m", "GMM_Demux.GMM_Demux", inputFile, paste0(rownames(barcodeMatrix), collapse=','), '-c', '-f', reportPath, '-o', outPath), stdout = TRUE, stderr = TRUE)
 		print(pyOut)
 
 		clusterNames <- read.table(paste0(reportPath, '/GMM_full.config'), header = FALSE, sep = ',')
@@ -39,6 +40,7 @@ GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux
 
 		unlink(inputFile)
 		unlink(reportPath, recursive = TRUE)
+		unlink(outPath, recursive = TRUE)
 
 		return(data.frame(cellbarcode = df$cellbarcode, method = methodName, classification = df$classification, classification.global = df$classification.global, stringsAsFactors = FALSE))
 	}, error = function(e){
