@@ -36,6 +36,7 @@ Imports:
     S4Vectors,
     preprocessCore,
     data.table,
+    reticulate,
     ggExtra
 Suggests:
     devtools,
@@ -47,11 +48,18 @@ BugReports: https://github.com/BimberLab/cellhashR/issues
 Remotes:
     bioc::DropletUtils,
     bmbolstad/preprocessCore
+Config/reticulate:
+  list(
+    packages = list(
+      list(package = "gmm-demux")
+    )
+  )
 Collate:
     'Utils.R'
     'Visualization.R'
     'Normalization.R'
     'BFF_Demux.R'
+    'GMM_Demux.R'
     'DropletUtils_Demux.R'
     'Threshold_Demux.R'
     'SeqND_Demux.R'

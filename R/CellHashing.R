@@ -6,6 +6,7 @@
 #' @include BFF_Demux.R
 #' @include Threshold_Demux.R
 #' @include DropletUtils_Demux.R
+#' @include GMM_Demux.R
 
 utils::globalVariables(
   names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall', 'consensuscall.global', 'topFraction', 'totalReadsPerCell'),
@@ -115,7 +116,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @title Generate Cell Hashing Calls
 #'
 #' @param barcodeMatrix The filtered matrix of hashing count data
-#' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux, multiseq, dropletutils, bff_threshold, and bff_quantile
+#' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux, multiseq, dropletutils, gmm_demux, bff_threshold, and bff_quantile
 #' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
 #' @param metricsFile If provided, summary metrics will be written to this file.
 #' @param \dots Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).
@@ -126,6 +127,10 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_quantile', 
   callList <- list()
   for (method in methods) {
     fnArgs <- list()
+    if ('methodName' %in% names(formals(cellhashR::GenerateCellHashingCalls))) {
+      fnArgs$methodName <- method
+    }
+
     if (length(list(...))) {
       vals <- unlist(list(...))
       vals <- vals[!is.null(names(vals))]
@@ -152,6 +157,12 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_quantile', 
     } else if (method == 'dropletutils'){
       fnArgs$barcodeMatrix <- barcodeMatrix
       calls <- do.call(GenerateCellHashCallsDropletUtils, fnArgs)
+      if (!is.null(calls)) {
+        callList[[method]] <- calls
+      }
+    } else if (method == 'gmm_demux'){
+      fnArgs$barcodeMatrix <- barcodeMatrix
+      calls <- do.call(GenerateCellHashCallsGMMDemux, fnArgs)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
