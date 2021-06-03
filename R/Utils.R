@@ -4,7 +4,7 @@ pkg.env$RANDOM_SEED <- 1234
 set.seed(pkg.env$RANDOM_SEED)
 
 .onLoad <- function(libname, pkgname) {
-	reticulate::py_config()
+	reticulate::configure_environment(pkgname)
 }
 
 # Reverse the vector x and return the value at the Nth index. If N is larger
