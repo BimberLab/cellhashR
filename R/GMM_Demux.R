@@ -6,7 +6,7 @@ GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux
 		print('Starting GMM-Demux')
 	}
 
-	if (!reticulate::py_available()) {
+	if (!reticulate::py_available(initialize = TRUE)) {
 		stop(paste0('Python/reticulate not configured. Run "reticulate::py_config()" to initialize python'))
 	}
 
