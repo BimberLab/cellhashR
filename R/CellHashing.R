@@ -326,6 +326,10 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_quantile', 
   summary$method <- 'consensus'
   names(summary) <- c('cellbarcode', 'classification.global', 'method')
   summary <- rbind(allCalls[c('cellbarcode', 'classification.global', 'method')], summary)
+  summary$method <- naturalsort::naturalfactor(summary$method)
+  summary$method <- forcats::fct_relevel(summary$method, 'consensus')
+  summary$method <- forcats::fct_relevel(summary$method, 'consensus')
+
   P2 <- ggplot(summary, aes(x = method, group = classification.global, fill = classification.global)) +
     geom_bar() +
     egg::theme_presentation(base_size = 14) +
