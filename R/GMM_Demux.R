@@ -46,12 +46,12 @@ GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux
 
 		toMerge <- ret$classification
 		names(toMerge) <- ret$cellbarcode
-		seuratObj$classification.gmm-demux <- toMerge[colnames(seuratObj)]
+		seuratObj$classification.gmm_demux <- toMerge[colnames(seuratObj)]
 
 		toMerge <- ret$classification.global
 		names(toMerge) <- ret$cellbarcode.global
-		seuratObj$classification.gmm-demux.global <- toMerge[colnames(seuratObj)]
-		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'gmm-demux', assay = assay)
+		seuratObj$classification.gmm_demux.global <- toMerge[colnames(seuratObj)]
+		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'gmm_demux', assay = assay)
 
 		return(ret)
 	}, error = function(e){

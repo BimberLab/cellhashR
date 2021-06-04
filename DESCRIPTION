@@ -51,7 +51,7 @@ Remotes:
 Config/reticulate:
   list(
     packages = list(
-      list(package = "gmm-demux")
+      list(package = "GMM_Demux")
     )
   )
 Collate:
