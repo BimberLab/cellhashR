@@ -1,7 +1,7 @@
 #' @include Utils.R
 #' @include Visualization.R
 
-GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux', verbose= TRUE, metricsFile = NULL) {
+GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux', label = 'GMM Demux', verbose= TRUE, metricsFile = NULL) {
 	if (verbose) {
 		print('Starting GMM-Demux')
 	}
@@ -40,7 +40,20 @@ GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux
 		unlink(reportPath, recursive = TRUE)
 		unlink(outPath, recursive = TRUE)
 
-		return(data.frame(cellbarcode = df$cellbarcode, method = methodName, classification = df$classification, classification.global = df$classification.global, stringsAsFactors = FALSE))
+		ret <- data.frame(cellbarcode = df$cellbarcode, method = methodName, classification = df$classification, classification.global = df$classification.global, stringsAsFactors = FALSE)
+		assay <- 'HTO'
+		seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
+
+		toMerge <- ret$classification
+		names(toMerge) <- ret$cellbarcode
+		seuratObj$classification.gmm-demux <- toMerge[colnames(seuratObj)]
+
+		toMerge <- ret$classification.global
+		names(toMerge) <- ret$cellbarcode.global
+		seuratObj$classification.gmm-demux.global <- toMerge[colnames(seuratObj)]
+		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'gmm-demux', assay = assay)
+
+		return(ret)
 	}, error = function(e){
 		print('Error generating GMMDemux calls, aborting')
 		if (!is.null(e)) {
