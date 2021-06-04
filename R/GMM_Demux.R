@@ -50,7 +50,7 @@ GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux
 
 		toMerge <- ret$classification.global
 		names(toMerge) <- ret$cellbarcode.global
-		seuratObj$classification.gmm_demux.global <- toMerge[colnames(seuratObj)]
+		seuratObj$classification.global.gmm_demux <- toMerge[colnames(seuratObj)]
 		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'gmm_demux', assay = assay)
 
 		return(ret)
