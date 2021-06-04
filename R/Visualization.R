@@ -21,12 +21,12 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 	}
 
 	#report outcome
-	df <- data.frame(prop.table(table(Barcode = seuratObj[[htoClassificationField]])))
+	df <- data.frame(prop.table(table(Barcode = seuratObj@meta.data[[htoClassificationField]])))
 	df$Barcode <- naturalsort::naturalfactor(df$Barcode)
 	P1 <- ggplot(df, aes(x = '', y=Freq, fill=Barcode)) +
 		geom_bar(width = 1, stat = "identity", color = "black") +
 		coord_polar("y", start=0) +
-		scale_fill_manual(values = GetPlotColors(length(unique(unlist(seuratObj[[htoClassificationField]]))))) +
+		scale_fill_manual(values = GetPlotColors(length(unique(seuratObj@meta.data[[htoClassificationField]])))) +
 		theme_minimal() +
 		theme(
 			axis.text.x=element_blank(),
@@ -35,11 +35,11 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 			panel.grid  = element_blank()
 		)
 
-	df <- data.frame(prop.table(table(Classification = seuratObj[[globalClassificationField]])))
+	df <- data.frame(prop.table(table(Classification = seuratObj@meta.data[[globalClassificationField]])))
 	P2 <- ggplot(df, aes(x = '', y=Freq, fill=Classification)) +
 		geom_bar(width = 1, stat = "identity", color = "black") +
 		coord_polar("y", start=0) +
-		scale_fill_manual(values = GetPlotColors(length(unique(unlist(seuratObj[[globalClassificationField]]))))) +
+		scale_fill_manual(values = GetPlotColors(length(unique(seuratObj@meta.data[[globalClassificationField]])))) +
 		theme_minimal() +
 		theme(
 		axis.text.x=element_blank(),

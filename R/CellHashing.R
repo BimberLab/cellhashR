@@ -416,6 +416,14 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_quantile', 
   names(toAdd) <- c('cellbarcode', 'consensuscall.global')
 
   dataClassification <- merge(dataClassification, toAdd, by = 'cellbarcode', all.x = T)
+  dataClassification$consensuscall <- naturalsort::naturalfactor(dataClassification$consensuscall)
+  for (val in c('Doublet', 'Negative', 'Discordant')){
+    if (val %in% unique(dataClassification$consensuscall)) {
+      dataClassification$consensuscall <- forcats::fct_relevel(dataClassification$consensuscall, val, after = Inf)
+    }
+  }
+
+  dataClassification$consensuscall.global <- naturalsort::naturalfactor(dataClassification$consensuscall.global)
 
   #final outcome
   df <- data.frame(prop.table(table(Barcode = dataClassification$consensuscall)))

@@ -3,7 +3,7 @@ context("scRNAseq")
 source('testing-data.R')
 
 test_that("GMM-Demux Works", {
-	if (!reticulate::py_available() || !reticulate::py_module_available('GMM_Demux')) {
+	if (!reticulate::py_available(initialize = T) || !reticulate::py_module_available('GMM_Demux')) {
 		print('GMM_Demux has not been installed, skipping')
 		return()
 	}
