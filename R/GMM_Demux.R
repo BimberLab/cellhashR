@@ -47,11 +47,13 @@ GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux
 		toMerge <- ret$classification
 		names(toMerge) <- ret$cellbarcode
 		seuratObj$classification.gmm_demux <- toMerge[colnames(seuratObj)]
+		seuratObj$classification.gmm_demux <- naturalsort::naturalfactor(seuratObj$classification.gmm_demux)
 
 		toMerge <- ret$classification.global
-		names(toMerge) <- ret$cellbarcode.global
+		names(toMerge) <- ret$cellbarcode
 		seuratObj$classification.global.gmm_demux <- toMerge[colnames(seuratObj)]
-		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'gmm_demux', assay = assay)
+		seuratObj$classification.global.gmm_demux <- naturalsort::naturalfactor(seuratObj$classification.global.gmm_demux)
+		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'gmm_demux', assay = assay, doTSNE = F, doHeatmap = F)
 
 		return(ret)
 	}, error = function(e){
