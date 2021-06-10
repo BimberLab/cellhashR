@@ -330,8 +330,8 @@ GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_r
       df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = "bff_threshold", classification = seuratObj$classification.bff_threshold, classification.global = seuratObj$classification.global.bff_threshold, stringsAsFactors = FALSE)
       return(df)
     } else {
-      SummarizeHashingCalls(seuratObj, label = 'bff_quantile', columnSuffix = 'bff_quantile', assay = assay, doHeatmap = TRUE)
-      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_quantile', classification = seuratObj$classification.bff_quantile, classification.global = seuratObj$classification.global.bff_quantile, stringsAsFactors = FALSE)
+      SummarizeHashingCalls(seuratObj, label = 'bff_cluster', columnSuffix = 'bff_cluster', assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_cluster', classification = seuratObj$classification.bff_cluster, classification.global = seuratObj$classification.global.bff_cluster, stringsAsFactors = FALSE)
       return(df)
     }
   }, error = function(e){
@@ -408,7 +408,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     max_list <- x_vals
     norm_cutoff <- mean(unlist(normed_cutoffs))
 
-    invisible(generateBFFGridPlot(t(tot_normed), "Log(Counts + 1)", "Normalized Count Distributions with Final Threshold", universal_cutoff = norm_cutoff))
+    # invisible(generateBFFGridPlot(t(tot_normed), "Log(Counts + 1)", "Normalized Count Distributions with Final Threshold", universal_cutoff = norm_cutoff))
 
     maxima <- colMeans(max_list)
     neg_mode <- maxima[1]
@@ -430,7 +430,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     
     vals <- c()
     for (i in 2:length(highest_dist$y)) {
-      if (highest_dist$y[[i-1]] <= doublet_thresh*max(highest_dist$y) & highest_dist$y[[i]] > doublet_thresh*max(highest_dist$y)) {
+      if (highest_dist$y[[i-1]] <= neg_thresh*max(highest_dist$y) & highest_dist$y[[i]] > neg_thresh*max(highest_dist$y)) {
         vals <- c(vals, i)
       }
     }
@@ -444,7 +444,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     
     vals <- c()
     for (i in 2:length(second_dist$y)) {
-      if (second_dist$y[[i-1]] > neg_thresh*max(second_dist$y) & second_dist$y[[i]] <= neg_thresh*max(second_dist$y)) {
+      if (second_dist$y[[i-1]] > doublet_thresh*max(second_dist$y) & second_dist$y[[i]] <= doublet_thresh*max(second_dist$y)) {
         vals <- c(vals, i)
       }
     }
@@ -515,7 +515,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     grid::grid.newpage()
     grid::grid.draw(P2)
 
-    seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_quantile', assay = assay)
+    seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_cluster', assay = assay)
     seuratObj@misc[['cutoffs']] <- cutoffs
     return(seuratObj)
   }

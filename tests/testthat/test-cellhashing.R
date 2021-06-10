@@ -141,12 +141,12 @@ test_that("BFF calling works", {
 		summaryFile <- paste0(testName, '-summary.txt')
 	}
 
-	l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile, methods = c('dropletutils', 'bff_quantile', 'multiseq'), skipNormalizationQc = TRUE)
+	l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile, methods = c('dropletutils', 'bff_cluster', 'multiseq'), skipNormalizationQc = TRUE)
 	barcodeData <- l$barcodeData
 	df <- l$df
 	metricsFile <- l$metricsFile
 	unlink(metricsFile)
 	
-	print(unique(df$bff_quantile))
-	expect_equal(expected = test[['BffQuantile']], object = sum(df$bff_quantile != 'Negative' & df$bff_quantile != 'ND'), info = testName)
+	print(unique(df$bff_cluster))
+	expect_equal(expected = test[['BffQuantile']], object = sum(df$bff_cluster != 'Negative' & df$bff_cluster != 'ND'), info = testName)
 })

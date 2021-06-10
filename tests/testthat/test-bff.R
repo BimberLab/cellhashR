@@ -5,7 +5,7 @@ source('testing-data.R')
 test_that("BFF Works", {
 	barcodeData <- t(as.matrix(read.csv('../testdata/MS/cell_type_counts.csv', row.names = 1)))
 
-	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('bff_quantile'))
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('bff_cluster'))
 
 	expectedCalls <- list(
 		Bar1 = 193,
@@ -32,12 +32,12 @@ test_that("BFF Works", {
 test_that("563-3 Works", {
 	barcodeData <- readRDS('../testdata/563-3-TCR.hashing.rawCounts.rds')
 	
-	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('bff_quantile'))
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('bff_cluster'))
 })
 
 test_that("568-1 Works", {
 	barcodeData <- readRDS('../testdata/568-1-TCR.hashing.rawCounts.rds')
 
-	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('bff_quantile'))
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('bff_cluster'))
 })
 
