@@ -107,38 +107,38 @@ NormalizeRelative <- function(mat) {
 #' @title Plot Normalization QC
 #'
 #' @param barcodeData The count matrix
+#' @param methods The normalizations to use. Allowable options are: bimodalQuantile, Quantile, log2Center, CLR and Raw
 #' @description Generates QC plots related to normalization
 #' @export
-PlotNormalizationQC <- function(barcodeData) {
-  bqn <- NULL
-  tryCatch({
-    temp <- NormalizeBimodalQuantile(barcodeData)[['lognormedcounts']]
-    bqn <- TransposeDF(data.frame(temp, check.names=FALSE))
-  }, error = function(e){
-    print("No valid barcodes, skipping Bimodal quantile normalization")
-    print(conditionMessage(e))
-    traceback()
-  })
-
-  if (!is.null(bqn)){
-    toQC <- list(
-      'Raw' = data.frame(log10(barcodeData + 1), check.names = FALSE),
-      'bimodalQuantile' = bqn,
-      'Quantile'= TransposeDF(data.frame(log10(NormalizeQuantile(t(barcodeData))+1), check.names = FALSE)),
-      'log2Center' = NormalizeLog2(barcodeData, mean.center = TRUE),
-      'CLR' = NormalizeCLR(barcodeData)
-    )
-  } else {
-    toQC <- list(
-      'Raw' = data.frame(log10(barcodeData + 1), check.names = FALSE),
-      'Quantile'= TransposeDF(data.frame(log10(NormalizeQuantile(t(barcodeData))+1), check.names = FALSE)),
-      'log2Center' = NormalizeLog2(barcodeData, mean.center = TRUE),
-      'CLR' = NormalizeCLR(barcodeData)
-    )
+PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Quantile', 'log2Center', 'CLR')) {
+  toQC <- list()
+  for (method in methods) {
+    if (method == 'bimodalQuantile') {
+      bqn <- NULL
+      tryCatch({
+        temp <- NormalizeBimodalQuantile(barcodeData)[['lognormedcounts']]
+        bqn <- TransposeDF(data.frame(temp, check.names=FALSE))
+        toQC[['bimodalQuantile']] <- bqn
+      }, error = function(e){
+        print("No valid barcodes, skipping Bimodal quantile normalization")
+        print(conditionMessage(e))
+        traceback()
+      })
+    } else if (method  == 'Raw') {
+      toQC[['Raw']] <- data.frame(log10(barcodeData + 1), check.names = FALSE)
+    } else if (method  == 'Quantile') {
+      toQC[['Quantile']] <- TransposeDF(data.frame(log10(NormalizeQuantile(t(barcodeData))+1), check.names = FALSE))
+    } else if (method  == 'CLR') {
+      toQC[['CLR']] <- NormalizeCLR(barcodeData)
+    } else if (method  == 'log2Center') {
+      toQC[['log2Center']] = NormalizeLog2(barcodeData, mean.center = TRUE)
+    } else {
+      stop(paste0('Unknown method: ', method))
+    }
   }
-
   uniqueRows = c()
   uniqueCols = c()
+
   for (norm in names(toQC)) {
     uniqueRows <- unique(c(uniqueRows, nrow(toQC[[norm]])))
     uniqueCols <- unique(c(uniqueCols, ncol(toQC[[norm]])))
