@@ -131,7 +131,7 @@
 
     <pre class="usage"><span class='fu'>GenerateCellHashingCalls</span><span class='op'>(</span>
   <span class='va'>barcodeMatrix</span>,
-  methods <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"bff_quantile"</span>, <span class='st'>"multiseq"</span>, <span class='st'>"dropletutils"</span><span class='op'>)</span>,
+  methods <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"bff_cluster"</span>, <span class='st'>"multiseq"</span>, <span class='st'>"dropletutils"</span><span class='op'>)</span>,
   cellbarcodeWhitelist <span class='op'>=</span> <span class='cn'>NULL</span>,
   metricsFile <span class='op'>=</span> <span class='cn'>NULL</span>,
   <span class='va'>...</span>
@@ -146,7 +146,7 @@
     </tr>
     <tr>
       <th>methods</th>
-      <td><p>A vector of one or more calling methods to use. Currently supported are: htodemux, multiseq, dropletutils, gmm_demux, bff_threshold, and bff_quantile</p></td>
+      <td><p>A vector of one or more calling methods to use. Currently supported are: htodemux, multiseq, dropletutils, gmm_demux, bff_threshold, and bff_cluster</p></td>
     </tr>
     <tr>
       <th>cellbarcodeWhitelist</th>
