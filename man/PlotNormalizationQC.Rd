@@ -4,10 +4,15 @@
 \alias{PlotNormalizationQC}
 \title{Plot Normalization QC}
 \usage{
-PlotNormalizationQC(barcodeData)
+PlotNormalizationQC(
+  barcodeData,
+  methods = c("bimodalQuantile", "Quantile", "log2Center", "CLR")
+)
 }
 \arguments{
 \item{barcodeData}{The count matrix}
+
+\item{methods}{The normalizations to use. Allowable options are: bimodalQuantile, Quantile, log2Center, CLR and Raw}
 }
 \description{
 Generates QC plots related to normalization
