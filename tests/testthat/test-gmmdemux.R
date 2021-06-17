@@ -13,20 +13,20 @@ test_that("GMM-Demux Works", {
 	print(table(df$consensuscall))
 	
 	expectedCalls <- list(
-		Bar1 = 200,
-		Bar2 = 147,
-		Bar3 = 375,
-		Bar4 = 455,
-		Bar5 = 149,
-		Bar6 = 481,
-		Bar7 = 561,
-		Bar8 = 520,
-		Bar9 = 448,
-		Bar10 = 493,
-		Bar11 = 477,
-		Bar12 = 622,
+		Bar1 = 196,
+		Bar2 = 139,
+		Bar3 = 366,
+		Bar4 = 449,
+		Bar5 = 158,
+		Bar6 = 467,
+		Bar7 = 543,
+		Bar8 = 505,
+		Bar9 = 435,
+		Bar10 = 487,
+		Bar11 = 457,
+		Bar12 = 621,
 		Doublet = 752,
-		Negative = 215
+		Negative = 204
 	)
 
 	# Note: we probably need to set the python / nympy random seed to make this deterministic

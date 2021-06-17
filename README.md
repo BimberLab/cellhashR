@@ -25,7 +25,7 @@ Once the count matrix is created, an algorithm must be used to demultiplex cells
 
 Each step of the workflow can either be run interactively in R (through the terminal or RStudio), or it can be executed as a pipeline that runs all commands and creates the call table and an HTML report. 
 
-[Click here to download an example HTML report](https://htmlpreview.github.io/?https://github.com/BimberLab/cellhashR/blob/master/examples/cellhashR.html)
+[Click here to view an example QC report](https://bimberlab.github.io/cellhashR/articles/V01-QC-example.html)
 
 ### <a name="example">Example Usage</a>
 
