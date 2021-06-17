@@ -31,14 +31,12 @@ knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error=TRUE)
 
 # Load Data
 
+cellhashR expects count data with cells in columns and barcode features in rows.
+
 ```{r setup, eval=FALSE}
 library(cellhashR)
-methods <- c("bff_threshold", "bff_cluster")
-
-barcodeData_t <- (read.csv(rawCountData, header = TRUE, row.names = 1))
-zeros <- row.names(barcodeData_t[barcodeData_t$Bar1 == 0,])
-barcodeData_t_fin <- barcodeData_t[!row.names(barcodeData_t) %in% zeros,]
-barcodeData <- t(barcodeData_t_fin)
+rawCountData <- "../tests/testdata/MS/cell_type_counts.csv"
+barcodeData <- t(read.csv(rawCountData, header = TRUE, row.names = 1))
 ```
 
 # Normalization / QC
@@ -46,7 +44,7 @@ barcodeData <- t(barcodeData_t_fin)
 The plots appearing in the following figure from the BFF paper are generated using the cellhashR command PlotNormalizationQC.
 
 ```{r, echo=FALSE}
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/QC_fig.png")
+knitr::include_graphics("BFF-example_files/figure-html/QC_fig.png")
 ```
 
 The following code produces QC plots helpful in visualizing the effects of various normalization procedures on cell hashing data, including the novel normalization Bimodal Quantile Normalization (BQN).
@@ -56,10 +54,10 @@ PlotNormalizationQC(barcodeData, methods = c('Raw', 'bimodalQuantile', 'log2Cent
 ```
 
 ```{r,  echo=FALSE}
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/NormalizationQC-1.png")
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/NormalizationQC-2.png")
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/NormalizationQC-3.png")
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/NormalizationQC-4.png")
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-1.png")
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-2.png")
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-3.png")
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-4.png")
 ```
   
 ```
@@ -67,8 +65,8 @@ knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_
 ```
 
 ```{r, echo=FALSE}
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/NormalizationQC-5.png")
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/NormalizationQC-8.png")
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-5.png")
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-8.png")
 ```
 
 ```
@@ -76,8 +74,8 @@ knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_
 ```
 
 ```{r, echo=FALSE}
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/NormalizationQC-9.png")
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/NormalizationQC-12.png")
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-9.png")
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-12.png")
 ```
 
 ```
@@ -85,8 +83,8 @@ knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_
 ```
 
 ```{r, echo=FALSE}
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/NormalizationQC-13.png")
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/NormalizationQC-16.png")
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-13.png")
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-16.png")
 ```
 
 # Generate Hashing Calls
@@ -94,9 +92,8 @@ knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_
 The cellhashR command GenerateCellHashingCalls performs demultiplexing analysis on the data using the algorithms listed in "methods" (BFF_threshold and BFF_cluster in the current analysis).  Below are results from four calls to GenerateCellHashingCalls, each time using a different parameter set for BFF_cluster.
 
 ```{r, eval=FALSE}
- 
+methods <- c("bff_threshold", "bff_cluster")
 df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, bff_threshold.simple_threshold=TRUE, bff_cluster.simple_threshold=FALSE, bff_cluster.doublet_thresh=0.05, bff_cluster.neg_thresh=0.05, bff_cluster.dist_frac=0.1)
-
 write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
 ```
 
@@ -115,7 +112,7 @@ write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
 The lines of output above are printed when BFF_threshold is run.  The statement "Simple Threshold:  TRUE" indicates that BFF_threshold is being run ("Simple Threshold:  FALSE" indicates that BFF_cluster is being run).  The parameter values printed above are the default values for BFF_cluster and are not actually used for BFF_threshold.
 
 ```{r, echo=FALSE}
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/unnamed-chunk-3-1.png")
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-3-1.png")
 ```
 
 The figure above will be generated each time BFF is run on this data (in either the threshold mode or the cluster mode).  Similarly, the list of thresholds below (not in log-space) is given each time BFF is run on the data.  Both outputs are shown in this document only this once, for sake of brevity.
@@ -143,7 +140,7 @@ BFF_threshold classifies droplets based on comparison of raw count values to the
 The figure below demonstrates the theory on which BFF_cluster operates.  BFF_cluster classification is tunable with three parameters that affect thresholds in the 2D space of top 2 normalized counts.  Parameter values are specified for the three parameters **bff_cluster.doublet_thresh** (shown as beta_c in the figure), **bff_cluster.neg_thresh** (shown as alpha_c in the figure), and **bff_cluster.dist_frac** (shown as delta_c in the figure) as demonstrated in the call to GenerateCellHashingCalls above.
 
 ```{r, echo=FALSE}
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/sim_curves.png")
+knitr::include_graphics("BFF-example_files/figure-html/sim_curves.png")
 ```
 
 #### BFF_cluster (0.05, 0.05, 0.1)
@@ -161,7 +158,7 @@ The first set of graphs below demonstrates output for default values for paramet
 ```
 
 ```{r, echo=FALSE}
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/unnamed-chunk-3-18.png")
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-2-18.png")
 ```
 
 The lines of output above are printed when BFF_cluster is run.  The output indicates that BFF_cluster is being run ("Simple Threshold:  FALSE").  The parameter values output here are the default values for BFF_cluster.
@@ -171,8 +168,8 @@ The figure above is generated each time BFF_cluster is run (BQN threshold values
 The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.05, 0.05, and 0.1, respectively.  The figure on the right compares the BFF_cluster classifications with BFF_threshold classifications (consensus output can be ignored).
 
 ```{r, echo=FALSE}
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/unnamed-chunk-2-19.png")
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/unnamed-chunk-2-35.png")
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-2-19.png")
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-2-35.png")
 ```
 
 #### BFF_cluster (0.2, 0.05, 0.1)
@@ -196,8 +193,8 @@ write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
 ```
 
 ```{r, echo=FALSE}
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/unnamed-chunk-3-19.png")
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/unnamed-chunk-3-35.png")
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-3-19.png")
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-3-35.png")
 ```
 
 #### BFF_cluster (0.05, 0.2, 0.1)
@@ -221,8 +218,8 @@ write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
 ```
 
 ```{r, echo=FALSE}
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/unnamed-chunk-4-19.png")
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/unnamed-chunk-4-35.png")
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-4-19.png")
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-4-35.png")
 ```
 
 #### BFF_cluster (0.05, 0.05, 0.25)
@@ -245,7 +242,7 @@ write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
 ```
 
 ```{r, echo=FALSE}
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/unnamed-chunk-5-19.png")
-knitr::include_graphics("/Users/boggy/bimberlab/cellhashR/vignettes/BFF-example_files/figure-html/unnamed-chunk-5-35.png")
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-5-19.png")
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-5-35.png")
 ```
 
