@@ -1,0 +1,187 @@
+---
+title: "Normalization QC Figure"
+output: html_notebook
+---
+
+
+```{r}
+library(Seurat)
+library(OOSAP)
+library(devtools)
+library(cellhashR)
+library(hash)
+library(dplyr)
+library(EnvStats)
+library(preprocessCore)
+library(ggplot2)
+library(viridis)
+library(forcats)
+library(hrbrthemes)
+library(stringr)
+library(RColorBrewer)
+library(wesanderson)
+
+source('/Users/boggy/bimberlab/cellhashR/R/BFF_Demux.R')
+source('/Users/boggy/bimberlab/cellhashR/R/Normalization.R')
+source('/Users/boggy/bimberlab/cellhashR/R/Utils.R')
+
+getPalette = rev(wes_palette("Zissou1", 12, type="continuous")) #viridis #colorRampPalette(brewer.pal(9, "Spectral"))
+
+```
+
+```{r}
+rawCountData <- "/Users/boggy/bimberlab/cell_type_counts.csv"
+
+barcodeData_t <- (read.csv(rawCountData, header = TRUE, row.names = 1))
+zeros <- row.names(barcodeData_t[barcodeData_t$Bar1 == 0,])
+barcodeData_t_fin <- barcodeData_t[!row.names(barcodeData_t) %in% zeros,]
+barcodeData <- t(barcodeData_t_fin)
+
+seuratObj <- Seurat::CreateSeuratObject(barcodeData, assay = 'HTO')
+```
+
+
+
+```{r}
+NormQCCompare <- function(indata, a, b, c, d, e ) {
+  df1 <- data.frame(indata, check.names = FALSE)
+  df <- df1
+  df$cell <- rownames(df)
+  dflong <- df %>% tidyr::pivot_longer(colnames(df)[1:length(colnames(df))-1], names_to = "Barcode", values_to = "count")
+  dflong$Barcode <- naturalsort::naturalfactor(dflong$Barcode)
+  
+  P1 <- ggplot2::ggplot(dflong, aes(x = count, color=Barcode))  + scale_color_manual(values = getPalette) +
+    egg::theme_presentation(base_size = 8) +
+		geom_density(aes(y = sqrt(..density..)), size = 1) + 
+		labs(y = 'sqrt(Density)', x = d) + facet_wrap(~Barcode, nrow = 3, ncol = 4) + ggtitle(a) + 
+    theme(legend.position = "none") 
+  
+  P2 <- dflong %>%
+  mutate(Barcode = factor(Barcode, levels=unique(dflong$Barcode)))  %>%
+  ggplot(aes( y=count, x=Barcode, color=Barcode)) +
+    geom_violin(position="dodge", alpha=0.5) +
+    ggtitle(b) + scale_color_manual(values = getPalette) + 
+
+
+    xlab("") +
+    ylab(e) +
+  
+    egg::theme_presentation(base_size = 8) + theme(axis.text.x = element_text(angle = 90, vjust=0.5), legend.position = "none")
+      # theme(legend.position = "bottom", legend.title = element_text(size=7)) + guides(color = guide_legend(override.aes = list(size = 1)))
+    
+  
+  snr <- SNR(df1)
+  snr$Barcode <- naturalsort::naturalfactor(snr$Barcode)
+	  
+	  
+  P3 <- (ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) + 
+         geom_point(cex=0.25) +
+           ggtitle(c) +
+         egg::theme_presentation(base_size = 8)) + 
+    theme(legend.position = "bottom", legend.text=element_text(size=6), legend.box.background = element_rect(color="black", size=0.25)) + guides(color = guide_legend(keywidth=0.25, keyheight =0.25, ncol=4, title.theme = element_text(size=6), override.aes = list(size=0.25))) + theme(legend.key = element_rect(fill = "white")) + scale_color_manual(values = getPalette)
+  # + theme(legend.position = c(0.5, 0.85), legend.text=element_text(size=5)) + guides(colour = guide_legend(ncol=3, title.theme = element_text(size=0.5), override.aes = list(size=0.25))) + theme(legend.key = element_rect(fill = "white"))
+  P4 <- ggExtra::ggMarginal(P3, size=4, groupColour = TRUE)
+  
+#   P4 <- ggplot2::ggplot(snr, aes(x=Highest)) +
+#     egg::theme_presentation(base_size = 14) +
+# 		geom_density(aes(y = (..density../max(..density..))), size = 1) + 
+# 		labs(y = 'sqrt(Density)', x = 'Log(Counts + 1)') + geom_hline(yintercept = 0.05)
+
+Pout <- P1 + P2 + P4
+return(Pout)
+  # return(list(P1, P2, P3))
+}
+```
+
+```{r}
+NormQCCompare_nolegend <- function(indata, a, b, c, d, e ) {
+  df1 <- data.frame(indata, check.names = FALSE)
+  df <- df1
+  df$cell <- rownames(df)
+  dflong <- df %>% tidyr::pivot_longer(colnames(df)[1:length(colnames(df))-1], names_to = "Barcode", values_to = "count")
+  dflong$Barcode <- naturalsort::naturalfactor(dflong$Barcode)
+  
+  P1 <- ggplot2::ggplot(dflong, aes(x = count, color=Barcode)) + scale_color_manual(values = getPalette) +
+    egg::theme_presentation(base_size = 8) +
+		geom_density(aes(y = sqrt(..density..)), size = 1) + 
+		labs(y = 'sqrt(Density)', x = d) + facet_wrap(~Barcode, nrow = 3, ncol = 4) + ggtitle(a) + 
+    theme(legend.position = "none")
+  
+  P2 <- dflong %>%
+  mutate(Barcode = factor(Barcode, levels=unique(dflong$Barcode)))  %>%
+  ggplot(aes( y=count, x=Barcode, color=Barcode)) + scale_color_manual(values = getPalette) +
+    geom_violin(position="dodge", alpha=0.5) +
+    ggtitle(b) +
+
+
+    xlab("") +
+    ylab(e) +
+  
+    egg::theme_presentation(base_size = 8) + theme(axis.text.x = element_text(angle = 90, vjust=0.5)) +
+      theme(legend.position = "none")
+  
+  snr <- SNR(df1)
+  snr$Barcode <- naturalsort::naturalfactor(snr$Barcode)
+	  
+	  
+  P3 <- (ggplot2::ggplot(snr, aes(x=Highest, y=Second, color=Barcode)) + scale_color_manual(values = getPalette) + 
+         geom_point(cex=0.25) +
+           ggtitle(c) +
+         egg::theme_presentation(base_size = 8)) + 
+    theme(legend.position = "none")
+  P4 <- ggExtra::ggMarginal(P3, size=4, groupColour = TRUE) 
+  
+#   P4 <- ggplot2::ggplot(snr, aes(x=Highest)) +
+#     egg::theme_presentation(base_size = 14) +
+# 		geom_density(aes(y = (..density../max(..density..))), size = 1) + 
+# 		labs(y = 'sqrt(Density)', x = 'Log(Counts + 1)') + geom_hline(yintercept = 0.05)
+
+Pout <- P1 + P2 + P4
+return(Pout)
+  # return(list(P1, P2, P3))
+}
+```
+
+```{r}
+data1 <- t(log10(barcodeData+1))
+res <- NormQCCompare(data1, "A", "B", "C", "Log(Raw Counts + 1)", "Density(Raw Counts)")
+data2 <- NormalizeBimodalQuantile(barcodeData)[["lognormedcounts"]]
+data3 <- t(NormalizeLog2(barcodeData, mean.center = TRUE))
+res2 <- NormQCCompare_nolegend(data2, "D", "E", "F", "Log(BQN Counts + 1)", "Density(BQN Counts)")
+res3 <- NormQCCompare_nolegend(data3, "G", "H", "I", "Log2Center Counts", "Density(L2C Counts)")
+```
+
+```{r}
+res / res2 / res3
+```
+
+```{r}
+png("/Users/boggy/bimberlab/cellhashR/examples/BFF-example2_files/figure-html/QC_fig.png", width = 7, height=8, units="in", res=150)
+res / res2 / res3
+dev.off()
+```
+
+```{r}
+pdf("/Users/boggy/bimberlab/BFF/Figures/PDFs/QC_fig.pdf", width = 7, height=8)
+res / res2 / res3
+dev.off()
+```
+
+```{r}
+data1 <- t(log10(barcodeData+1))
+res <- NormQCCompare(data1, "A", "B", "C", "Log(Raw Counts + 1)", "Density(Raw Counts)")
+data2 <- NormalizeQuantile(data1)
+data3 <- t(NormalizeCLR(barcodeData))
+res2 <- NormQCCompare_nolegend(data2, "D", "E", "F", "Log(Quantile Counts + 1)", "Density(Quantile Counts)")
+res3 <- NormQCCompare_nolegend(data3, "G", "H", "I", "CLR Counts", "Density(CLR Counts)")
+```
+
+```{r}
+res2
+```
+
+```{r}
+pdf("/Users/boggy/bimberlab/BFF/Figures/PDFs/SuppQC_fig.pdf", width = 7, height=8)
+res / res2 / res3
+dev.off()
+```

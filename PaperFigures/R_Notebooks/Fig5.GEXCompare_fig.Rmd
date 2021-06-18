@@ -1,0 +1,400 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r results='hide', message=FALSE}
+library(Seurat)
+library(OOSAP)
+library(devtools)
+library(cellhashR)
+library(dplyr)
+library(ggplot2)
+library(forcats)
+library(stringr)
+
+source('/Users/boggy/bimberlab/cellhashR/R/BFF_Demux.R')
+source('/Users/boggy/bimberlab/cellhashR/R/Normalization.R')
+source('/Users/boggy/bimberlab/cellhashR/R/Utils.R')
+
+
+rawCountData <- "/Users/boggy/bimberlab/cell_type_counts.csv"
+
+barcodeData_t <- (read.csv(rawCountData, header = TRUE, row.names = 1))
+zeros <- row.names(barcodeData_t[barcodeData_t$Bar1 == 0,])
+barcodeData_t_fin <- barcodeData_t[!row.names(barcodeData_t) %in% zeros,]
+barcodeData <- t(barcodeData_t_fin)
+
+BQN <- NormalizeBimodalQuantile(barcodeData)
+snr <- SNR(BQN[[3]])
+
+metadata_file <- "/Users/boggy/bimberlab/cell_type_meta.csv"
+metadata_df <- read.csv(metadata_file, header = TRUE)
+snr_df <- dplyr::inner_join(snr, metadata_df, by= c("CellID" = "CellID"))
+snr_df <- snr_df[!colnames(snr_df) %in% c("nGene", "nUMI_RNA", "PercentMito", "Classification")]
+
+dups <- snr_df$CellID[duplicated(snr_df$CellID)]
+
+bc_list <- list()
+bc_list$Bar1 <- "HEK"
+bc_list$Bar2 <- "HEK"
+bc_list$Bar3 <- "MEF"
+bc_list$Bar4 <- "MEF"
+bc_list$Bar5 <- "Jurkats"
+bc_list$Bar6 <- "Jurkats"
+bc_list$Bar7 <- "Jurkats"
+bc_list$Bar8 <- "Jurkats"
+bc_list$Bar9 <- "Jurkats"
+bc_list$Bar10 <- "Jurkats"
+bc_list$Bar11 <- "Jurkats"
+bc_list$Bar12 <- "Jurkats"
+bc_list$Negative <- "Negative"
+bc_list$Doublet <- "Doublet"
+
+
+DoubletCelltypeList <- list()
+
+for (cellname in dups) {
+  doublet_type <- snr_df[snr_df$CellID == cellname,]$CellType
+  doublet_type <- doublet_type[naturalsort::naturalorder(doublet_type, decreasing=FALSE)] %>% paste(collapse='/')
+  DoubletCelltypeList[[cellname]] <- doublet_type
+}
+
+
+nodups_df <- snr_df[!snr_df$CellID %in% dups,]
+dups_df <- snr_df[snr_df$CellID %in% dups,]
+
+for (row in 1:nrow(dups_df)) {
+  dups_df[row, "CellType"] <- DoubletCelltypeList[[dups_df[row, "CellID"]]]
+}
+
+dups_df <- unique(dups_df)
+calls_w_dubs <- rbind(nodups_df, dups_df)
+```
+
+```{r}
+metadata_df
+```
+
+```{r}
+getConcordance <- function(calls_w_dubs, doublet_thresh, neg_thresh, diff_dist) {
+  
+  highest_dist <- stats::density(calls_w_dubs$Highest, adjust = 1, kernel = 'gaussian',
+                                     bw = 'SJ', give.Rkern = FALSE)
+  second_dist <- stats::density(calls_w_dubs$Second, adjust = 1, kernel = 'gaussian',
+                                    bw = 'SJ', give.Rkern = FALSE)
+  
+  vals <- c()
+  for (i in 2:length(highest_dist$y)) {
+    if (highest_dist$y[[i-1]] <= neg_thresh*max(highest_dist$y) & highest_dist$y[[i]] > neg_thresh*max(highest_dist$y)) {
+      vals <- c(vals, i)
+    }
+  }
+  val <- min(vals)
+  neg_cutoff <- highest_dist$x[[val]]
+  
+  
+  vals <- c()
+  for (i in 2:length(second_dist$y)) {
+    if (second_dist$y[[i-1]] > doublet_thresh*max(second_dist$y) & second_dist$y[[i]] <= doublet_thresh*max(second_dist$y)) {
+      vals <- c(vals, i)
+    }
+  }
+  val <- max(vals)
+  doublet_cutoff <- second_dist$x[[val]]
+  
+  print(doublet_cutoff)
+  print(neg_cutoff)
+  
+  
+
+  for (row in 1:nrow(calls_w_dubs)) {
+    calls_w_dubs[row, "BFF_Call1"] <- bc_list[[calls_w_dubs[row, "Barcode"]]]
+    calls_w_dubs[row, "BFF_Call2"] <- bc_list[[calls_w_dubs[row, "Barcode2"]]]
+    if (calls_w_dubs[row, "Highest"] <= neg_cutoff) {
+      calls_w_dubs[row, "BFF_Callout"] <- "Negative"
+    } else if (calls_w_dubs[row, "Second"] > doublet_cutoff){
+      doublet_type <- c(calls_w_dubs[row, "BFF_Call1"], calls_w_dubs[row, "BFF_Call2"])
+      doublet_type <- doublet_type[naturalsort::naturalorder(doublet_type, decreasing=FALSE)] %>% paste(collapse='/')
+      calls_w_dubs[row, "BFF_Callout"] <- doublet_type
+    } else if (calls_w_dubs[row, "Highest"] - calls_w_dubs[row, "Second"] <= diff_dist*1.236) {
+      doublet_type <- c(calls_w_dubs[row, "BFF_Call1"], calls_w_dubs[row, "BFF_Call2"])
+      doublet_type <- doublet_type[naturalsort::naturalorder(doublet_type, decreasing=FALSE)] %>% paste(collapse='/')
+      calls_w_dubs[row, "BFF_Callout"] <- doublet_type
+    } else {
+      calls_w_dubs[row, "BFF_Callout"] <- calls_w_dubs[row, "BFF_Call1"]
+    }
+  }
+  
+
+  
+  method1 <- as.character("BFF_Callout")
+  method2 <- as.character("CellType")
+  concordance <- calls_w_dubs
+  # names(concordance) <- c('method1', 'method2')
+  concordance
+  # concordance <- concordance %>% dplyr::group_by(method1, method2) %>% dplyr::summarise(Count = dplyr::n())
+  # concordance
+  
+  # concordance[1, "Class"] <- "GEX Singlet"
+  
+  for (row in 1:nrow(concordance)) {
+    if (concordance[[row, "CellType"]] %in% c("HEK", "Jurkats", "MEF")) {
+      concordance[row, "GEXClass"] <- "Singlet"
+    } else {
+      concordance[row, "GEXClass"] <- "Doublet"
+    }
+    if (concordance[[row, "BFF_Callout"]] %in% c("HEK", "Jurkats", "MEF")) {
+      concordance[row, "BFFClass"] <- "Singlet"
+    } else if (concordance[[row, "BFF_Callout"]] == "Negative") {
+      concordance[row, "BFFClass"] <- "Negative"
+    } else {
+      concordance[row, "BFFClass"] <- "Doublet"
+    }
+  }
+  concordance$Agree <- concordance$BFF_Callout == concordance$CellType
+  
+  for (row in 1:nrow(concordance)) {
+    if (concordance[[row, "Agree"]]) {
+        concordance[row, "label"] <- "Agree"
+    } else {
+      concordance[row, "label"] <- "Disagree"
+    }
+  }
+  return(concordance)
+}
+
+```
+
+```{r}
+concordance4<- getConcordance(calls_w_dubs, 0.05, 0.05, 0.1)
+concordance4$GEXClass <- factor(concordance4$GEXClass, levels = c("Singlet", "Doublet"))
+disagree <- concordance4[concordance4$label=="Disagree",]
+disagree
+```
+
+
+
+
+```{r}
+concordance1 <- getConcordance(calls_w_dubs, 0.05, .05, .1)
+concordance_bar <- concordance1 %>% group_by(GEXClass, label) %>% summarise(count = n()) %>% 
+  mutate(Percentage = count/sum(count))
+concordance_bar$thresh <- 0.05
+df <- concordance_bar
+for (doublet_thresh in 0.05*c(2:5)) {
+  temp_concordance <- getConcordance(calls_w_dubs, doublet_thresh, .05, .1)
+  temp_con_bar <- temp_concordance %>% group_by(GEXClass, label) %>% summarise(count = n()) %>% 
+    mutate(Percentage = count/sum(count))
+  temp_con_bar$thresh <- doublet_thresh
+  df <- rbind(df, temp_con_bar)
+}
+df$GEXClass <- factor(df$GEXClass, levels = c("Singlet", "Doublet"))
+```
+
+```{r}
+plotdf <- df[df$label=="Agree",]
+plotdf
+```
+
+```{r}
+library("wesanderson")
+getPalette = wes_palette("Zissou1", 12, type="continuous")
+
+Pout1 <- ggplot2::ggplot(plotdf, aes(thresh, Percentage, label=count)) + geom_line(aes(color=GEXClass)) + geom_text(hjust=0.5, vjust=-0.5, size=3) + egg::theme_presentation(base_size = 8) + xlim(0.025, .275) + ylim(0.775, 0.975) + theme(legend.position = c(0.55, 0.9), legend.text=element_text(size=7)) + ggtitle("A") + theme(text = element_text(size = 9)) + xlab(expression(beta[c])) + ylab("Sensitivity") +labs(subtitle = expression("BFF Sensitivity for varying "* beta[c]* " ("*alpha[c]* "=0.05, " * Delta[c]*" = 0.1)"), color = "GEX Classification") + theme(legend.title = element_text(size = 7)) + scale_color_manual(values=getPalette[c(1,12)])
+
+labs(title = "B",
+       subtitle = "Droplets with GEX/BFF Conflicts", color='BFF Classification', shape = "GEX Classification")
+
+Pout1
+```
+
+```{r}
+doublet_thresh <- 0.15
+
+second_dist <- stats::density(calls_w_dubs$Second, adjust = 1, kernel = 'gaussian',
+                                    bw = 'SJ', give.Rkern = FALSE)
+vals <- c()
+  for (i in 2:length(second_dist$y)) {
+    if (second_dist$y[[i-1]] > doublet_thresh*max(second_dist$y) & second_dist$y[[i]] <= doublet_thresh*max(second_dist$y)) {
+      vals <- c(vals, i)
+    }
+  }
+  val <- max(vals)
+  new_doublet_cutoff <- second_dist$x[[val]]
+  new_doublet_cutoff
+```
+
+```{r}
+# for (row in 1:nrow(disagree)) {
+#   if (disagree[row, "BFF_Call1"] %in% c("Jurkats/Jurkats", "HEK/HEK", "MEF/MEF")) {
+#     disagree[row, "BFF_Global"] <- "Same Species Doublet (or Singlet)"
+#   } else if (disagree[row, "BFF_Call1"] %in% c("Jurkats/MEF", "HEK/MEF")){
+#     disagree[row, "BFF_Global"] <- "Mouse/Human Doublet"
+#   } else if (disagree[row, "BFF_Call1"] %in% c("HEK/Jurkats")) {
+#     disagree[row, "BFF_Global"] <- "Same Species Doublet (or Singlet)"
+#   } else {
+#     disagree[row, "BFF_Global"] <- "Same Species Doublet (or Singlet)"
+#   }
+# }
+for (row in 1:nrow(disagree)) {
+  if (disagree[row, "BFF_Callout"] %in% c("Jurkats/Jurkats", "HEK/HEK", "MEF/MEF")) {
+    disagree[row, "SameSpecies_Top2"] <- "Same Species"
+  } else if (disagree[row, "BFF_Callout"] %in% c("Jurkats/MEF", "HEK/MEF")){
+    disagree[row, "SameSpecies_Top2"] <- "Mouse/Human"
+  } else if (disagree[row, "BFF_Callout"] %in% c("HEK/Jurkats")) {
+    disagree[row, "SameSpecies_Top2"] <- "Same Species"
+  } else {
+  # } else if (disagree[row, "BFFClass"] == "Singlet") {
+    if ((disagree[row, "BFF_Call1"] %in% c("Jurkats", "HEK")) & (disagree[row, "BFF_Call2"] %in% c("Jurkats", "HEK"))){
+      disagree[row, "SameSpecies_Top2"] <- "Same Species"
+    } else if ((disagree[row, "BFF_Call1"]=="MEF") & (disagree[row, "BFF_Call2"]=="MEF")){
+      disagree[row, "SameSpecies_Top2"] <- "Same Species"
+    } else {
+      disagree[row, "SameSpecies_Top2"] <- "Mouse/Human"
+    }
+  }
+  
+  # else {
+  #   disagree[row, "SameSpecies_Top2"] <- "Same Species Doublet (or Singlet)"
+  # }
+}
+```
+
+```{r}
+library("wesanderson")
+getPalette = wes_palette("Zissou1", 12, type="continuous")
+doublet_cutoff <- 2.207107
+neg_cutoff <- 2.000553
+
+
+# mis <- mat[mat[,"label"]=="misclassification",]
+# points_mis <-cbind(x=mis$Highest, y=mis$Second)
+# dens_mis <- dbscan::pointdensity(points_mis, eps=.5, type="frequency")
+# mis <- cbind(mis, dens_mis)
+# mis$ratio <- mis$dens_mis/mis$dens
+# mis
+
+d=data.frame(x=c(neg_cutoff, neg_cutoff, Inf,Inf, doublet_cutoff + 0.1*1.236, neg_cutoff), y=c(neg_cutoff - 0.1*1.236, neg_cutoff, max(disagree$Highest+0.15), doublet_cutoff, doublet_cutoff, neg_cutoff - 0.1*1.236))
+
+e=data.frame(x=c(neg_cutoff, neg_cutoff, doublet_cutoff + 0.1*1.236 ,Inf, Inf),  y=c(-Inf, neg_cutoff - 0.1*1.236, doublet_cutoff, doublet_cutoff, -Inf))
+
+f=data.frame(x=c(-Inf, -Inf, neg_cutoff, neg_cutoff),  y=c(-Inf,min(disagree$Second-0.1), neg_cutoff, -Inf))
+
+# "BFF/GE Mismatch\n(Human)", "BFF/GE Mismatch\n(Interspecies)", "GE Doublet\n(Interspecies)"
+# "MEF/(Jurkat or HEK) GE Doublet","Jurkat/HEK conflict","MEF/(Jurkat or HEK) conflict"
+
+# Pout2 <- ggplot2::ggplot(disagree, aes(x=Highest, y=Second)) + 
+#   geom_point(aes(color= factor(BFF_Global), shape=factor(GEXClass)), size= 1) + scale_shape_manual(values = c(1, 3)) +
+
+Pout2 <- ggplot2::ggplot(disagree, aes(x=Highest, y=Second)) +
+  geom_point(aes(color= factor(SameSpecies_Top2), shape=factor(GEXClass, labels=c("Singlet","Doublet"))), size= 1) + scale_shape_manual(values = c(1, 3)) + scale_color_manual(values=getPalette[c(12,1)]) + 
+  
+    
+  geom_polygon(data=d, aes(x=x, y=y, color=NULL), fill="#d8161688", alpha = 1/10, linetype="blank") + geom_polygon(data=e, aes(x=x, y=y, color=NULL), fill="#80B1D3", alpha = 1/10, linetype="blank") + geom_polygon(data=f, aes(x=x, y=y, color=NULL), fill="#CCEBC5", alpha = 1/5, linetype="blank") +
+  
+  
+  geom_hline(yintercept = doublet_cutoff, size=0.2) + geom_vline(xintercept = neg_cutoff, size=0.2) +
+  geom_segment(x=neg_cutoff, y=neg_cutoff - 0.1*1.236, xend= doublet_cutoff+0.1*1.236, yend=doublet_cutoff, linetype="dashed", color="black", size=0.2) + geom_segment(x=2.75, y=new_doublet_cutoff, xend= 3.5, yend=new_doublet_cutoff, linetype="dotted", color="black", size=0.4) + 
+  
+  annotate("text", x = 2.07, y = 1.2, label = expression(alpha[c]), size=3) + annotate("text", x = 2.27, y = 1.2, label = " = 0.05", size=3) +
+  annotate("text", x = 3.55, y = 2.1, label = expression(beta[c]), size=3) + annotate("text", x = 3.75, y = 2.1, label = "= 0.15", size=3) +
+  annotate("text", x = 2.25, y = 2.0, label = expression(Delta[c]), size=3) + annotate("text", x = 2.43, y = 2.0, label = "= 0.1", size=3) + annotate("text", x = 1.5, y = 2.27, label = expression(beta[c]), size=3) + annotate("text", x = 1.72, y = 2.27, label = "= 0.05", size=3) +
+  
+  annotate("text",  x = 3.7, y = 2.4, label = "BFF Doublets", size=2) + 
+  annotate("text",  x = 3.7, y = 1.35, label = "BFF Singlets", size=2) + 
+  annotate("text",  x = 1.69, y = 1.35, label = "BFF Negatives", size=2) + 
+  
+  labs(title = "B",
+       subtitle = "Droplets with GEX/BFF Conflicts", color='Top 2 Barcode Species', shape = "GEX Classification")  + egg::theme_presentation(base_size = 9) +
+  guides(color=guide_legend(override.aes=list(size=1, fill=NA))) +
+  theme(legend.position = c(0.45, 0.75), legend.title = element_text(size = 7)) 
+
+# theme(legend.position = c(0.45, 0.75), legend.text=element_text(size=7)) +
+
+Pout2
+```
+
+```{r}
+Pout1 + Pout2
+```
+
+```{r}
+disagree
+```
+
+```{r}
+table(disagree$BFF_Call1[disagree$BFFClass=="Singlet"])
+```
+
+
+
+```{r}
+table(disagree$BFF_Global)
+```
+
+
+```{r}
+disagree
+```
+
+```{r}
+disagree$BFF_Global <- factor(disagree$BFF_Global, levels = c("Same Species Doublet (or Singlet)", "Mouse/Human Doublet"))
+```
+
+```{r}
+disagree
+```
+
+
+
+
+```{r}
+# 
+# # mis <- mat[mat[,"label"]=="misclassification",]
+# # points_mis <-cbind(x=mis$Highest, y=mis$Second)
+# # dens_mis <- dbscan::pointdensity(points_mis, eps=.5, type="frequency")
+# # mis <- cbind(mis, dens_mis)
+# # mis$ratio <- mis$dens_mis/mis$dens
+# # mis
+# 
+# d=data.frame(x=c(neg_cutoff, neg_cutoff, Inf,Inf, doublet_cutoff + 0.1*1.236, neg_cutoff), y=c(neg_cutoff - 0.1*1.236, neg_cutoff, max(disagree$Highest+0.15), doublet_cutoff, doublet_cutoff, neg_cutoff - 0.1*1.236))
+# 
+# e=data.frame(x=c(neg_cutoff, neg_cutoff, doublet_cutoff + 0.1*1.236 ,Inf, Inf),  y=c(-Inf, neg_cutoff - 0.1*1.236, doublet_cutoff, doublet_cutoff, -Inf))
+# 
+# f=data.frame(x=c(-Inf, -Inf, neg_cutoff, neg_cutoff),  y=c(-Inf,min(disagree$Second-0.1), neg_cutoff, -Inf))
+# 
+# # "BFF/GE Mismatch\n(Human)", "BFF/GE Mismatch\n(Interspecies)", "GE Doublet\n(Interspecies)"
+# # "MEF/(Jurkat or HEK) GE Doublet","Jurkat/HEK conflict","MEF/(Jurkat or HEK) conflict"
+# 
+# Pout2 <- ggplot2::ggplot(disagree, aes(x=Highest, y=Second, color= factor(GEXClass, labels=c("GEX Singlet","GEX Doublet")))) + 
+#   geom_point(aes(shape=BFF_Global), size= 2) + ggtitle("B")  + scale_shape_manual(values = c(1, 3, 4)) +
+#   
+#   geom_polygon(data=d, aes(x=x, y=y, color=NULL), fill="#d8161688", alpha = 1/10, linetype="blank") + geom_polygon(data=e, aes(x=x, y=y, color=NULL), fill="#80B1D3", alpha = 1/10, linetype="blank") + geom_polygon(data=f, aes(x=x, y=y, color=NULL), fill="#CCEBC5", alpha = 1/5, linetype="blank") +
+#   
+#   
+#   geom_hline(yintercept = doublet_cutoff, size=0.2) + geom_vline(xintercept = neg_cutoff, size=0.2) +
+#   geom_segment(x=neg_cutoff, y=neg_cutoff - 0.1*1.236, xend= doublet_cutoff+0.1*1.236, yend=doublet_cutoff, linetype="dashed", color="black", size=0.2) + geom_segment(x=2.75, y=new_doublet_cutoff, xend= 3.5, yend=new_doublet_cutoff, linetype="dotted", color="black", size=0.4) + 
+#   
+#   annotate("text", x = 2.07, y = 1.2, label = expression(alpha[c]), size=3) + annotate("text", x = 2.27, y = 1.2, label = " = 0.05", size=3) +
+#   annotate("text", x = 3.55, y = 2.1, label = expression(beta[c]), size=3) + annotate("text", x = 3.75, y = 2.1, label = "= 0.15", size=3) +
+#   annotate("text", x = 2.25, y = 2.0, label = expression(Delta[c]), size=3) + annotate("text", x = 2.43, y = 2.0, label = "= 0.1", size=3) + annotate("text", x = 1.5, y = 2.27, label = expression(beta[c]), size=3) + annotate("text", x = 1.72, y = 2.27, label = "= 0.05", size=3) +
+#   
+#   annotate("text",  x = 3.75, y = 2.4, label = "BFF Doublets", size=2.5) + 
+#   annotate("text",  x = 3.75, y = 1.35, label = "BFF Singlets", size=2.5) + 
+#   annotate("text",  x = 1.7, y = 1.35, label = "BFF Negatives", size=2.5) + 
+#   
+#   labs(color = "Droplets with\nBFF/GEX Conflicts")  + egg::theme_presentation(base_size = 9) +
+#   guides(color=guide_legend(override.aes=list(size=1, fill=NA))) +
+#   theme(legend.position = c(0.45, 0.85), legend.text=element_text(size=9))
+# 
+# Pout2
+```
+
+
+```{r}
+pdf("/Users/boggy/bimberlab/BFF/Figures/PDFs/GEX_BFF.pdf", width = 7, height=3.5)
+Pout1 + Pout2
+dev.off()
+```
+

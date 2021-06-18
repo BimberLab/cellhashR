@@ -1,0 +1,353 @@
+---
+title: "Simulated Densities"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+```{r results='hide', message=FALSE}
+library(Seurat)
+library(OOSAP)
+library(devtools)
+library(cellhashR)
+library(dplyr)
+library(ggplot2)
+library(forcats)
+library(stringr)
+
+source('/Users/boggy/bimberlab/cellhashR/R/BFF_Demux.R')
+source('/Users/boggy/bimberlab/cellhashR/R/Normalization.R')
+source('/Users/boggy/bimberlab/cellhashR/R/Utils.R')
+```
+
+```{r}
+rawCountData <- "/Users/boggy/bimberlab/cell_type_counts.csv"
+
+barcodeData_t <- (read.csv(rawCountData, header = TRUE, row.names = 1))
+zeros <- row.names(barcodeData_t[barcodeData_t$Bar1 == 0,])
+barcodeData_t_fin <- barcodeData_t[!row.names(barcodeData_t) %in% zeros,]
+barcodeData <- t(barcodeData_t_fin)
+
+BQN <- NormalizeBimodalQuantile(barcodeData)
+snr <- SNR(BQN[[3]])
+
+metadata_file <- "/Users/boggy/bimberlab/cell_type_meta.csv"
+metadata_df <- read.csv(metadata_file, header = TRUE)
+snr_df <- dplyr::inner_join(snr, metadata_df, by= c("CellID" = "CellID"))
+snr_df <- snr_df[!colnames(snr_df) %in% c("nGene", "nUMI_RNA", "PercentMito", "Classification")]
+
+all_calls <- "/Users/boggy/bimberlab/cell_type_calls_trial2.csv"
+calls_df <- read.csv(all_calls, header = TRUE, sep = '\t')
+calls_df <- calls_df[, !colnames(calls_df) %in% c('consensuscall', 'consensuscall.global')]
+
+allcalls_df <- calls_df
+allcalls_w_meta_df <- dplyr::inner_join(metadata_df, allcalls_df, by= c("CellID" = "cellbarcode"))
+allcalls_w_meta_df <- allcalls_w_meta_df[,!colnames(allcalls_w_meta_df) %in% c("nGene", "nUMI_RNA", "PercentMito", "seqnd")]
+df <- allcalls_w_meta_df
+
+dups <- df$CellID[duplicated(df$CellID)]
+df2 <- df[!df$CellID %in% dups,]
+
+df3 <- df[df$CellID==dups[1],][1,]
+for (i in 2:length(dups)) {
+  df3[i,] <- df[df$CellID==dups[i],][1,]
+}
+df3$CellType <- "Doublet"
+
+df4 <- rbind(df3,df2)
+row.names(df4) <- 1:nrow(df4)
+df <- df4
+bar_tab <- table(df$Classification, df$bff_q01)
+
+bc_dict <- list()
+jurkat_bcs <- colnames(bar_tab)[apply(bar_tab[row.names(bar_tab)[str_detect(row.names(bar_tab), "Jurkat")],], 1, which.max)]
+for (i in jurkat_bcs){
+  bc_dict[i] = "Jurkats"
+}
+hek_bcs <-colnames(bar_tab)[apply(bar_tab[row.names(bar_tab)[str_detect(row.names(bar_tab), "HEK")],], 1, which.max)]
+for (i in hek_bcs){
+  bc_dict[i] = "HEK"
+}
+mef_bcs <-colnames(bar_tab)[apply(bar_tab[row.names(bar_tab)[str_detect(row.names(bar_tab), "MEF")],], 1, which.max)]
+for (i in mef_bcs){
+  bc_dict[i] = "MEF"
+}
+
+call1 <- c()
+call2 <- c()
+label <- c()
+for (i in 1:dim(snr_df)[[1]]) {
+  call1[i] <- bc_dict[[snr_df[[i, "Barcode"]]]]
+  call2[i] <- bc_dict[[snr_df[[i, "Barcode2"]]]]
+  if (snr_df[[i,"CellID"]] %in% dups) {
+    label[i] <- "doublet"
+  } else if (snr_df[[i,"CellType"]] != call1[i]) {
+    label[i] <- "misclassification"
+  } else if (call1[i] == call2[i]) {
+    label[i] <- "same"
+  } else label[i] <- "different"
+}
+df_fin <- cbind(snr_df, call1, call2, label)
+df_fin2 <- df_fin
+df_fin <-df_fin[!colnames(df_fin) %in% "CellType"]
+df_fin <- unique(df_fin)
+```
+
+```{r}
+snr
+```
+
+
+```{r}
+df_calls <- df_fin
+df_calls
+```
+
+```{r}
+doublet_thresh <- 0.05
+neg_thresh <- 0.05
+highest_dist <- stats::density(df_fin$Highest, adjust = 1, kernel = 'gaussian',
+                                   bw = 'SJ', give.Rkern = FALSE)
+second_dist <- stats::density(df_fin$Second, adjust = 1, kernel = 'gaussian',
+                                  bw = 'SJ', give.Rkern = FALSE)
+
+vals <- c()
+  for (i in 2:length(highest_dist$y)) {
+    if (highest_dist$y[[i-1]] <= neg_thresh*max(highest_dist$y) & highest_dist$y[[i]] > neg_thresh*max(highest_dist$y)) {
+      vals <- c(vals, i)
+    }
+  }
+  val <- min(vals)
+  neg_cutoff <- highest_dist$x[[val]]
+  
+  
+  vals <- c()
+  for (i in 2:length(second_dist$y)) {
+    if (second_dist$y[[i-1]] > doublet_thresh*max(second_dist$y) & second_dist$y[[i]] <= doublet_thresh*max(second_dist$y)) {
+      vals <- c(vals, i)
+    }
+  }
+  val <- max(vals)
+  doublet_cutoff <- second_dist$x[[val]]
+  
+```
+
+```{r}
+classification <- c()
+called <- c()
+dist_frac <- 0.1
+for (i in 1:nrow(snr)) {
+  
+  if (snr[i, "Highest"] >= neg_cutoff) {
+    if (snr[i, "Second"] <= doublet_cutoff) {
+      if (snr[i, "Highest"] - snr[i, "Second"] >= 0.1*1.236) {
+        called <- c(called, snr[i, "CellID"])
+        classification[i] <- "Singlet"
+      } else {
+        classification[i] <- "Doublet"
+      }
+      
+    } else {
+      classification[i] <- "Doublet"
+    }
+  } else {
+    classification[i] <- "Negative"
+  }
+}
+
+joined <- cbind(snr, classification)
+
+
+```
+
+```{r}
+library("RColorBrewer")
+library("wesanderson")
+move <- 0.05
+getPalette = wes_palette("Zissou1", 12, type="continuous")
+
+P1 <- ggplot2::ggplot(joined, aes(x=Highest, y=Second, color=classification)) + 
+            geom_point(cex=0.25) + scale_color_manual(values = getPalette[c(12,5,1)]) +
+  geom_hline(yintercept = doublet_cutoff, size=0.25) + geom_segment(x=neg_cutoff, y=neg_cutoff - 0.1*1.236, xend= doublet_cutoff+0.1*1.236, yend=doublet_cutoff, linetype="dashed", color="black", size=0.25) +
+            geom_segment(x=2.05 - move, y=2.05 - move, xend= 2.15 - move, yend=2.15 - move, color="black", size=0.25) + geom_vline(xintercept = neg_cutoff, size=0.25) + ggtitle("D") +
+      egg::theme_presentation(base_size = 9) + theme(legend.position = c(0.5, 0.85), legend.text=element_text(size=9)) + guides(colour = guide_legend(override.aes = list(size=1))) + annotate("text", x = 2.05, y = 1.2, label = expression(alpha), size=3) +
+  annotate("text", x = 3.9, y = 2.3, label = expression(beta), size=3) + annotate("text", x = 2.065 - move/2, y = 2.15 - move/2, label = expression(Delta), size=3) + 
+  # annotate("text", x = 3.9, y = 2.3, label = expression(beta)) + annotate("text", x = 2.065, y = 2, label = expression(Delta)) +
+  annotate(
+             "segment", x = 2.102 - move, xend = 2.15 - move, y = 2.08 - move, yend = 2.03 - move, arrow = arrow(ends = "both", length = unit(.1,"cm")), size=0.4) +
+  labs(color = "BFF Classifications")
+
+    Plast <- ggExtra::ggMarginal(P1, size=6)
+    grid::grid.newpage()
+    grid::grid.draw(Plast)
+```
+
+
+
+```{r}
+library(ggplot2)
+mean1=1.0
+sd1=0.5
+wt1 = 10
+
+mean2 = 3.5
+sd2 = 0.5
+wt2 = 2
+
+move <- 1
+
+x <- seq(-1,5,by = 0.01)
+y <- dnorm(x,mean1,sd1) * wt1 + dnorm(x,mean2,sd2) * wt2
+df <- as.data.frame(cbind(x, y))
+p4 <- ggplot(df, aes(x = x, y = y)) + geom_line() + xlab("Log(Counts)") +ylab("Density")  +  scale_y_continuous(limits = c(0, 10), expand = c(0, 0)) + 
+  annotate("segment", x = 1, xend = 1, y = 7.5, yend = 8.5, size=0.5) + 
+  annotate("segment", x = 3.5, xend = 3.5, y = 7.5, yend = 8.5, size=0.5) + 
+  annotate("segment", x = 1.03, xend = 3.47, y = 8, yend = 8, size = 0.3, arrow = arrow(ends = "both", length = unit(.1,"cm"))) +
+  annotate("text", x = 1, y = 4, label = "-", size=4) + 
+  annotate("text", x = 3.5, y = 0.75, label = "+", size=4) + 
+  annotate("text", x = 2.25, y = 9, label = expression(d[IP]), size=3) +
+  geom_ribbon(data=subset(df, x>1.76 + move & x<=2.14 + move), aes(ymax=y), ymin=0, fill="gray") + 
+  geom_line() + 
+  annotate("segment", x = 1.76 + move, xend = 1.76 + move, y = 0, yend = 2.5, linetype="dotted", size=0.3) + 
+  annotate("segment", x = 2.14 + move, xend = 2.14 + move, y = 0, yend = 2.5, linetype="dotted", size=0.3) + 
+  xlab("Log(BQN Counts)") +ylab("Density") + 
+  annotate("segment", x = 1.78 + move, xend = 2.12 + move, y = 2, yend = 2, size = 0.3, 
+           arrow = arrow(ends = "both", length = unit(.1,"cm"))) + 
+  annotate("text", x = 1.95 + move, y = 3.5, label = expression(Delta), size=3) +
+  annotate("text", x = 2.4 + move, y = 3.5, label = "=", size=3) +
+  annotate("text", x = 3 + move, y = 3.5, label = expression(Delta[c] * d[IP]), size=3) +
+   
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black")) + geom_hline(yintercept = 0) + ggtitle("C") + theme(axis.text.y = element_blank(),
+  axis.ticks = element_blank(), title = element_text(size=9),
+  axis.title.x = element_text(size=8), axis.title.y = element_text(size=8))
+
+p4
+```
+
+```{r}
+mean1=1.0
+sd1=0.5
+wt1 = 10
+
+mean2 = 3.5
+sd2 = 0.5
+wt2 = 1
+
+x <- seq(-1,5,by = 0.01)
+y <- dnorm(x,mean1,sd1) * wt1 + dnorm(x,mean2,sd2) * wt2
+df <- as.data.frame(cbind(x, y))
+p1 <- ggplot(df, aes(x = x, y = y)) + geom_line() + 
+  annotate("text", x = 1, y = 2, label = "Negative Peak") + annotate("text", x = 3.5, y = 2, label = "Positive Peak") + geom_vline(xintercept = 2.52, linetype="dashed", color = "red") + xlab("Log(Raw Counts)") +ylab("Density") +  
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black")) + geom_hline(yintercept = 0) + ggtitle("A") + theme(axis.text.y = element_blank(),
+  axis.ticks = element_blank(), title = element_text(size=9),
+  axis.title.x = element_text(size=8), axis.title.y = element_text(size=8))
+
+p1
+
+```
+
+
+```{r}
+mean1=1.0
+sd1=0.5
+wt1 = 10
+
+mean2 = 3.5
+sd2 = 1
+wt2 = 2
+move <- 0.5
+
+x <- seq(-1,5,by = 0.01)
+y <- dnorm(x,mean1,sd1) * wt1 + dnorm(x,mean2,sd2) * wt2
+df <- as.data.frame(cbind(x, y))
+p3 <- ggplot(df, aes(x = x, y = y)) + geom_ribbon(data=subset(df, x>=2.01), aes(ymax=y), ymin=0, fill="gray") + geom_line() + geom_vline(xintercept = 2.01, linetype="dashed") + xlab("Log(BQN 2nd-highest Counts)") +ylab("Density") + scale_y_continuous(limits = c(0, 10), expand = c(0, 0)) + 
+  
+  annotate("text", x = 2.15, y = 5, label = expression(beta), size=3) + 
+  annotate("text", x = 3.5, y = 8, label = "Doublets", size=3) + 
+  
+  annotate("point", x = 1, y = 8, size=1) + 
+  annotate("text", x = 1.2, y = 9, label = expression(D[max]), size=3) + 
+  annotate("point", x = 2.01, y = 1.3, size=1) + 
+  annotate("text", x = 2.05 + move, y = 2.0, label = expression(D(beta)), size=3) +
+  annotate("text", x = 2.6 + move, y = 2.0, label = "=", size=3) +
+  annotate("text", x = 3.3 + move, y = 2.0, label = expression(beta[c] * D[max]), size=3) +
+  
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black")) + geom_hline(yintercept = 0) + ggtitle("B") + theme(axis.text.y = element_blank(),
+  axis.ticks = element_blank(), title = element_text(size=9),
+  axis.title.x = element_text(size=8), axis.title.y = element_text(size=8))
+
+p3
+
+```
+
+```{r}
+mean1=1.0
+sd1=1
+wt1 = 2
+
+mean2 = 3.5
+sd2 = 0.65
+wt2 = 12
+move <- 0.7
+
+x <- seq(-1,5,by = 0.01)
+y <- dnorm(x,mean1,sd1) * wt1 + dnorm(x,mean2,sd2) * wt2
+df <- as.data.frame(cbind(x, y))
+p2 <- ggplot(df, aes(x = x, y = y)) + 
+  geom_ribbon(data=subset(df, x<2.2), aes(ymax=y), ymin=0, fill="gray") + 
+  geom_line()  + scale_y_continuous(limits = c(0, 10), expand = c(0, 0)) + 
+  geom_vline(xintercept = 2.2, linetype="dashed") + 
+  xlab("Log(BQN Highest Counts)") +ylab("Density") + 
+  annotate("text", x = 0.75, y = 8, label = "Negatives", size=3) +
+  annotate("text", x = 2, y = 4.5, label = expression(alpha), size=3) + 
+  
+  
+  annotate("point", x = 3.5, y = 7.4, size=1) + 
+  annotate("text", x = 3.7, y = 8.4, label = expression(D[max]), size=3) + 
+  annotate("point", x = 2.2, y = 1.4, size=1) + 
+  annotate("text", x = 2.05 + move, y = 1.2, label = expression(D(alpha)), size=3) +
+  annotate("text", x = 2.6 + move, y = 1.2, label = "=", size=3) +
+  annotate("text", x = 3.3 + move, y = 1.2, label = expression(alpha[c] * D[max]), size=3) +
+  
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black")) + geom_hline(yintercept = 0) + ggtitle("A") + theme(axis.text.y = element_blank(),
+  axis.ticks = element_blank(), title = element_text(size=9),
+  axis.title.x = element_text(size=8), axis.title.y = element_text(size=8))
+
+p2
+```
+
+
+
+
+```{r fig.width= 6, fig.height=3}
+library(patchwork)
+# pout <- ((p1|p2)/(p3|p4))| Plast
+pout <- (p2/p3/p4)| Plast
+pout + plot_layout(widths = c(1, 2)) + theme(plot.margin = margin(0, 0, 0, 0))
+```
+
+```{r fig.width= 6, fig.height=3}
+pdf("/Users/boggy/bimberlab/BFF/Figures/PDFs/sim_curves.pdf", width = 7, height = 4.5)
+pout + plot_layout(widths = c(1, 2)) + theme(plot.margin = margin(0, 0, 0, 0))
+dev.off()
+```
+
+
+```{r fig.width= 6, fig.height=3}
+png("/Users/boggy/bimberlab/cellhashR/examples/BFF-example2_files/figure-html/sim_curves.png", width = 7, height = 4.5, units="in", res=150)
+pout + plot_layout(widths = c(1, 2)) + theme(plot.margin = margin(0, 0, 0, 0))
+dev.off()
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+

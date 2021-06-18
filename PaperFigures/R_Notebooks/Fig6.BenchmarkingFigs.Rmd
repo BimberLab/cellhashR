@@ -1,0 +1,285 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library("wesanderson")
+getPalette = wes_palette("Zissou1", 7, type="continuous")
+
+df <- NULL
+
+infilename <- paste0("/Users/boggy/bimberlab/BFF/DataSubsets_and_Results/overallcalls/overallcalls.csv")
+res<- (read.csv(infilename, header = TRUE, row.names = 1, sep="\t"))
+df <- data.frame(res)
+
+gmm_infilename <- paste0("/Users/boggy/bimberlab/BFF/DataSubsets_and_Results/GMMoutput/GMM_full.csv")
+res.df<- data.frame(read.csv(gmm_infilename, header = TRUE, row.names = 1, sep=","))
+for (j in 1:nrow(res.df)){
+  res.df[j,"Barcode"] <- ifelse(res.df[j,"Cluster_id"] <=12, ifelse(res.df[j,"Cluster_id"]==0, "Negative", paste0("Bar", res.df[j,"Cluster_id"])), "Doublet")
+}
+res.df2 <- data.frame(GMMDemux=res.df$Barcode)
+rownames(res.df2) <- rownames(res.df)
+
+# cons.infilename <- paste0("/Users/boggy/bimberlab/BFF/DataSubsets_and_Results/conscalls/conscalls.csv")
+# cons.res<- (read.csv(cons.infilename, header = TRUE, row.names = 1, sep="\t"))
+# cons.df <- data.frame(cons.res)
+# colnames(cons.df) <- c("bff_quantile_cons", "consensuscall", "consensuscall.global")
+# 
+# supercons.infilename <- paste0("/Users/boggy/bimberlab/BFF/DataSubsets_and_Results/conscalls/superconscalls.csv")
+# supercons.res<- (read.csv(supercons.infilename, header = TRUE, row.names = 1, sep="\t"))
+# supercons.df <- data.frame(supercons.res)
+# colnames(supercons.df) <- c("bff_quantile_supercons", "consensuscall", "consensuscall.global")
+
+merged <- merge(df, res.df2, by=0, all=TRUE)
+merged <- merged[,!colnames(merged) %in% c("consensuscall", "consensuscall.global")]
+
+# merged2 <- merge(merged, cons.df, by.x = "Row.names", by.y=0, all=TRUE)
+
+# merged2 <- merged2[,!colnames(merged2) %in% c("consensuscall", "consensuscall.global")]
+
+# merged3 <- merge(merged2, supercons.df, by.x = "Row.names", by.y=0, all=TRUE)
+
+# merged3 <- merged3[,!colnames(merged3) %in% c("consensuscall", "consensuscall.global")]
+
+metadata_file <- "/Users/boggy/bimberlab/cell_type_meta.csv"
+metadata_df <- read.csv(metadata_file, header = TRUE)
+metadata_df <- metadata_df[,colnames(metadata_df) %in% c("CellID", "CellType")]
+
+dups <- metadata_df$CellID[duplicated(metadata_df$CellID)]
+meta_nodups <- metadata_df[!metadata_df$CellID %in% dups,]
+meta_nodups <- meta_nodups[,colnames(meta_nodups) %in% c("CellID", "CellType")]
+doublet_df <- metadata_df[metadata_df$CellID %in% dups,]
+doublet_df$CellType <- "Doublet"
+doublet_df <- doublet_df[,colnames(doublet_df) %in% c("CellID", "CellType")]
+doublet_df <- unique(doublet_df)
+final_meta_df <- rbind(meta_nodups, doublet_df)
+
+df_w_meta <- dplyr::left_join(merged, final_meta_df, by=c("Row.names" = "CellID"))
+
+bc_list <- list()
+bc_list$Bar1 <- "HEK"
+bc_list$Bar2 <- "HEK"
+bc_list$Bar3 <- "MEF"
+bc_list$Bar4 <- "MEF"
+bc_list$Bar5 <- "Jurkats"
+bc_list$Bar6 <- "Jurkats"
+bc_list$Bar7 <- "Jurkats"
+bc_list$Bar8 <- "Jurkats"
+bc_list$Bar9 <- "Jurkats"
+bc_list$Bar10 <- "Jurkats"
+bc_list$Bar11 <- "Jurkats"
+bc_list$Bar12 <- "Jurkats"
+bc_list$Negative <- "Negative"
+bc_list$Doublet <- "Doublet"
+
+
+cellcalls <- NULL
+methods <- colnames(df_w_meta)[!colnames(df_w_meta) %in% c("Row.names", "CellType")]
+methods <- methods[order(methods)]
+
+temp <- df_w_meta
+
+for (method in methods) {
+  tempname <- paste0(method, "_cell")
+  for (row in 1:nrow(temp)) {
+    temp[row, tempname] <- bc_list[temp[row,method]]
+  }
+}
+cellcalls <- temp
+```
+
+```{r}
+df
+```
+
+
+```{r}
+# cellcalls_fin <- cellcalls[colnames(cellcalls) %in% c("Row.names", "bff_quantile_cell", "bff_quantile_cons_cell", "bff_quantile_supercons_cell", "bff_threshold_cell", "dropletutils_cell", "GMMDemux_cell", "htodemux_cell", "multiseq_cell", "CellType")]
+
+cellcalls_fin <- cellcalls[colnames(cellcalls) %in% c("Row.names", "bff_quantile_cell", "bff_threshold_cell", "dropletutils_cell", "GMMDemux_cell", "htodemux_cell", "multiseq_cell", "CellType")]
+```
+
+
+
+```{r}
+callslist <- list()
+
+for (i in 1:10) {
+
+  df <- NULL
+  
+  infilename <- paste0("/Users/boggy/bimberlab/BFF/DataSubsets_and_Results/10fold_output/subset", i, ".csv")
+  res<- (read.csv(infilename, header = TRUE, row.names = 1, sep="\t"))
+  df <- data.frame(res)
+  
+  gmm_infilename <- paste0("/Users/boggy/bimberlab/BFF/DataSubsets_and_Results/GMMres10/results", i, "/GMM_full.csv")
+  res.df<- data.frame(read.csv(gmm_infilename, header = TRUE, row.names = 1, sep=","))
+  for (j in 1:nrow(res.df)){
+    res.df[j,"Barcode"] <- ifelse(res.df[j,"Cluster_id"] <=12, ifelse(res.df[j,"Cluster_id"]==0, "Negative", paste0("Bar", res.df[j,"Cluster_id"])), "Doublet")
+  }
+  res.df2 <- data.frame(GMMDemux=res.df$Barcode)
+  rownames(res.df2) <- rownames(res.df)
+
+  # cons.infilename <- paste0("/Users/boggy/bimberlab/BFF/DataSubsets_and_Results/10fold_output_cons/subset", i, ".csv")
+  # cons.res<- (read.csv(cons.infilename, header = TRUE, row.names = 1, sep="\t"))
+  # cons.df <- data.frame(cons.res)
+  # colnames(cons.df) <- c("bff_quantile_cons", "consensuscall", "consensuscall.global")
+  # 
+  # supercons.infilename <- paste0("/Users/boggy/bimberlab/BFF/DataSubsets_and_Results/10fold_output_supercons/subset", i, ".csv")
+  # supercons.res<- (read.csv(supercons.infilename, header = TRUE, row.names = 1, sep="\t"))
+  # supercons.df <- data.frame(supercons.res)
+  # colnames(supercons.df) <- c("bff_quantile_supercons", "consensuscall", "consensuscall.global")
+
+
+  # merged <- df
+  merged <- merge(df, res.df2, by=0, all=TRUE)
+  merged <- merged[,!colnames(merged) %in% c("consensuscall", "consensuscall.global")]
+  
+  callslist[[i]] <- merged
+}
+
+df_w_meta <- NULL
+for (i in 1:10) {
+  df_w_meta[[i]] <- dplyr::left_join(callslist[[i]], final_meta_df, by=c("Row.names" = "CellID"))
+  # df_w_meta[[i]] <- dplyr::left_join(tibble::rownames_to_column(callslist[[i]], var = "Row.names"), final_meta_df, by=c("Row.names" = "CellID"))
+}
+
+cellcalls2 <- NULL
+methods <- colnames(df_w_meta[[1]])[!colnames(df_w_meta[[1]]) %in% c("Row.names", "CellType")]
+
+for (i in 1:10) {
+  temp <- df_w_meta[[i]]
+
+  for (method in methods) {
+    tempname <- paste0(method, "_cell")
+    for (row in 1:nrow(temp)) {
+      temp[row, tempname] <- bc_list[temp[row,method]]
+    }
+  }
+  cellcalls2[[i]] <- temp
+}
+
+
+confusionList <- NULL
+
+for (i in 1:10){
+  subset_method_confusion <- NULL
+  temp <- cellcalls2[[i]]
+  for (method in methods){
+    tempname <- paste0(method, "_cell")
+    subset_method_confusion[[method]] <- caret::confusionMatrix(data = factor(temp[,tempname], levels=c("Doublet", "HEK", "Jurkats", "MEF", "Negative")), reference= factor(temp$CellType, levels=c("Doublet", "HEK", "Jurkats", "MEF", "Negative") ))
+  }
+  confusionList[[i]] <- subset_method_confusion
+}
+
+avg_confusion <- NULL
+for (method in methods){
+  total_confusion <- confusionList[[1]][[method]]$overall
+  for (i in 2:10) {
+    total_confusion <- total_confusion + confusionList[[i]][[method]]$overall
+  }
+  avg_confusion[[method]] <- total_confusion / 10
+}
+
+scaled_confusion_var <- NULL
+for (method in methods){
+  confusion_var <- (confusionList[[1]][[method]]$overall - avg_confusion[[method]])^2
+  for (i in 2:10) {
+    confusion_var <- confusion_var + (confusionList[[i]][[method]]$overall - avg_confusion[[method]])^2
+  }
+  scaled_confusion_var[[method]] <- sqrt(confusion_var / 9)
+}
+
+df <- NULL
+for (method in methods) {
+  if (is.null(df)) {
+    df <- data.frame(method = method, Accuracy = avg_confusion[[method]][["Accuracy"]], Error = scaled_confusion_var[[method]][["Accuracy"]])
+  } else {
+    temp <- data.frame(method = method, Accuracy = avg_confusion[[method]][["Accuracy"]], Error = scaled_confusion_var[[method]][["Accuracy"]])
+    df <- rbind(df, temp)
+  }
+}
+
+```
+
+```{r}
+df <- df[order(df$Accuracy, decreasing = TRUE),]
+df$method <- factor(df$method, levels=df$method)
+df
+df
+```
+
+
+```{r}
+library(ggplot2)
+library(scales)
+P2 <- ggplot2::ggplot(df, aes(x=method, y=Accuracy, fill=method)) + geom_bar(stat="identity", position=position_dodge()) + 
+  geom_errorbar(aes(ymin=Accuracy-Error, ymax=Accuracy+Error), width=.2,
+                 position=position_dodge(.9)) + egg::theme_presentation(base_size = 10) +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  scale_fill_manual(values=getPalette[1:6]) + theme(legend.position = "none") + ggtitle("A") + labs(x = "Method")
+P2
+```
+
+```{r}
+# # celllist <- c("bff_quantile_cell", "bff_quantile_cons_cell", "bff_threshold_cell", "CellType")
+# celllist <- c("bff_quantile_cell", "bff_threshold_cell", "dropletutils_cell", "GMMDemux_cell", "htodemux_cell", "multiseq_cell", "CellType")
+# celllist
+# df$method
+# paste0(df$method, "_cell")
+celllist <- c(paste0(df$method, "_cell"), "CellType")
+```
+
+```{r}
+cellcalls_long <- tidyr::pivot_longer(cellcalls_fin, celllist, names_to = "method", values_to = "call")
+cellcalls_long$method <- factor(cellcalls_long$method, levels = celllist)
+cellcalls_long$call <- factor(cellcalls_long$call, levels = c("HEK", "MEF", "Jurkats", "Doublet", "Negative"))
+```
+
+
+
+```{r}
+library(ggplot2)
+
+P1 <- ggplot2::ggplot(cellcalls_long, aes(x=call, group=method, fill=method)) + geom_bar(position = position_dodge2(preserve = 'single')) + egg::theme_presentation(base_size = 10)  +
+labs(x="Cell Type", y = "Count", fill="Method") + theme(legend.position = c(0.2, 0.75), legend.text=element_text(size=10), legend.text.align = 0) + guides(colour = guide_legend(override.aes = list(size=3))) + scale_fill_manual(values=getPalette, labels = c(expression(BFF[cluster]), expression(BFF[threshold]), "GMM Demux", "MULTI-Seq", "HTO Demux", "DropletUtils", "Gene Expression"))
+P1
+```
+
+
+```{r}
+Pout <- lemon::grid_arrange_shared_legend(P2,P1, ncol = 2, nrow = 1, position='right')
+```
+
+```{r}
+pdf("/Users/boggy/bimberlab/BFF/Figures/PDFs/Benchmark_fig.pdf", width = 7, height=4)
+lemon::grid_arrange_shared_legend(P2,P1, ncol = 2, nrow = 1, position='right')
+dev.off()
+```
+
+
+```{r}
+Pout
+```
+
+
+```{r}
+library(patchwork)
+P2 + P1 + 
+  plot_layout(widths = c(1, 6))
+```
+
+```{r}
+pdf("/Users/boggy/bimberlab/BFF/Figures/PDFs/Benchmark_fig.pdf", width = 7, height=4)
+P2 + P1 + 
+  plot_layout(widths = c(1, 6))
+dev.off()
+```
+
+```{r}
+png("/Users/boggy/bimberlab/cellhashR/vignettes/Benchmark-example_files/figure-html/Benchmark_fig.png", width = 7, height=3.5, units="in", res=150)
+P1
+dev.off()
+```

@@ -1,0 +1,539 @@
+---
+title: "BQN Figure"
+output: html_notebook
+---
+
+```{r}
+library(Seurat)
+library(OOSAP)
+library(devtools)
+library(cellhashR)
+library(hash)
+library(dplyr)
+library(EnvStats)
+library(preprocessCore)
+library(ggplot2)
+library(viridis)
+library(forcats)
+library(hrbrthemes)
+library(stringr)
+library(ggsci)
+
+source('/Users/boggy/bimberlab/cellhashR/R/BFF_Demux.R')
+source('/Users/boggy/bimberlab/cellhashR/R/Normalization.R')
+source('/Users/boggy/bimberlab/cellhashR/R/Utils.R')
+
+library("wesanderson")
+getPalette = rev(wes_palette("Zissou1", 12, type="continuous"))
+```
+
+```{r}
+getCutoff <- function(data) {
+  # assumes log10 transformed data is input
+  num_peaks <- 10000
+  change <- 10
+  j <- 1
+  max2_list <- numeric(10)
+
+  while ((change > 0) | (length(max2_list) > 4)) {
+    j <- j + 0.5
+    #TODO?: Potentially add support for different kernels/bandwidths? 
+    smooth <- stats::density(data, adjust = j, kernel = 'gaussian',
+                      bw = 'SJ', give.Rkern = FALSE)
+    deriv <- numeric(length(smooth$x))
+    deriv2 <- numeric(length(smooth$x))
+    max_list <- c()
+    max2_list <- c()
+    for (i in 2:(length(smooth$x)-1)){
+      deriv[i] <- smooth$y[i+1] - smooth$y[i-1]
+      deriv2[i] <- smooth$y[i+1] - 2*smooth$y[i] + smooth$y[i-1]
+    }
+    for (i in 2:(length(smooth$x)-1)){
+      if ((deriv[i+1] < 0 ) && (deriv[i] >= 0) ) {
+        max_list <- c(max_list, i)
+      }
+      if ((deriv2[i+1] < 0 ) && (deriv2[i] >= 0) ) {
+        max2_list <- c(max2_list, i)
+      }
+    }
+    
+    change <- num_peaks - length(max_list)
+    num_peaks <- length(max_list)
+  }
+    yvals <- sapply(max_list, FUN = function(x) {
+    return(smooth$y[x])
+    })
+    
+    if (length(max_list) > 1) {
+      y1 <- max(yvals)
+      index1 <- max_list[which.max(yvals)]
+      x1 <- smooth$x[index1]
+      y2 <- max(yvals[yvals != y1])
+      index2 <- max_list[which(yvals==y2)]
+      x2 <- smooth$x[index2]
+    
+    
+    if (x2 < x1){
+      #2nd peak must be at least 1/10th the maximum peak
+      
+      cutoff_indices <- index2:index1
+    }
+    else {
+      cutoff_indices <- index1:index2
+    }
+    cutoff_index <- which.min(smooth$y[cutoff_indices]) + min(cutoff_indices)
+    cutoff <- smooth$x[cutoff_index]
+  }
+  return(cutoff)
+
+}
+
+```
+
+```{r}
+
+rawCountData <- "/Users/boggy/bimberlab/cell_type_counts.csv"
+
+barcodeData_t <- (read.csv(rawCountData, header = TRUE, row.names = 1))
+zeros <- row.names(barcodeData_t[barcodeData_t$Bar1 == 0,])
+barcodeData_t_fin <- barcodeData_t[!row.names(barcodeData_t) %in% zeros,]
+barcodeData <- t(barcodeData_t_fin)
+
+rownames(barcodeData) <- str_replace(rownames(barcodeData), '_', '.')
+seuratObj <- Seurat::CreateSeuratObject(barcodeData, assay = 'HTO')
+
+cutoffs <- hash::hash()
+pics <- list()
+for (hto in rownames(barcodeData)) {
+  cells <- barcodeData[hto, colnames(barcodeData), drop = FALSE]
+  #PeakND uses a log-scale to smooth higher counts, so we transform back once we find the threshold
+  cutoffresults <- getCountCutoff(cells, hto, 4)
+  threshold <- 10^(cutoffresults[[1]])
+  cutoffs[[hto]] <- threshold
+  pics[[hto]] <- cutoffresults[[4]]
+}
+
+boxplot(t(log10(barcodeData)))
+cutoffs
+
+discrete <- getDiscreteFromCutoffs(seuratObj, assay='HTO', cutoffs)
+negdiscrete <- 1 - discrete
+is.na(negdiscrete) <- negdiscrete==0
+negvals <- t(as.matrix(negdiscrete * barcodeData))
+neg_normed <- NormalizeQuantile(negvals)
+neg_normed_na <- neg_normed
+neg_normed[is.na(neg_normed)] <- 0
+neg_normed
+
+called_vals <- t(as.matrix(discrete * barcodeData))
+called_vals_df <- as.data.frame(called_vals)
+is.na(called_vals_df) <- called_vals_df==0
+pos_normed <- NormalizeQuantile(called_vals_df)
+pos_normed_na <- pos_normed
+pos_normed[is.na(pos_normed)] <- 0
+pos_normed
+
+multi <- colnames(discrete[,colSums(discrete) > 1])
+singles <- colnames(discrete[,colSums(discrete) == 1])
+single_background <- rowMeans(neg_normed[singles,])
+multi_background <- rowMeans(neg_normed[multi,])
+
+tot_normed <- neg_normed + pos_normed
+tot_normed
+
+normed_cutoffs <- copy(cutoffs)
+max_list <- c()
+pics2 <- list()
+for (hto in colnames(tot_normed)) {
+  cells <- tot_normed[rownames(tot_normed), hto, drop = FALSE]
+  #PeakND uses a log-scale to smooth higher counts, so we transform back once we find the threshold
+  cutoffresults <- getCountCutoff(cells, hto, 4)
+  threshold <- (cutoffresults[[1]])
+  max_list <- rbind(max_list, cutoffresults[[3]])
+  normed_cutoffs[[hto]] <- threshold
+  pics2[[hto]] <- cutoffresults[[4]]
+}
+
+normed_cutoffs
+max_list
+
+```
+
+```{r}
+
+tot_normed2 <- tot_normed
+        normed_cutoffs <- hash::hash()
+        max_list <- c()
+        for (hto in colnames(tot_normed2)) {
+          cells <- tot_normed2[rownames(tot_normed2), hto, drop = FALSE]
+          #PeakND uses a log-scale to smooth higher counts, so we transform back once we find the threshold
+          cutoffresults <- getCountCutoff(cells, hto, 4)
+          threshold <- (cutoffresults[[1]])
+          max_list <- rbind(max_list, cutoffresults[[3]])
+          normed_cutoffs[[hto]] <- threshold
+        }
+        
+        norm_cutoff <- mean(as.numeric(values(normed_cutoffs)))
+        maxima <- colMeans(max_list)
+        neg_mode <- maxima[1]
+        pos_mode <- maxima[2]
+        
+        d <- pos_mode - norm_cutoff
+        w <- norm_cutoff - neg_mode
+        
+        called <- c()
+
+```
+
+```{r}
+df <- data.frame(t(log10(barcodeData+1)))
+df_raw <- data.frame(t(barcodeData))
+df <- tibble::rownames_to_column(df, var = "cell")
+df <- df %>% tidyr::pivot_longer(colnames(df)[2:length(colnames(df))], names_to = "barcode", values_to = "count")
+df$count_type = "Raw"
+
+df_norm <- data.frame(log10(tot_normed+1))
+head(df_norm)
+df_norm_wide <- df_norm
+df_norm <- tibble::rownames_to_column(df_norm, var = "cell")
+df_norm <- df_norm %>% tidyr::pivot_longer(colnames(df_norm)[2:length(colnames(df_norm))], names_to = "barcode", values_to = "count")
+df_norm$count_type = "Norm"
+
+df_poscounts <- data.frame(log10(called_vals_df+1))
+df_poscounts_wide <- df_poscounts
+df_poscounts <- tibble::rownames_to_column(df_poscounts, var = "cell")
+df_poscounts <- df_poscounts %>% tidyr::pivot_longer(colnames(df_poscounts)[2:length(colnames(df_poscounts))], names_to = "barcode", values_to = "count")
+df_poscounts$count_type = "PosRaw"
+
+df_posnorm <- data.frame(log10(pos_normed_na+1))
+head(df_posnorm)
+df_posnorm_wide <- df_posnorm
+df_posnorm <- tibble::rownames_to_column(df_posnorm, var = "cell")
+df_posnorm <- df_posnorm %>% tidyr::pivot_longer(colnames(df_posnorm)[2:length(colnames(df_posnorm))], names_to = "barcode", values_to = "count")
+df_posnorm$count_type = "PosNorm"
+
+df_negcounts <- data.frame(log10(negvals+1))
+df_negcounts_wide <- df_negcounts
+df_negcounts <- tibble::rownames_to_column(df_negcounts, var = "cell")
+df_negcounts <- df_negcounts %>% tidyr::pivot_longer(colnames(df_negcounts)[2:length(colnames(df_negcounts))], names_to = "barcode", values_to = "count")
+df_negcounts$count_type = "PosRaw"
+
+df_negnorm <- data.frame(log10(neg_normed_na+1))
+df_negnorm_wide <- df_negnorm
+df_negnorm <- tibble::rownames_to_column(df_negnorm, var = "cell")
+df_negnorm <- df_negnorm %>% tidyr::pivot_longer(colnames(df_negnorm)[2:length(colnames(df_negnorm))], names_to = "barcode", values_to = "count")
+df_negnorm$count_type = "PosRaw"
+
+print(head(df))
+P1 <- df %>%
+  mutate(barcode = factor(barcode, levels=unique(df$barcode)))  %>%
+  ggplot(aes( y=count, x=barcode, color=barcode)) + 
+    geom_violin(position="dodge", alpha=0.5, size = 0.2) +
+    stat_summary(fun = "getCutoff", geom = "crossbar", 
+               width = 0.5, size=0.2, color="black") + labs(title="B", subtitle = "Raw Counts with Threshold") +
+    # geom_point(data=df2, color= 'red') +
+    # geom_point(data=df3, color='blue') +
+    # geom_point(data=df4, color='green') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='red') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='blue') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='green') +
+
+    xlab("") +
+    ylab("Log(Raw Counts)") +
+  ylim(0,4.75)  + egg::theme_presentation(base_size = 7) + theme(axis.text.x = element_text(angle = 90, vjust=0.5)) + scale_color_manual(values = getPalette) + theme(legend.position = "none")
+# print(P1)
+
+P2a <- df_poscounts %>%
+  mutate(barcode = factor(barcode, levels=unique(df$barcode)))  %>%
+  ggplot(aes( y=count, x=barcode, color=barcode)) + 
+    geom_violin(position="dodge", alpha=0.5, size = 0.2) + ggtitle("C", subtitle="Pos. Counts (Raw > Threshold)") +
+    # stat_summary(fun = "getCutoff", geom = "crossbar", 
+    #            width = 0.5) +
+    # geom_point(data=df2, color= 'red') +
+    # geom_point(data=df3, color='blue') +
+    # geom_point(data=df4, color='green') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='red') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='blue') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='green') +
+
+    xlab("") +
+    ylab("Log(+)") +
+  ylim(0,4.75)  + egg::theme_presentation(base_size = 7) + theme(axis.text.x = element_text(angle = 90, vjust=0.5)) + scale_color_manual(values = getPalette) + theme(legend.position = "none")
+
+P3a <- df_posnorm %>%
+  mutate(barcode = factor(barcode, levels=unique(df$barcode)))  %>%
+  ggplot(aes( y=count, x=barcode, color=barcode)) + 
+    geom_violin(position="dodge", alpha=0.5, size = 0.2) + ggtitle("E", subtitle = "Normalized Pos. Counts") +
+    # stat_summary(fun = "getCutoff", geom = "crossbar", 
+    #            width = 0.5) +
+    # geom_point(data=df2, color= 'red') +
+    # geom_point(data=df3, color='blue') +
+    # geom_point(data=df4, color='green') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='red') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='blue') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='green') +
+
+    xlab("") +
+    ylab("Log(Norm(+))") +
+  ylim(0,4.75) + egg::theme_presentation(base_size = 7) + theme(axis.text.x = element_text(angle = 90, vjust=0.5)) + scale_color_manual(values = getPalette) + theme(legend.position = "none")
+
+P2b <- df_negcounts %>%
+  mutate(barcode = factor(barcode, levels=unique(df$barcode)))  %>%
+  ggplot(aes( y=count, x=barcode, color=barcode)) + 
+    geom_violin(position="dodge", alpha=0.5, size = 0.2) + ggtitle("D", subtitle = "Neg. Counts (Raw < Threshold)") +
+    # stat_summary(fun = "getCutoff", geom = "crossbar", 
+    #            width = 0.5) +
+    # geom_point(data=df2, color= 'red') +
+    # geom_point(data=df3, color='blue') +
+    # geom_point(data=df4, color='green') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='red') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='blue') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='green') +
+
+    xlab("") +
+    ylab("Log(-)") +
+  ylim(0,4.75) + egg::theme_presentation(base_size = 7) + theme(axis.text.x = element_text(angle = 90, vjust=0.5)) + scale_color_manual(values = getPalette) + theme(legend.position = "none")
+
+P3b <- df_negnorm %>%
+  mutate(barcode = factor(barcode, levels=unique(df$barcode)))  %>%
+  ggplot(aes( y=count, x=barcode, color=barcode)) + 
+    geom_violin(position="dodge", alpha=0.5, size = 0.2) + ggtitle("F", subtitle = "Normalized Neg. Counts") +
+    # stat_summary(fun = "getCutoff", geom = "crossbar", 
+    #            width = 0.5) +
+    # geom_point(data=df2, color= 'red') +
+    # geom_point(data=df3, color='blue') +
+    # geom_point(data=df4, color='green') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='red') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='blue') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='green') +
+
+    xlab("") +
+    ylab("Log(Norm(-))") +
+  ylim(0,4.75) + egg::theme_presentation(base_size = 7) + theme(axis.text.x = element_text(angle = 90, vjust=0.5)) + scale_color_manual(values = getPalette) + theme(legend.position = "none")
+
+P4 <- df_norm %>%
+  mutate(barcode = factor(barcode, levels=unique(df$barcode)))  %>%
+  ggplot(aes( y=count, x=barcode, color=barcode)) + 
+    geom_violin(position="dodge", alpha=0.5, size = 0.2) +
+  stat_summary(fun = "getCutoff", geom = "crossbar", color = "black",
+               width = 0.5, size=0.2) + ggtitle("G", subtitle = "BQN Counts with Threshold") +
+    # geom_point(data=df2_norm, color='red') +
+    # geom_point(data=df3_norm, color='blue') +
+    # geom_point(data=df4_norm, color='green') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='red') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='blue') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='green') +
+
+    xlab("") +
+    ylab("Log(BQN Counts)") +
+  ylim(0,4.75) + egg::theme_presentation(base_size = 7) + theme(axis.text.x = element_text(angle = 90, vjust=0.5)) + scale_color_manual(values = getPalette) + theme(legend.position = "none")
+print(P4)
+
+gplot <- df %>%
+  mutate(barcode = factor(barcode, levels=unique(df$barcode)))  %>%
+  ggplot(aes( y=count, x=barcode, color=barcode)) + 
+    geom_violin(position="dodge", alpha=0.5, size = 0.2) +
+    stat_summary(fun = "getCutoff", geom = "crossbar", 
+               width = 0.5, size=0.2) +
+    
+    # geom_point(data=df4, color='green') + 
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='red') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='blue') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='green') +
+    scale_fill_viridis(discrete=T, name="") +
+
+    xlab("") +
+    ylab("Log10(Counts)")
+for (i in 1:10){
+  gplot <- gplot + geom_jitter(data=df[df$cell == multi[i],],color = i) 
+}
+
+gplot
+
+df_norm %>%
+  mutate(barcode = factor(barcode, levels=unique(df$barcode)))  %>%
+  ggplot(aes( y=count, x=barcode, color=barcode)) +
+    geom_violin(position="dodge", alpha=0.5, size = 0.2) +
+    # geom_jitter(data=df_norm[df_norm$cell %in% called,]) +
+    # geom_jitter(data=tn_called) +
+    geom_hline(yintercept=norm_cutoff - w/2) +
+    geom_hline(yintercept=norm_cutoff) +
+    # geom_point(data=df4_norm, color='green') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='red') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='blue') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='green') +
+
+    theme_ipsum()  +
+    xlab("") +
+    ylab("Log10(Counts)") + scale_color_manual(values = getPalette) + theme(legend.position = "none")
+
+df_norm %>%
+  mutate(barcode = factor(barcode, levels=unique(df$barcode)))  %>%
+  ggplot(aes( y=count, x=barcode, color=barcode)) + 
+    geom_violin(position="dodge", alpha=0.5, size = 0.2) +
+    # geom_jitter(data=df_norm[df_norm$cell %in% called,]) +
+    # geom_jitter(data=tp_called) +
+    geom_hline(yintercept=norm_cutoff + 2*d/3) +
+    # geom_hline(yintercept=norm_cutoff) + 
+    # geom_point(data=df4_norm, color='green') + 
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='red') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='blue') +
+    # stat_summary(fun = "sample", geom = "point", fun.args = list(size = 1), color='green') +
+    scale_fill_viridis(discrete=T, name="") +
+    theme_ipsum()  +
+    xlab("") +
+    ylab("Log10(Counts)") + scale_color_manual(values = getPalette) + theme(legend.position = "none")
+
+```
+
+```{r}
+generateBFFGridPlot <- function(barcodeMatrix, barcodeBlocklist = NULL, xlab, maintitle, subtitle, universal_cutoff = NULL) {
+  plotdata <- NULL
+  linedata <- NULL
+  cutoffs <- NULL
+  discrete <- barcodeMatrix
+  discrete[discrete > 0] <- 0
+  
+  for (hto in rownames(barcodeMatrix)) {
+    cells <- barcodeMatrix[hto, colnames(barcodeMatrix), drop = FALSE]
+    cutoffresults <- getCountCutoff(cells, hto, 4, barcodeBlocklist)
+    cutoffval <- cutoffresults[[1]]
+    x_vals <- cutoffresults[[3]]
+
+    if (!is.null(universal_cutoff)) {
+      cutoffval <- universal_cutoff
+    }
+    if ((is.null(universal_cutoff)) & (cutoffval< 2)) {
+      print(paste0("Threshold for ", hto, " may be placed too low, recalculating with more smoothing."))
+      cutoffresults <- getCountCutoff(cells, paste0(hto, "*"), 2, barcodeBlocklist)
+      cutoffval <- cutoffresults[[1]]
+      
+      toAdd <- cutoffresults[[4]]
+      toAdd$Barcode <- hto
+
+      if (is.null(plotdata)) {
+        plotdata <- toAdd
+      } else {
+        plotdata <- rbind(toAdd, plotdata)
+      }
+      
+      toAdd <- cutoffresults[[5]]
+      toAdd$Barcode <- hto
+
+      if (is.null(linedata)) {
+        linedata <- toAdd
+      } else {
+        linedata <- rbind(toAdd, linedata)
+      }
+      
+      toAdd <- data.frame(cutoff = cutoffval)
+      toAdd$Barcode <- hto
+      toAdd$y <- max(linedata$y) * 1.1
+      
+      if (is.null(cutoffs)) {
+        cutoffs <- toAdd
+      } else {
+        cutoffs <- rbind(toAdd, cutoffs)
+      }
+      toAdd <- data.frame(cutoff = cutoffval)
+      toAdd$Barcode <- hto
+      toAdd$y <- -0.1
+      cutoffs <- rbind(toAdd, cutoffs)
+      
+    } else {
+      toAdd <- cutoffresults[[4]]
+      toAdd$Barcode <- hto
+
+      if (is.null(plotdata)) {
+        plotdata <- toAdd
+      } else {
+        plotdata <- rbind(toAdd, plotdata)
+      }
+      
+      toAdd <- cutoffresults[[5]]
+      toAdd$Barcode <- hto
+
+      if (is.null(linedata)) {
+        linedata <- toAdd
+      } else {
+        linedata <- rbind(toAdd, linedata)
+      }
+      
+      toAdd <- data.frame(cutoff = cutoffval)
+      toAdd$Barcode <- hto
+      toAdd$y <- max(linedata$y) * 1.1
+      
+      if (is.null(cutoffs)) {
+        cutoffs <- toAdd
+      } else {
+        cutoffs <- rbind(toAdd, cutoffs)
+      }
+      toAdd <- data.frame(cutoff = cutoffval)
+      toAdd$Barcode <- hto
+      toAdd$y <- -0.1
+      cutoffs <- rbind(toAdd, cutoffs)
+    }
+    barcodeBlocklist <- cutoffresults[[2]]
+    discrete[hto, colnames(barcodeMatrix)] <- ifelse(cells > 10^cutoffval, yes = 1, no = 0)
+  }
+  plotdata$Barcode <- naturalsort::naturalfactor(plotdata$Barcode)
+  linedata$Barcode <- naturalsort::naturalfactor(linedata$Barcode)
+  cutoffs$Barcode <- naturalsort::naturalfactor(cutoffs$Barcode)
+  
+  cutoffsout <- unique(cutoffs[, c("cutoff", "Barcode")])
+  
+
+  cutoffslist <- list()
+  for (i in 1:length(cutoffsout$Barcode)) {
+    cutoffslist[[as.character(cutoffsout[[i, "Barcode"]])]] <- cutoffsout[i, "cutoff"]
+  }
+
+  nbins <- 100
+  maxPerPlot <- 12
+
+  # getPalette[10]
+  
+P1 <- ggplot2::ggplot(plotdata, aes(x = Value)) + geom_line(data = linedata, mapping = aes(x = x, y = y, color = Barcode), size = 0.5) +
+        egg::theme_presentation(base_size = 7) + theme(axis.title=element_text(size=7), title = element_text(size=7))+ geom_line(data=cutoffs, aes(x=cutoff, y = y), size = 0.25) + 
+        geom_histogram(aes(y = sqrt(..density..)), size = 0.1, bins = nbins) + scale_y_continuous(breaks = function(x) unique(floor(pretty(seq(0, (max(x) + 1) * 1.1))))) + scale_x_continuous(breaks = function(x) unique(floor(pretty(seq(0, (max(x) + 1) * 1.1))))) + 
+        labs(y = 'sqrt(Density)', x = xlab) + ggtitle(maintitle, subtitle = subtitle)  +
+        ggforce::facet_wrap_paginate(~Barcode, scales = 'free', strip.position = 'top', nrow = min(4, length(unique(plotdata$Barcode))), labeller = labeller(.multi_line = FALSE), page = i) + theme(panel.spacing = unit(0.0, "lines"), axis.text.y = element_text(margin = margin(l=5)), axis.text.x = element_text(margin = margin(b=0)), axis.title.x = element_text(margin=margin(t=0, r=0, b=0, l=0)), axis.title.y = element_text(margin=margin(t=0, r=-2, b=0, l=0)), plot.margin = margin(t=0, r=0, b=0, l=0), plot.subtitle = element_text(margin=margin(t=0,r=0,b=-2,l=0))) + theme(legend.position = "none") + scale_color_manual(values = getPalette)
+
+
+  return(list(barcodeBlocklist, cutoffslist, discrete, x_vals, P1))
+}
+```
+
+
+
+
+```{r}
+thresholdres <- generateBFFGridPlot(barcodeData, barcodeBlocklist = NULL, "Log(Raw Counts)", "A", "Raw Counts with Threshold")
+Pbefore <- thresholdres[[5]]
+foo2 <- generateBFFGridPlot(t(tot_normed), barcodeBlocklist= NULL, "Log(BQN Counts)", "H", "BQN Counts with Avg. Threshold", universal_cutoff = norm_cutoff)
+Pafter <- foo2[[5]]
+    
+```
+
+
+```{r}
+library(patchwork)
+pout <- wrap_elements(panel =Pbefore, clip=FALSE)/wrap_elements(panel =P1, clip=FALSE)| wrap_elements(panel =P2a, clip=FALSE)/wrap_elements(panel =P2b, clip=FALSE) | wrap_elements(panel =P3a, clip=FALSE)/wrap_elements(panel =P3b, clip=FALSE) | wrap_elements(panel =P4, clip=FALSE)/wrap_elements(panel =Pafter, clip=FALSE)
+# pout <- plot_spacer()/Pbefore/plot_spacer()|plot_spacer()/P1/plot_spacer()|plot_spacer()/P2a/P2b/plot_spacer()|plot_spacer()/P3a/P3b/plot_spacer()|plot_spacer()/P4/plot_spacer()|plot_spacer()/Pafter/plot_spacer()
+pout + theme(plot.margin = margin(t=0, r=0, b=0, l=0)) # + theme(plot.margin = unit(0, "lines"))
+```
+
+```{r}
+library(patchwork)
+pout <- wrap_elements(panel =Pbefore, clip=FALSE)/P1| P2a/P2b | P3a/P3b | P4/wrap_elements(panel =Pafter, clip=FALSE)
+# pout <- plot_spacer()/Pbefore/plot_spacer()|plot_spacer()/P1/plot_spacer()|plot_spacer()/P2a/P2b/plot_spacer()|plot_spacer()/P3a/P3b/plot_spacer()|plot_spacer()/P4/plot_spacer()|plot_spacer()/Pafter/plot_spacer()
+pout + theme(plot.margin = margin(t=0, r=0, b=0, l=0)) # + theme(plot.margin = unit(0, "lines"))
+```
+
+```{r}
+pdf("/Users/boggy/bimberlab/BFF/Figures/PDFs/BQN_fig.pdf", width = 7, height=5)
+pout + theme(plot.margin = margin(t=0, r=0, b=0, l=0))
+dev.off()
+```
+
+
