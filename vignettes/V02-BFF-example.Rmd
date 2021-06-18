@@ -1,0 +1,248 @@
+---
+title: "Demultiplexing with Bimodal Flexible Fitting (BFF)"
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    self_contained: yes
+    thumbnails: yes
+    fig_width: 12
+    code_folding: hide
+vignette: >
+  %\VignetteIndexEntry{Example cellhashR/BFF Report}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+# Introduction
+
+This vignette demonstrates how to use cellhashR's Bimodal Flexible Fitting (BFF) Demultiplexing Algorithm to produce the kinds of analyses reported in the BFF paper.  cellhashR produces many plots and outputs that provide useful information about cell hashing data.  For purposes of brevity and clarity, only output related to figures in the BFF paper is shown in this report.  The data  analyzed in this vignette is the same data analyzed in the BFF paper.
+
+```{css, echo=FALSE}
+img {
+    margin: 5px 10px 5px 10px;
+    max-width:100%;
+    height: auto;
+}
+```
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error=TRUE)
+```
+
+# Load Data
+
+cellhashR expects count data with cells in columns and barcode features in rows.
+
+```{r setup, eval=FALSE}
+library(cellhashR)
+rawCountData <- "../tests/testdata/MS/cell_type_counts.csv"
+barcodeData <- t(read.csv(rawCountData, header = TRUE, row.names = 1))
+```
+
+# Normalization / QC
+
+The plots appearing in the following figure from the BFF paper are generated using the cellhashR command PlotNormalizationQC.
+
+```{r, echo=FALSE}
+knitr::include_graphics("BFF-example_files/figure-html/QC_fig.png")
+```
+
+The following code produces QC plots helpful in visualizing the effects of various normalization procedures on cell hashing data, including the novel normalization Bimodal Quantile Normalization (BQN).
+
+```{r NormQC, eval=FALSE}
+PlotNormalizationQC(barcodeData, methods = c('Raw', 'bimodalQuantile', 'log2Center'))
+```
+
+```{r,  echo=FALSE}
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-1.png")
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-2.png")
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-3.png")
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-4.png")
+```
+  
+```
+## [1] "Printing Raw Count QC Plots"
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-5.png")
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-8.png")
+```
+
+```
+## [1] "Printing bimodalQuantile Normalization QC Plots"
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-9.png")
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-12.png")
+```
+
+```
+## [1] "Printing log2Center Normalization QC Plots"
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-13.png")
+knitr::include_graphics("BFF-example_files/figure-html/NormalizationQC-16.png")
+```
+
+# Generate Hashing Calls
+
+The cellhashR command GenerateCellHashingCalls performs demultiplexing analysis on the data using the algorithms listed in "methods" (BFF_threshold and BFF_cluster in the current analysis).  Below are results from four calls to GenerateCellHashingCalls, each time using a different parameter set for BFF_cluster.
+
+```{r, eval=FALSE}
+methods <- c("bff_threshold", "bff_cluster")
+df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, bff_threshold.simple_threshold=TRUE, bff_cluster.simple_threshold=FALSE, bff_cluster.doublet_thresh=0.05, bff_cluster.neg_thresh=0.05, bff_cluster.dist_frac=0.1)
+write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
+```
+
+### BFF_threshold
+
+```
+## [1] "simple_threshold"
+## [1] "Starting BFF"
+## [1] "rows dropped for low counts: 0 of 12"
+## [1] "Simple Threshold:  TRUE"
+## [1] "Doublet thresh:  0.05"
+## [1] "Neg thresh:  0.05"
+## [1] "Min distance as fraction of distance between peaks:  0.1"
+```
+
+The lines of output above are printed when BFF_threshold is run.  The statement "Simple Threshold:  TRUE" indicates that BFF_threshold is being run ("Simple Threshold:  FALSE" indicates that BFF_cluster is being run).  The parameter values printed above are the default values for BFF_cluster and are not actually used for BFF_threshold.
+
+```{r, echo=FALSE}
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-3-1.png")
+```
+
+The figure above will be generated each time BFF is run on this data (in either the threshold mode or the cluster mode).  Similarly, the list of thresholds below (not in log-space) is given each time BFF is run on the data.  Both outputs are shown in this document only this once, for sake of brevity.
+
+BFF_threshold classifies droplets based on comparison of raw count values to the thresholds found by fitting.  Droplets are classified as singlets when they are positive for just one barcode, as doublets when positive for multiple barcodes, and as negatives when they are negative for all barcodes.
+
+```
+## [1] "Thresholds:"
+## [1] "Bar12: 137.252466391685"
+## [1] "Bar11: 101.320341426663"
+## [1] "Bar10: 102.166166632405"
+## [1] "Bar9: 119.819102035079"
+## [1] "Bar8: 121.225210166733"
+## [1] "Bar7: 125.094886095467"
+## [1] "Bar6: 65.6394846865428"
+## [1] "Bar5: 101.483503173679"
+## [1] "Bar4: 729.16925156116"
+## [1] "Bar3: 75.1400201328909"
+## [1] "Bar2: 1116.2498732095"
+## [1] "Bar1: 216.243218824503"
+```
+
+### BFF_cluster
+
+The figure below demonstrates the theory on which BFF_cluster operates.  BFF_cluster classification is tunable with three parameters that affect thresholds in the 2D space of top 2 normalized counts.  Parameter values are specified for the three parameters **bff_cluster.doublet_thresh** (shown as beta_c in the figure), **bff_cluster.neg_thresh** (shown as alpha_c in the figure), and **bff_cluster.dist_frac** (shown as delta_c in the figure) as demonstrated in the call to GenerateCellHashingCalls above.
+
+```{r, echo=FALSE}
+knitr::include_graphics("BFF-example_files/figure-html/sim_curves.png")
+```
+
+#### BFF_cluster (0.05, 0.05, 0.1)
+
+The first set of graphs below demonstrates output for default values for parameters bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.05, 0.05, and 0.1, respectively.
+
+```
+## [1] "simple_threshold" "doublet_thresh"   "neg_thresh"       "dist_frac"       
+## [1] "Starting BFF"
+## [1] "rows dropped for low counts: 0 of 12"
+## [1] "Simple Threshold:  FALSE"
+## [1] "Doublet thresh:  0.05"
+## [1] "Neg thresh:  0.05"
+## [1] "Min distance as fraction of distance between peaks:  0.1"
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-2-18.png")
+```
+
+The lines of output above are printed when BFF_cluster is run.  The output indicates that BFF_cluster is being run ("Simple Threshold:  FALSE").  The parameter values output here are the default values for BFF_cluster.
+
+The figure above is generated each time BFF_cluster is run (BQN threshold values are not affected by parameter values) but is shown only once here for brevity.  In this figure, BQN data and BQN thresholds are shown.
+
+The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.05, 0.05, and 0.1, respectively.  The figure on the right compares the BFF_cluster classifications with BFF_threshold classifications (consensus output can be ignored).
+
+```{r, echo=FALSE}
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-2-19.png")
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-2-35.png")
+```
+
+#### BFF_cluster (0.2, 0.05, 0.1)
+
+The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.2, 0.05, and 0.1, respectively.  The figure on the right compares the BFF_cluster classifications with BFF_threshold classifications (consensus output can be ignored).
+
+```{r, eval=FALSE}
+df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, bff_threshold.simple_threshold=TRUE, bff_cluster.simple_threshold=FALSE, bff_cluster.doublet_thresh=0.2, bff_cluster.neg_thresh=0.05, bff_cluster.dist_frac=0.1)
+
+write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
+```
+
+```
+## [1] "simple_threshold" "doublet_thresh"   "neg_thresh"       "dist_frac"       
+## [1] "Starting BFF"
+## [1] "rows dropped for low counts: 0 of 12"
+## [1] "Simple Threshold:  FALSE"
+## [1] "Doublet thresh:  0.2"
+## [1] "Neg thresh:  0.05"
+## [1] "Min distance as fraction of distance between peaks:  0.1"
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-3-19.png")
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-3-35.png")
+```
+
+#### BFF_cluster (0.05, 0.2, 0.1)
+
+The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.05, 0.2, and 0.1, respectively.  The figure on the right compares the BFF_cluster classifications with BFF_threshold classifications (consensus output can be ignored).
+
+```{r, eval=FALSE}
+df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, bff_threshold.simple_threshold=TRUE, bff_cluster.simple_threshold=FALSE, bff_cluster.doublet_thresh=0.05, bff_cluster.neg_thresh=0.2, bff_cluster.dist_frac=0.1)
+
+write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
+```
+
+```
+## [1] "simple_threshold" "doublet_thresh"   "neg_thresh"       "dist_frac"       
+## [1] "Starting BFF"
+## [1] "rows dropped for low counts: 0 of 12"
+## [1] "Simple Threshold:  FALSE"
+## [1] "Doublet thresh:  0.05"
+## [1] "Neg thresh:  0.2"
+## [1] "Min distance as fraction of distance between peaks:  0.1"
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-4-19.png")
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-4-35.png")
+```
+
+#### BFF_cluster (0.05, 0.05, 0.25)
+
+The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.05, 0.05, and 0.25, respectively.  The figure on the right compares the BFF_cluster classifications with BFF_threshold classifications (consensus output can be ignored).
+
+```{r, eval=FALSE}
+df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, bff_threshold.simple_threshold=TRUE, bff_cluster.simple_threshold=FALSE, bff_cluster.doublet_thresh=0.05, bff_cluster.neg_thresh=0.05, bff_cluster.dist_frac=0.25)
+write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
+```
+
+```
+## [1] "simple_threshold" "doublet_thresh"   "neg_thresh"       "dist_frac"       
+## [1] "Starting BFF"
+## [1] "rows dropped for low counts: 0 of 12"
+## [1] "Simple Threshold:  FALSE"
+## [1] "Doublet thresh:  0.05"
+## [1] "Neg thresh:  0.05"
+## [1] "Min distance as fraction of distance between peaks:  0.25"
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-5-19.png")
+knitr::include_graphics("BFF-example_files/figure-html/unnamed-chunk-5-35.png")
+```
+

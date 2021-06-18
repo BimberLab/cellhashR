@@ -16,12 +16,16 @@ Cell hashing is a method that allows sample multiplexing or super-loading within
 
 Once the count matrix is created, an algorithm must be used to demultiplex cells and assign them to hash tags (i.e. sample). This is where cellhashR comes in. This package provides several functions:
 - Quality control reports for the cell hashing library, covering read counts and normalization. Think [FASTQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/), except for cell hashing data.
-- A single interface to run one or more demutiplexing algorithms. Multiple algorithms have been published to demultiplex and classify cells, including [deMULTIplex](https://github.com/chris-mcginnis-ucsf/MULTI-seq) and [HTODemux from Seurat](https://satijalab.org/seurat/v3.1/hashing_vignette.html). Each has pros and cons, and will perform better or worse under certain conditions. If you select multiple algorithms (our default workflow), cellhashR will score cells using the consensus call from the set. Various QC summaries are produced during this process as well, if debugging is needed.
+- A single interface to run one or more demutiplexing algorithms, including the novel demultiplexing algorithms BFF_threshold and BFF_cluster.  Each algorithm has pros and cons, and will perform better or worse under certain conditions (though in our experience, of the algorithms we have tested, the BFF algorithms work most consistently and under the widest variety of conditions). If you select multiple algorithms (our default workflow), cellhashR will score cells using the consensus call from the set. Various QC summaries are produced during this process as well, if debugging is needed.  In addition to the BFF demultiplexing algorithms, other algorithms that can be run from cellhashR include:
+    - [GMM-Demux](https://github.com/CHPGenetics/GMM-Demux)
+    - [deMULTIplex](https://github.com/chris-mcginnis-ucsf/MULTI-seq)
+    - [HTODemux from Seurat](https://satijalab.org/seurat/v3.1/hashing_vignette.html)
+    - [hashedDrops from DropletUtils](https://github.com/MarioniLab/DropletUtils)
 - The workflow produces a unified table with the results of each caller and the consensus call. Final QC plots and summaries are created. 
 
 Each step of the workflow can either be run interactively in R (through the terminal or RStudio), or it can be executed as a pipeline that runs all commands and creates the call table and an HTML report. 
 
-[Click here to download an example HTML report](https://htmlpreview.github.io/?https://github.com/BimberLab/cellhashR/blob/master/examples/cellhashR.html)
+[Click here to view an example QC report](https://bimberlab.github.io/cellhashR/articles/V01-QC-example.html)
 
 ### <a name="example">Example Usage</a>
 
