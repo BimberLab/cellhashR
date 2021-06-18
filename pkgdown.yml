@@ -2,6 +2,8 @@ pandoc: 2.7.3
 pkgdown: 1.6.1
 pkgdown_sha: ~
 articles:
-  Example-Report: Example-Report.html
-last_built: 2021-06-11T15:36Z
+  V01-QC-example: V01-QC-example.html
+  V02-BFF-example: V02-BFF-example.html
+  V03-Benchmark-example: V03-Benchmark-example.html
+last_built: 2021-06-18T04:52Z
 

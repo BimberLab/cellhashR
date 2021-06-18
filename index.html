@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">cellhashR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -54,7 +54,13 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="articles/Example-Report.html">Example cellhashR Report</a>
+      <a href="articles/V01-QC-example.html">Data/Normalization QC</a>
+    </li>
+    <li>
+      <a href="articles/V02-BFF-example.html">Demultiplexing with Bimodal Flexible Fitting (BFF)</a>
+    </li>
+    <li>
+      <a href="articles/V03-Benchmark-example.html">Benchmarking Demultiplexing Algorithms with cellhashR</a>
     </li>
   </ul>
 </li>
@@ -101,11 +107,18 @@
 <p>Once the count matrix is created, an algorithm must be used to demultiplex cells and assign them to hash tags (i.e. sample). This is where cellhashR comes in. This package provides several functions:</p>
 <ul>
 <li>Quality control reports for the cell hashing library, covering read counts and normalization. Think <a href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/">FASTQC</a>, except for cell hashing data.</li>
-<li>A single interface to run one or more demutiplexing algorithms. Multiple algorithms have been published to demultiplex and classify cells, including <a href="https://github.com/chris-mcginnis-ucsf/MULTI-seq">deMULTIplex</a> and <a href="https://satijalab.org/seurat/v3.1/hashing_vignette.html">HTODemux from Seurat</a>. Each has pros and cons, and will perform better or worse under certain conditions. If you select multiple algorithms (our default workflow), cellhashR will score cells using the consensus call from the set. Various QC summaries are produced during this process as well, if debugging is needed.</li>
+<li>A single interface to run one or more demutiplexing algorithms, including the novel demultiplexing algorithms BFF_threshold and BFF_cluster. Each algorithm has pros and cons, and will perform better or worse under certain conditions (though in our experience, of the algorithms we have tested, the BFF algorithms work most consistently and under the widest variety of conditions). If you select multiple algorithms (our default workflow), cellhashR will score cells using the consensus call from the set. Various QC summaries are produced during this process as well, if debugging is needed. In addition to the BFF demultiplexing algorithms, other algorithms that can be run from cellhashR include:
+<ul>
+<li><a href="https://github.com/CHPGenetics/GMM-Demux">GMM-Demux</a></li>
+<li><a href="https://github.com/chris-mcginnis-ucsf/MULTI-seq">deMULTIplex</a></li>
+<li><a href="https://satijalab.org/seurat/v3.1/hashing_vignette.html">HTODemux from Seurat</a></li>
+<li><a href="https://github.com/MarioniLab/DropletUtils">hashedDrops from DropletUtils</a></li>
+</ul>
+</li>
 <li>The workflow produces a unified table with the results of each caller and the consensus call. Final QC plots and summaries are created.</li>
 </ul>
 <p>Each step of the workflow can either be run interactively in R (through the terminal or RStudio), or it can be executed as a pipeline that runs all commands and creates the call table and an HTML report.</p>
-<p><a href="https://htmlpreview.github.io/?https://github.com/BimberLab/cellhashR/blob/master/examples/cellhashR.html">Click here to download an example HTML report</a></p>
+<p><a href="https://bimberlab.github.io/cellhashR/articles/V01-QC-example.html">Click here to view an example QC report</a></p>
 </div>
 <div id="example-usage" class="section level3">
 <h3 class="hasAnchor">
