@@ -13,7 +13,8 @@ ProcessCountMatrix(
   doPlot = TRUE,
   simplifyBarcodeNames = TRUE,
   saveOriginalCellBarcodeFile = NULL,
-  metricsFile = NULL
+  metricsFile = NULL,
+  minCellsToContinue = 25
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ ProcessCountMatrix(
 \item{saveOriginalCellBarcodeFile}{An optional file path, where the set of original cell barcodes, prior to filtering, will be written. The primary use-case is if the count matrix was generated using a cell whitelist (like cells with passing gene expression). Preserving this list allows downstream reporting.}
 
 \item{metricsFile}{If provided, summary metrics will be written to this file.}
+
+\item{minCellsToContinue}{Demultiplexing generally requires a minimal amount of cells. If the matrix contains fewer than this many cells, it will abort.}
 }
 \value{
 The updated count matrix
