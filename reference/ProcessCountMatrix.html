@@ -144,7 +144,8 @@
   doPlot <span class='op'>=</span> <span class='cn'>TRUE</span>,
   simplifyBarcodeNames <span class='op'>=</span> <span class='cn'>TRUE</span>,
   saveOriginalCellBarcodeFile <span class='op'>=</span> <span class='cn'>NULL</span>,
-  metricsFile <span class='op'>=</span> <span class='cn'>NULL</span>
+  metricsFile <span class='op'>=</span> <span class='cn'>NULL</span>,
+  minCellsToContinue <span class='op'>=</span> <span class='fl'>25</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -185,6 +186,10 @@
     <tr>
       <th>metricsFile</th>
       <td><p>If provided, summary metrics will be written to this file.</p></td>
+    </tr>
+    <tr>
+      <th>minCellsToContinue</th>
+      <td><p>Demultiplexing generally requires a minimal amount of cells. If the matrix contains fewer than this many cells, it will abort.</p></td>
     </tr>
     </table>
 
