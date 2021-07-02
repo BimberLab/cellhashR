@@ -326,8 +326,8 @@ GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_r
     seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
     seuratObj <- BFFDemux(seuratObj = seuratObj, assay = assay, simple_threshold = simple_threshold, doublet_thresh = doublet_thresh, neg_thresh = neg_thresh, dist_frac=dist_frac, metricsFile = metricsFile)
     if (as.logical(simple_threshold) == TRUE) {
-      SummarizeHashingCalls(seuratObj, label = "bff_threshold", columnSuffix = "bff_threshold", assay = assay, doHeatmap = TRUE)
-      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = "bff_threshold", classification = seuratObj$classification.bff_threshold, classification.global = seuratObj$classification.global.bff_threshold, stringsAsFactors = FALSE)
+      SummarizeHashingCalls(seuratObj, label = "bff_raw", columnSuffix = "bff_raw", assay = assay, doHeatmap = TRUE)
+      df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = "bff_raw", classification = seuratObj$classification.bff_raw, classification.global = seuratObj$classification.global.bff_raw, stringsAsFactors = FALSE)
       return(df)
     } else {
       SummarizeHashingCalls(seuratObj, label = 'bff_cluster', columnSuffix = 'bff_cluster', assay = assay, doHeatmap = TRUE)
@@ -349,10 +349,14 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     slot = 'counts'
   )[, colnames(x = seuratObj)]
   
-  print(paste("Simple Threshold: ", simple_threshold))
-  print(paste("Doublet thresh: ", doublet_thresh))
-  print(paste("Neg thresh: ", neg_thresh))
-  print(paste("Min distance as fraction of distance between peaks: ", dist_frac))
+  if (!simple_threshold) {
+    print('Running BFF_cluster')
+    print(paste("Doublet threshold: ", doublet_thresh))
+    print(paste("Neg threshold: ", neg_thresh))
+    print(paste("Min distance as fraction of distance between peaks: ", dist_frac))
+  } else {
+    print('Running BFF_raw')
+  }
 
   thresholdres <- generateBFFGridPlot(barcodeMatrix, "Log(Counts + 1)", "Raw Count Distributions with BQN Thresholds")
   
@@ -372,7 +376,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
   x_vals <- thresholdres[['x_vals']]
   
   if (simple_threshold == TRUE) {
-    seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_threshold', assay = assay)
+    seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_raw', assay = assay)
     return(seuratObj)
   } else {
     #   Quantile method compares the distance between the top 2 normalized barcode counts to the
