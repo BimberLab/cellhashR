@@ -116,7 +116,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @title Generate Cell Hashing Calls
 #'
 #' @param barcodeMatrix The filtered matrix of hashing count data
-#' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux, multiseq, dropletutils, gmm_demux, bff_threshold, and bff_cluster
+#' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux, multiseq, dropletutils, gmm_demux, bff_raw, and bff_cluster
 #' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
 #' @param metricsFile If provided, summary metrics will be written to this file.
 #' @param \dots Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).
@@ -136,8 +136,12 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
       vals <- vals[!is.null(names(vals))]
       vals <- vals[grepl(names(vals), pattern = paste0('^', method, '\\.'))]
       names(vals) <- gsub(names(vals), pattern = paste0('^', method, '\\.'), replacement = '')
-      print(names(vals))
-      
+
+      print('The following custom parameters are being applied:')
+      for (v in names(vals)) {
+        print(paste0(v, ': ', vals[v]))
+      }
+
       fnArgs <- vals
     }
 
@@ -166,7 +170,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
-    } else if (method == 'bff_threshold'){
+    } else if (method == 'bff_raw'){
       fnArgs$barcodeMatrix <- barcodeMatrix
       fnArgs$simple_threshold <- TRUE
       calls <- do.call(GenerateCellHashCallsBFF, fnArgs)
