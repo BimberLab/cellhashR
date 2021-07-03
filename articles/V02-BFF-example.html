@@ -135,25 +135,20 @@ img {
 <div id="generate-hashing-calls" class="section level1">
 <h1 class="hasAnchor">
 <a href="#generate-hashing-calls" class="anchor"></a>Generate Hashing Calls</h1>
-<p>The cellhashR command GenerateCellHashingCalls performs demultiplexing analysis on the data using the algorithms listed in “methods” (BFF_threshold and BFF_cluster in the current analysis). Below are results from four calls to GenerateCellHashingCalls, each time using a different parameter set for BFF_cluster.</p>
+<p>The cellhashR command GenerateCellHashingCalls performs demultiplexing analysis on the data using the algorithms listed in “methods” (BFF_raw and BFF_cluster in the current analysis). Below are results from four calls to GenerateCellHashingCalls, each time using a different parameter set for BFF_cluster.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">methods</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"bff_threshold"</span>, <span class="st">"bff_cluster"</span><span class="op">)</span>
-<span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="va">methods</span>, cellbarcodeWhitelist <span class="op">=</span> <span class="va">cellbarcodeWhitelist</span>, metricsFile <span class="op">=</span> <span class="va">metricsFile</span>, bff_threshold.simple_threshold<span class="op">=</span><span class="cn">TRUE</span>, bff_cluster.simple_threshold<span class="op">=</span><span class="cn">FALSE</span>, bff_cluster.doublet_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.neg_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.dist_frac<span class="op">=</span><span class="fl">0.1</span><span class="op">)</span>
+<code class="sourceCode R"><span class="va">methods</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"bff_raw"</span>, <span class="st">"bff_cluster"</span><span class="op">)</span>
+<span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="va">methods</span>, cellbarcodeWhitelist <span class="op">=</span> <span class="va">cellbarcodeWhitelist</span>, metricsFile <span class="op">=</span> <span class="va">metricsFile</span>, bff_cluster.doublet_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.neg_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.dist_frac<span class="op">=</span><span class="fl">0.1</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/write.table.html">write.table</a></span><span class="op">(</span><span class="va">df</span>, file <span class="op">=</span> <span class="va">callFile</span>, sep <span class="op">=</span> <span class="st">'\t'</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></code></pre></div>
-<div id="bff_threshold" class="section level3">
+<div id="bff_raw" class="section level3">
 <h3 class="hasAnchor">
-<a href="#bff_threshold" class="anchor"></a>BFF_threshold</h3>
-<pre><code>## [1] "simple_threshold"
-## [1] "Starting BFF"
-## [1] "rows dropped for low counts: 0 of 12"
-## [1] "Simple Threshold:  TRUE"
-## [1] "Doublet thresh:  0.05"
-## [1] "Neg thresh:  0.05"
-## [1] "Min distance as fraction of distance between peaks:  0.1"</code></pre>
-<p>The lines of output above are printed when BFF_threshold is run. The statement “Simple Threshold: TRUE” indicates that BFF_threshold is being run (“Simple Threshold: FALSE” indicates that BFF_cluster is being run). The parameter values printed above are the default values for BFF_cluster and are not actually used for BFF_threshold.</p>
+<a href="#bff_raw" class="anchor"></a>BFF_raw</h3>
+<pre><code>## [1] "Starting BFF_raw"
+## [1] "rows dropped for low counts: 0 of 12"</code></pre>
+<p>The lines of output above are printed when BFF_raw is run (as opposed to BFF_cluster).</p>
 <p><img src="BFF-example_files/figure-html/unnamed-chunk-3-1.png" width="576"></p>
 <p>The figure above will be generated each time BFF is run on this data (in either the threshold mode or the cluster mode). Similarly, the list of thresholds below (not in log-space) is given each time BFF is run on the data. Both outputs are shown in this document only this once, for sake of brevity.</p>
-<p>BFF_threshold classifies droplets based on comparison of raw count values to the thresholds found by fitting. Droplets are classified as singlets when they are positive for just one barcode, as doublets when positive for multiple barcodes, and as negatives when they are negative for all barcodes.</p>
+<p>BFF_raw classifies droplets based on comparison of raw count values to the thresholds found by fitting. Droplets are classified as singlets when they are positive for just one barcode, as doublets when positive for multiple barcodes, and as negatives when they are negative for all barcodes.</p>
 <pre><code>## [1] "Thresholds:"
 ## [1] "Bar12: 137.252466391685"
 ## [1] "Bar11: 101.320341426663"
@@ -177,31 +172,27 @@ img {
 <h4 class="hasAnchor">
 <a href="#bff_cluster-0-05-0-05-0-1" class="anchor"></a>BFF_cluster (0.05, 0.05, 0.1)</h4>
 <p>The first set of graphs below demonstrates output for default values for parameters bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.05, 0.05, and 0.1, respectively.</p>
-<pre><code>## [1] "simple_threshold" "doublet_thresh"   "neg_thresh"       "dist_frac"       
-## [1] "Starting BFF"
+<pre><code>## [1] "Starting BFF_cluster"
 ## [1] "rows dropped for low counts: 0 of 12"
-## [1] "Simple Threshold:  FALSE"
 ## [1] "Doublet thresh:  0.05"
 ## [1] "Neg thresh:  0.05"
 ## [1] "Min distance as fraction of distance between peaks:  0.1"</code></pre>
 <p><img src="BFF-example_files/figure-html/unnamed-chunk-2-18.png" width="576"></p>
-<p>The lines of output above are printed when BFF_cluster is run. The output indicates that BFF_cluster is being run (“Simple Threshold: FALSE”). The parameter values output here are the default values for BFF_cluster.</p>
+<p>The lines of output above are printed when BFF_cluster is run. The parameter values output here are the default values for BFF_cluster.</p>
 <p>The figure above is generated each time BFF_cluster is run (BQN threshold values are not affected by parameter values) but is shown only once here for brevity. In this figure, BQN data and BQN thresholds are shown.</p>
-<p>The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.05, 0.05, and 0.1, respectively. The figure on the right compares the BFF_cluster classifications with BFF_threshold classifications (consensus output can be ignored).</p>
+<p>The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.05, 0.05, and 0.1, respectively. The figure on the right compares the BFF_cluster classifications with BFF_raw classifications (consensus output can be ignored).</p>
 <p><img src="BFF-example_files/figure-html/unnamed-chunk-2-19.png" width="576"><img src="BFF-example_files/figure-html/unnamed-chunk-2-35.png" width="576"></p>
 </div>
 <div id="bff_cluster-0-2-0-05-0-1" class="section level4">
 <h4 class="hasAnchor">
 <a href="#bff_cluster-0-2-0-05-0-1" class="anchor"></a>BFF_cluster (0.2, 0.05, 0.1)</h4>
-<p>The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.2, 0.05, and 0.1, respectively. The figure on the right compares the BFF_cluster classifications with BFF_threshold classifications (consensus output can be ignored).</p>
+<p>The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.2, 0.05, and 0.1, respectively. The figure on the right compares the BFF_cluster classifications with BFF_raw classifications (consensus output can be ignored).</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="va">methods</span>, cellbarcodeWhitelist <span class="op">=</span> <span class="va">cellbarcodeWhitelist</span>, metricsFile <span class="op">=</span> <span class="va">metricsFile</span>, bff_threshold.simple_threshold<span class="op">=</span><span class="cn">TRUE</span>, bff_cluster.simple_threshold<span class="op">=</span><span class="cn">FALSE</span>, bff_cluster.doublet_thresh<span class="op">=</span><span class="fl">0.2</span>, bff_cluster.neg_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.dist_frac<span class="op">=</span><span class="fl">0.1</span><span class="op">)</span>
+<code class="sourceCode R"><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="va">methods</span>, cellbarcodeWhitelist <span class="op">=</span> <span class="va">cellbarcodeWhitelist</span>, metricsFile <span class="op">=</span> <span class="va">metricsFile</span>, bff_cluster.doublet_thresh<span class="op">=</span><span class="fl">0.2</span>, bff_cluster.neg_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.dist_frac<span class="op">=</span><span class="fl">0.1</span><span class="op">)</span>
 
 <span class="fu"><a href="https://rdrr.io/r/utils/write.table.html">write.table</a></span><span class="op">(</span><span class="va">df</span>, file <span class="op">=</span> <span class="va">callFile</span>, sep <span class="op">=</span> <span class="st">'\t'</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></code></pre></div>
-<pre><code>## [1] "simple_threshold" "doublet_thresh"   "neg_thresh"       "dist_frac"       
-## [1] "Starting BFF"
+<pre><code>## [1] "Starting BFF_cluster"
 ## [1] "rows dropped for low counts: 0 of 12"
-## [1] "Simple Threshold:  FALSE"
 ## [1] "Doublet thresh:  0.2"
 ## [1] "Neg thresh:  0.05"
 ## [1] "Min distance as fraction of distance between peaks:  0.1"</code></pre>
@@ -210,15 +201,13 @@ img {
 <div id="bff_cluster-0-05-0-2-0-1" class="section level4">
 <h4 class="hasAnchor">
 <a href="#bff_cluster-0-05-0-2-0-1" class="anchor"></a>BFF_cluster (0.05, 0.2, 0.1)</h4>
-<p>The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.05, 0.2, and 0.1, respectively. The figure on the right compares the BFF_cluster classifications with BFF_threshold classifications (consensus output can be ignored).</p>
+<p>The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.05, 0.2, and 0.1, respectively. The figure on the right compares the BFF_cluster classifications with BFF_raw classifications (consensus output can be ignored).</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="va">methods</span>, cellbarcodeWhitelist <span class="op">=</span> <span class="va">cellbarcodeWhitelist</span>, metricsFile <span class="op">=</span> <span class="va">metricsFile</span>, bff_threshold.simple_threshold<span class="op">=</span><span class="cn">TRUE</span>, bff_cluster.simple_threshold<span class="op">=</span><span class="cn">FALSE</span>, bff_cluster.doublet_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.neg_thresh<span class="op">=</span><span class="fl">0.2</span>, bff_cluster.dist_frac<span class="op">=</span><span class="fl">0.1</span><span class="op">)</span>
+<code class="sourceCode R"><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="va">methods</span>, cellbarcodeWhitelist <span class="op">=</span> <span class="va">cellbarcodeWhitelist</span>, metricsFile <span class="op">=</span> <span class="va">metricsFile</span>, bff_cluster.doublet_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.neg_thresh<span class="op">=</span><span class="fl">0.2</span>, bff_cluster.dist_frac<span class="op">=</span><span class="fl">0.1</span><span class="op">)</span>
 
 <span class="fu"><a href="https://rdrr.io/r/utils/write.table.html">write.table</a></span><span class="op">(</span><span class="va">df</span>, file <span class="op">=</span> <span class="va">callFile</span>, sep <span class="op">=</span> <span class="st">'\t'</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></code></pre></div>
-<pre><code>## [1] "simple_threshold" "doublet_thresh"   "neg_thresh"       "dist_frac"       
-## [1] "Starting BFF"
+<pre><code>## [1] "Starting BFF_cluster"
 ## [1] "rows dropped for low counts: 0 of 12"
-## [1] "Simple Threshold:  FALSE"
 ## [1] "Doublet thresh:  0.05"
 ## [1] "Neg thresh:  0.2"
 ## [1] "Min distance as fraction of distance between peaks:  0.1"</code></pre>
@@ -227,14 +216,12 @@ img {
 <div id="bff_cluster-0-05-0-05-0-25" class="section level4">
 <h4 class="hasAnchor">
 <a href="#bff_cluster-0-05-0-05-0-25" class="anchor"></a>BFF_cluster (0.05, 0.05, 0.25)</h4>
-<p>The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.05, 0.05, and 0.25, respectively. The figure on the right compares the BFF_cluster classifications with BFF_threshold classifications (consensus output can be ignored).</p>
+<p>The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.05, 0.05, and 0.25, respectively. The figure on the right compares the BFF_cluster classifications with BFF_raw classifications (consensus output can be ignored).</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="va">methods</span>, cellbarcodeWhitelist <span class="op">=</span> <span class="va">cellbarcodeWhitelist</span>, metricsFile <span class="op">=</span> <span class="va">metricsFile</span>, bff_threshold.simple_threshold<span class="op">=</span><span class="cn">TRUE</span>, bff_cluster.simple_threshold<span class="op">=</span><span class="cn">FALSE</span>, bff_cluster.doublet_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.neg_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.dist_frac<span class="op">=</span><span class="fl">0.25</span><span class="op">)</span>
+<code class="sourceCode R"><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="va">methods</span>, cellbarcodeWhitelist <span class="op">=</span> <span class="va">cellbarcodeWhitelist</span>, metricsFile <span class="op">=</span> <span class="va">metricsFile</span>, bff_cluster.doublet_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.neg_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.dist_frac<span class="op">=</span><span class="fl">0.25</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/write.table.html">write.table</a></span><span class="op">(</span><span class="va">df</span>, file <span class="op">=</span> <span class="va">callFile</span>, sep <span class="op">=</span> <span class="st">'\t'</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></code></pre></div>
-<pre><code>## [1] "simple_threshold" "doublet_thresh"   "neg_thresh"       "dist_frac"       
-## [1] "Starting BFF"
+<pre><code>## [1] "Starting BFF_cluster"
 ## [1] "rows dropped for low counts: 0 of 12"
-## [1] "Simple Threshold:  FALSE"
 ## [1] "Doublet thresh:  0.05"
 ## [1] "Neg thresh:  0.05"
 ## [1] "Min distance as fraction of distance between peaks:  0.25"</code></pre>
