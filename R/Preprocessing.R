@@ -33,8 +33,15 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 		}
 
 		cellbarcodeWhitelistToUse <- intersect(cellbarcodeWhitelist, colnames(barcodeData))
+
+		# As a sanity check, find the top cells by counts and report intersect:
+		topByCounts <- sort(colSums(barcodeData), decreasing = T)
+		cellsShared <- length(intersect(names(topByCounts)[1:length(cellbarcodeWhitelist)], cellbarcodeWhitelist))
+
 		barcodeData <- barcodeData[ , cellbarcodeWhitelistToUse, drop = FALSE]
 		print(paste0('Subsetting based on whitelist. Cells in whitelist: ', length(cellbarcodeWhitelist), ', cells in matrix after subset: ', ncol(barcodeData)))
+		print(paste0('Total cells shared between whitelist and top droplets by count: ', cellsShared, ' (', round(100 * cellsShared / length(cellbarcodeWhitelist), 1),'%)'))
+
 	}
 	.LogMetric(metricsFile, 'InitialCellBarcodes', ncol(barcodeData))
 
@@ -208,7 +215,7 @@ DoRowFiltering <- function(barcodeData, minCountPerRow = 1, doLog = TRUE) {
 		barcodeData <- barcodeData[!toDropRows, , drop = FALSE]
 
 		if (doLog) {
-			print(paste0('Rows after filter: ', nrow(barcodeData)))
+			print(paste0('Rows after row filter: ', nrow(barcodeData)))
 		}
 	}
 
@@ -221,7 +228,7 @@ DoCellFiltering <- function(barcodeData, minCountPerCell = 5){
 		if (toDrop > 0){
 			print(paste0('Cells dropped due to low total counts per cell (<', minCountPerCell, '): ', toDrop))
 			barcodeData <- barcodeData[,which(colSums(barcodeData) >= minCountPerCell), drop = FALSE]
-			print(paste0('After filter: ', ncol(barcodeData)))
+			print(paste0('After cell filter: ', ncol(barcodeData)))
 		}
 	}
 
