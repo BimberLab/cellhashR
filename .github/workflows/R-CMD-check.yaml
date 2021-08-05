@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          #- {os: ubuntu-20.04, r: 'devel', bioc: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
+          - {os: ubuntu-20.04, r: '4.1', bioc: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
           - {os: ubuntu-20.04, r: 'release', bioc: '3.13', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest", pkgdown: "true"}
           - {os: ubuntu-20.04, r: '4.0', bioc: '3.12', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
           #- {os: windows-latest, r: '4.1', bioc: '3.13'}
@@ -74,11 +74,28 @@ jobs:
             eval sudo $cmd
           done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "20.04"))')
 
+      # NOTE: this is a temporary fix to manually install a patched remotes to allow it to properly install bioconductor-devel packages
+      - name: Install Custom Remotes
+        if: matrix.config.bioc == 'devel'
+        run: |
+          git clone -b git_head https://github.com/bbimber/remotes.git
+          cd remotes
+          R CMD build --no-build-vignettes .
+          R CMD INSTALL --build remotes_2.3.0.9000.tar.gz
+          cd ../
+          rm -Rf remotes
+
       # See: https://github.com/PeteHaitch/DelayedMatrixStats/issues/84
-      - name: Temporary Fixes
+      - name: Temporary Fixes 3.13
         if: matrix.config.bioc == '3.13'
         run: |
           BiocManager::install("PeteHaitch/DelayedMatrixStats@906ef69596558b0b7436ce95ad81a529062fa38c")
+        shell: Rscript {0}
+
+      - name: Temporary Fixes Devel
+        if: matrix.config.bioc == 'devel'
+        run: |
+          BiocManager::install("PeteHaitch/DelayedMatrixStats@949d3868d26a63861abe6109e18e62f352c0c41e")
         shell: Rscript {0}
 
       - name: Install dependencies
