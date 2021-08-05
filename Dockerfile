@@ -14,6 +14,9 @@ RUN apt-get update -y \
 
 ENV RETICULATE_PYTHON=/usr/bin/python3
 
+# Temporary fix. See: https://github.com/PeteHaitch/DelayedMatrixStats/issues/84
+RUN Rscript -e 'BiocManager::install("PeteHaitch/DelayedMatrixStats@906ef69596558b0b7436ce95ad81a529062fa38c")'
+
 # Let this run for the purpose of installing/caching dependencies
 RUN Rscript -e "install.packages(c('devtools', 'BiocManager', 'remotes'), dependencies=TRUE, ask = FALSE)" \
 	&& echo "local({\noptions(repos = BiocManager::repositories())\n})\n" >> ~/.Rprofile \
