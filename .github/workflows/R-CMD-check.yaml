@@ -74,6 +74,13 @@ jobs:
             eval sudo $cmd
           done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "20.04"))')
 
+      # See: https://github.com/PeteHaitch/DelayedMatrixStats/issues/84
+      - name: Temporary Fixes
+        if: matrix.config.bioc == '3.13'
+        run: |
+          BiocManager::install("PeteHaitch/DelayedMatrixStats@906ef69596558b0b7436ce95ad81a529062fa38c")
+        shell: Rscript {0}
+
       - name: Install dependencies
         run: |
           remotes::install_deps(dependencies = TRUE, upgrade = "always")
