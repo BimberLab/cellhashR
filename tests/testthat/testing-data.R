@@ -33,7 +33,7 @@ tests <- list(
       SeuratCalled = 4096
     ),
     '438-24' = list(
-      input = '../testdata/438-24-GEX/umi_count',
+      input = '../testdata/438-24-GEX/umi_count/',
       htos = paste0('MS-', c(11, 12)),
       CalledCells = 4624,
       Singlet = 3920,
@@ -54,7 +54,7 @@ tests <- list(
       SeuratCalled = 1103
     ),
     '457-1' = list(
-      input = '../testdata/457-1-GEX/umi_count',
+      input = '../testdata/457-1-GEX/umi_count/',
       htos = paste0('MS-', c(1:3, 5:8)),
       CalledCells = 1816,
       Singlet = 1481,
@@ -95,7 +95,7 @@ tests <- list(
     )
 )
 
-DoTest <- function(test, callsFile, summaryFile, methods = c('multiseq', 'htodemux'), skipNormalizationQc = FALSE) {
+DoTest <- function(test, methods = c('multiseq', 'htodemux'), skipNormalizationQc = FALSE) {
 	barcodeFile <- test$input
 	barcodeData <- ProcessCountMatrix(rawCountData = barcodeFile, barcodeWhitelist = test$htos)
 

@@ -43,7 +43,7 @@ test_that("Workflow works", {
 	countData <- Seurat::Read10X(test$input, gene.column=1, strip.suffix = TRUE)
 	countData <- countData[,1:2500]
 	
-	subsetCountDir = normalizePath('./subsetCounts/', mustWork = FALSE)
+	subsetCountDir <- normalizePath('./subsetCounts/', mustWork = FALSE)
 	DropletUtils::write10xCounts(path = subsetCountDir, countData, overwrite = TRUE)
 
 	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile, rawCountsExport = rawCountsExport)
@@ -91,40 +91,34 @@ test_that("Saturation plot works", {
 
 test_that("Cell hashing works", {
     for (testName in names(tests)) {
-				print(paste0('Running test: ', testName))
-				test <- tests[[testName]]
+		print(paste0('Running test: ', testName))
+		test <- tests[[testName]]
 
-				callsFile <- paste0(testName, '-calls.txt')
-				summaryFile <- NULL
-				if (!is.null(test$gexBarcodeFile)) {
-					summaryFile <- paste0(testName, '-summary.txt')
-				}
+		l <- DoTest(test)
+		barcodeData <- l$barcodeData
+		df <- l$df
+		metricsFile <- l$metricsFile
 
-				l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile)
-				barcodeData <- l$barcodeData
-        df <- l$df
-				metricsFile <- l$metricsFile
+		expectedHtos <- sort(test$htos)
+		actualHtosMatrix <- sort(unname(cellhashR:::SimplifyHtoNames(rownames(barcodeData))))
+		expect_equal(expected = expectedHtos, object = actualHtosMatrix, info = testName)
 
-				expectedHtos <- sort(test$htos)
-				actualHtosMatrix <- sort(unname(cellhashR:::SimplifyHtoNames(rownames(barcodeData))))
-				expect_equal(expected = expectedHtos, object = actualHtosMatrix, info = testName)
+		expect_true(file.exists(metricsFile), info = testName)
+		metrics <- read.table(metricsFile, sep = '\t', header = FALSE, col.names = c('Category', 'MetricName', 'MetricValue'))
+		expect_equal(object = nrow(metrics), expected = 18 + length(expectedHtos), info = testName)
+		unlink(metricsFile)
 
-				expect_true(file.exists(metricsFile), info = testName)
-				metrics <- read.table(metricsFile, sep = '\t', header = FALSE, col.names = c('Category', 'MetricName', 'MetricValue'))
-				expect_equal(object = nrow(metrics), expected = 18 + length(expectedHtos), info = testName)
-				unlink(metricsFile)
+		print(paste0('evaluating test: ', testName))
+		expect_equal(expected = 0, object = sum(df$consensuscall == 'Not Called'), info = testName)
+		expect_equal(expected = test[['CalledCells']], object = sum(df$consensuscall != 'Discordant'), info = testName)
+		expect_equal(expected = test[['Singlet']], object = sum(df$consensuscall.global == 'Singlet'), info = testName)
+		expect_equal(expected = test[['Doublet']], object = sum(df$consensuscall.global == 'Doublet'), info = testName)
+		expect_equal(expected = test[['SeuratCalled']], object = sum(df$htodemux != 'Negative'), info = testName)
+		expect_equal(expected = test[['MultiSeqCalled']], object = sum(df$multiseq != 'Negative'), info = testName)
 
-				print(paste0('evaluating test: ', testName))
-				expect_equal(expected = 0, object = sum(df$consensuscall == 'Not Called'), info = testName)
-				expect_equal(expected = test[['CalledCells']], object = sum(df$consensuscall != 'Discordant'), info = testName)
-				expect_equal(expected = test[['Singlet']], object = sum(df$consensuscall.global == 'Singlet'), info = testName)
-				expect_equal(expected = test[['Doublet']], object = sum(df$consensuscall.global == 'Doublet'), info = testName)
-				expect_equal(expected = test[['SeuratCalled']], object = sum(df$htodemux != 'Negative'), info = testName)
-				expect_equal(expected = test[['MultiSeqCalled']], object = sum(df$multiseq != 'Negative'), info = testName)
-
-				expect_equal(expected = sum(df$consensuscall.global == 'Discordant'), object = sum(df$consensuscall == 'Discordant'), info = testName)
-				expect_equal(expected = test[['Discordant']], object = sum(df$consensuscall == 'Discordant'), info = testName)
-				expect_equal(expected = test[['Discordant']], object = sum(df$consensuscall.global == 'Discordant'), info = testName)
+		expect_equal(expected = sum(df$consensuscall.global == 'Discordant'), object = sum(df$consensuscall == 'Discordant'), info = testName)
+		expect_equal(expected = test[['Discordant']], object = sum(df$consensuscall == 'Discordant'), info = testName)
+		expect_equal(expected = test[['Discordant']], object = sum(df$consensuscall.global == 'Discordant'), info = testName)
     }
 })
 
@@ -135,13 +129,7 @@ test_that("BFF calling works", {
 	print(paste0('Running test: ', testName))
 	test <- tests[[testName]]
 
-	callsFile <- paste0(testName, '-calls.txt')
-	summaryFile <- NULL
-	if (!is.null(test$gexBarcodeFile)) {
-		summaryFile <- paste0(testName, '-summary.txt')
-	}
-
-	l <- DoTest(test, callsFile=callsFile, summaryFile=summaryFile, methods = c('dropletutils', 'bff_cluster', 'multiseq'), skipNormalizationQc = TRUE)
+	l <- DoTest(test, methods = c('dropletutils', 'bff_cluster', 'multiseq'), skipNormalizationQc = TRUE)
 	barcodeData <- l$barcodeData
 	df <- l$df
 	metricsFile <- l$metricsFile
