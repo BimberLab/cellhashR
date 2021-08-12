@@ -7,7 +7,7 @@
 PlotLibrarySaturationByMarker(citeseqCountDir)
 }
 \arguments{
-\item{citeseqCountDir, }{The root of the Cite-seq-Count output folder, which should contain umi_count and read_count folders.}
+\item{citeseqCountDir}{The root of the Cite-seq-Count output folder, which should contain umi_count and read_count folders.}
 }
 \description{
 Create a plot of the library saturation per cell, separated by marker

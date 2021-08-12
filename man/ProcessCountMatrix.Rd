@@ -18,7 +18,7 @@ ProcessCountMatrix(
 )
 }
 \arguments{
-\item{rawCountData, }{The input barcode file or umi_count folder}
+\item{rawCountData}{The input barcode file or umi_count folder}
 
 \item{minCountPerCell}{Cells (columns) will be dropped if their total count is less than this value.}
 
