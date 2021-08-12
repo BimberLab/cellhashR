@@ -3,7 +3,7 @@
 #' @title Process CiteSeq Count Matrix
 #'
 #' @description The primary entrypoint for parsing and QC of the cell hashing count matrix.
-#' @param rawCountData, The input barcode file or umi_count folder
+#' @param rawCountData The input barcode file or umi_count folder
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
 #' @param barcodeWhitelist A vector of barcode names to retain.
 #' @param barcodeBlacklist A vector of barcodes names to discard.
@@ -89,21 +89,19 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 
 .LoadCountMatrix <- function(rawCountData = NA, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), simplifyBarcodeNames = TRUE) {
 	if (is.na(rawCountData)){
-		stop("No file set: change rawCountData")
+		stop("Need to provide a directory or file for rawCountData")
 	}
 
 	if (is.na(barcodeBlacklist) || is.null(barcodeBlacklist)) {
 		barcodeBlacklist <- character()
 	}
 
-	if (!file.exists(rawCountData)){
-		stop(paste0("File does not exist: ", rawCountData))
-	}
-
 	if (dir.exists(rawCountData)) {
 		barcodeData <- Seurat::Read10X(rawCountData, gene.column=1, strip.suffix = TRUE)
 		barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% barcodeBlacklist)), , drop = F]
 		barcodeData <- as.matrix(barcodeData)
+	} else if (!file.exists(rawCountData)){
+		stop(paste0("File does not exist: ", rawCountData))
 	} else {
 		# older CITE-seq-Count versions created a CSV file, so support this:
 		barcodeData <- utils::read.table(rawCountData, sep = ',', header = T, row.names = 1)
@@ -316,8 +314,8 @@ PrintColumnQc <- function(barcodeMatrix) {
 	if (nrow(barcodeMatrix) == 2){
 		tryCatch({
 			df <- data.frame(t(barcodeMatrix))
-			M = log2(df[,1]) - log2(df[,2])
-			A = (log2(df[,1]) + log2(df[,2]))/2
+			M <- log2(df[,1]) - log2(df[,2])
+			A <- (log2(df[,1]) + log2(df[,2]))/2
 
 			df$M <- M
 			df$A <- A
@@ -356,7 +354,7 @@ utils::globalVariables(
 #' @title Plot Library Saturation
 #'
 #' @description Create a plot of the library saturation per cell
-#' @param citeseqCountDir, The root of the Cite-seq-Count output folder, which should contain umi_count and read_count folders.
+#' @param citeseqCountDir The root of the Cite-seq-Count output folder, which should contain umi_count and read_count folders.
 #' @param metricsFile If provided, summary metrics will be written to this file.
 #' @return The overall saturation for this library
 #' @export
@@ -393,7 +391,7 @@ PlotLibrarySaturation <- function(citeseqCountDir, metricsFile = NULL) {
 #' @title Plot Library Saturation By Marker
 #'
 #' @description Create a plot of the library saturation per cell, separated by marker
-#' @param citeseqCountDir, The root of the Cite-seq-Count output folder, which should contain umi_count and read_count folders.
+#' @param citeseqCountDir The root of the Cite-seq-Count output folder, which should contain umi_count and read_count folders.
 #' @export
 PlotLibrarySaturationByMarker <- function(citeseqCountDir) {
 	countData <- Seurat::Read10X(paste0(citeseqCountDir, '/read_count'), gene.column=1, strip.suffix = TRUE)

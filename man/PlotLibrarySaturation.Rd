@@ -7,7 +7,7 @@
 PlotLibrarySaturation(citeseqCountDir, metricsFile = NULL)
 }
 \arguments{
-\item{citeseqCountDir, }{The root of the Cite-seq-Count output folder, which should contain umi_count and read_count folders.}
+\item{citeseqCountDir}{The root of the Cite-seq-Count output folder, which should contain umi_count and read_count folders.}
 
 \item{metricsFile}{If provided, summary metrics will be written to this file.}
 }
