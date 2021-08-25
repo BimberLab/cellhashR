@@ -1,4 +1,4 @@
-from bioconductor/bioconductor_docker:latest
+FROM bioconductor/bioconductor_docker:latest
 
 # NOTE: if anything breaks the dockerhub build cache, you will probably need to build locally and push to dockerhub.
 # After the cache is in place, builds from github commits should be fast.
@@ -13,9 +13,6 @@ RUN apt-get update -y \
 	&& rm -rf /var/lib/apt/lists/*
 
 ENV RETICULATE_PYTHON=/usr/bin/python3
-
-# Temporary fix. See: https://github.com/PeteHaitch/DelayedMatrixStats/issues/84
-RUN Rscript -e 'BiocManager::install("PeteHaitch/DelayedMatrixStats@906ef69596558b0b7436ce95ad81a529062fa38c")'
 
 # Let this run for the purpose of installing/caching dependencies
 RUN Rscript -e "install.packages(c('devtools', 'BiocManager', 'remotes'), dependencies=TRUE, ask = FALSE)" \
