@@ -80,7 +80,6 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
   # Stop when there are fewer peaks than the number specified in num_deriv_peaks.
   while (length(max_list) > num_deriv_peaks) {
     j <- j + 1
-    # j <- 2
     smooth <- stats::density(data, adjust = j, kernel = 'gaussian',
                       bw = 'SJ', give.Rkern = FALSE)
     deriv <- numeric(length(smooth$x))
