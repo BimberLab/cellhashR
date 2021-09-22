@@ -11,17 +11,17 @@ test_that("BFF Works", {
 		Bar1 = 193,
 		Bar2 = 151,
 		Bar3 = 429,
-		Bar4 = 483,
-		Bar5 = 147,
+		Bar4 = 480,
+		Bar5 = 146,
 		Bar6 = 526,
-		Bar7 = 600,
-		Bar8 = 564,
+		Bar7 = 598,
+		Bar8 = 562,
 		Bar9 = 482,
-		Bar10 = 535,
-		Bar11 = 507,
+		Bar10 = 534,
+		Bar11 = 506,
 		Bar12 = 683,
-		Doublet = 428,
-		Negative = 68
+		Doublet = 437,
+		Negative = 70
 	)
 
 	for (hto in unique(df$consensuscall)) {
