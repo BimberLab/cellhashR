@@ -14,7 +14,7 @@ GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO', autoThre
 	}
 
 	tryCatch({
-		seuratObj <- CreateSeuratObject(barcodeMatrix, assay = assay)
+		seuratObj <- suppressWarnings(CreateSeuratObject(barcodeMatrix, assay = assay))
 		if (doRelNorm) {
 			print('Performing relative normalization instead of log2')
 			seuratObj[[assay]]@data <- NormalizeRelative(barcodeMatrix)

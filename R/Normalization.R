@@ -94,7 +94,7 @@ NormalizeLog2 <- function(mat, mean.center = TRUE) {
 }
 
 NormalizeCLR <- function(mat) {
-  seuratObj <- Seurat::CreateSeuratObject(mat, assay = 'Hashing')
+  seuratObj <- suppressWarnings(Seurat::CreateSeuratObject(mat, assay = 'Hashing'))
   seuratObj <- Seurat::NormalizeData(seuratObj, assay = 'Hashing', normalization.method = "CLR", verbose = FALSE)
 
   return(seuratObj@assays$Hashing@data)
@@ -216,7 +216,7 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
 }
 
 PerformHashingClustering <- function(barcodeMatrix, norm) {
-  seuratObj <- CreateSeuratObject(barcodeMatrix, assay = norm)
+  seuratObj <- suppressWarnings(CreateSeuratObject(barcodeMatrix, assay = norm))
 
   # Calculate tSNE embeddings with a distance matrix
   success <- FALSE
