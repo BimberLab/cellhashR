@@ -72,6 +72,6 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 	}
 
 	if (doHeatmap) {
-		print(HTOHeatmap(seuratObj, assay = assay, classification = htoClassificationField, global.classification = globalClassificationField, ncells = min(4000, ncol(seuratObj)), singlet.names = NULL) + ggtitle(label))
+		suppressWarnings(print(HTOHeatmap(seuratObj, assay = assay, classification = htoClassificationField, global.classification = globalClassificationField, ncells = min(4000, ncol(seuratObj)), singlet.names = NULL) + ggtitle(label)))
 	}
 }
