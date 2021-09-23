@@ -46,7 +46,6 @@ getNegNormedData <- function(discrete, barcodeMatrix) {
   is.na(negdiscrete) <- negdiscrete==0
   negvals <- negdiscrete * barcodeMatrix
   neg_normed <- NormalizeQuantile(t(as.matrix(negvals)))
-  neg_normed_na <- neg_normed
   neg_normed[is.na(neg_normed)] <- 0
 
   return(neg_normed)
@@ -65,172 +64,127 @@ getPosNormedData <- function(discrete, barcodeMatrix) {
   return(all_pos_normed)
 }
 
-getDiscreteFromCutoffs <- function(seuratObj, assay, cutoffs) {
-  barcodeMatrix <- GetAssayData(
-    object = seuratObj,
-    assay = assay,
-    slot = 'counts'
-  )[, colnames(x = seuratObj)]
-  
-  #loop over HTOs in matrix, perform thresholding and store cells that pass the threshold
-  #return a discrete matrix, with 1 equal to a call positive for that barcode
-  discrete <- GetAssayData(object = seuratObj, assay = assay)
-  discrete[discrete > 0] <- 0
-  for (hto in ls(cutoffs)) {
-    cells <- barcodeMatrix[hto, colnames(seuratObj), drop = FALSE]
-    threshold <- cutoffs[[hto]]
-    discrete[hto, colnames(seuratObj)] <- ifelse(cells > threshold, yes = 1, no = 0)
-  }
-  # now assign cells to HTO based on discretized values
-  return(discrete)
-}
-
-
-PlotCutoff <- function(data, smooth, label) {
-  # Function to calculate the threshold between positive and negative peaks and plot the distribution, fit, and
-  # derivative peaks.
-  deriv <- numeric(length(smooth$x))
-  max_list <- c()
-  for (i in 2:(length(smooth$x)-1)){
-    deriv[i] <- smooth$y[i+1] - smooth$y[i-1]
-  }
-  for (i in 2:(length(smooth$x)-1)){
-    if ((deriv[i+1] < 0 ) && (deriv[i] >= 0) ) {
-      max_list <- c(max_list, i)
-    }
-  }
-  yvals <- sapply(max_list, FUN = function(x) {
-    return(smooth$y[x])
-  })
-  
-  plotdata <- data.frame(Value = data)
-  linedata <- data.frame(x = smooth$x, y = sqrt(smooth$y))
-  
-  if (length(max_list) > 1) {
-    y1 <- max(yvals)
-    index1 <- max_list[which.max(yvals)]
-    x1 <- smooth$x[index1]
-    y2 <- max(yvals[yvals != y1])
-    index2 <- max_list[which(yvals==y2)]
-    x2 <- smooth$x[index2]
-    if (x2 < x1){
-      #Negative peak must be at least 1/10th the positive peak
-      if (y2 < (y1/10)) {
-        print(paste0('Negative peak was not at least 1/10th the positive peak, using max value as cutoff: ', label))
-        cutoff <- max(data)
-        return(list(
-          cutoff = cutoff,
-          plotdata = plotdata,
-          linedata = linedata
-        ))
-      }
-      cutoff_indices <- index2:index1
-    } else {
-      cutoff_indices <- index1:index2
-    }
-    cutoff_index <- which.min(smooth$y[cutoff_indices]) + min(cutoff_indices)
-    cutoff <- smooth$x[cutoff_index]
-  } else {
-    print(paste0('Only one peak found, using max value as cutoff: ', label))
-    cutoff <- max(data)
-    return(list(
-      cutoff = cutoff,
-      plotdata = plotdata,
-      linedata = linedata
-    ))
-  }
-
-  return(list(
-    cutoff = cutoff,
-    plotdata = plotdata,
-    linedata = linedata
-  ))
-}
-
 getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL, random.seed = GetSeed()) {
   if (!is.null(random.seed)) {
     set.seed(random.seed)
   }
 
-  # Function to find the threshold between positive and negative peaks of a barcode's distribution
-  num_peaks <- 10000
-  change <- 10
   j <- 1
-  max2_list <- numeric(10)
+  max_list <- numeric(10)
 
   # adding a small amount of noise (0-1) to count data removes distortions from the log-scale count histogram
   data <- log10(as.vector(data+1) + matrix(stats::runif(dim(data)[[1]]*dim(data)[[2]]), nrow=dim(data)[[1]]))
   data <- data[data > 0]
   # Iterate KDE over sequentially larger bandwidths until fake peaks are smoothed away.
-  # Stop when there is no change in number of peaks and there are fewer peaks than the number
-  #    specified in num_deriv_peaks.
-  while ((change > 0) | (length(max2_list) > num_deriv_peaks)) {
-    j <- j + 0.5
+  # Stop when there are fewer peaks than the number specified in num_deriv_peaks.
+  while (length(max_list) > num_deriv_peaks) {
+    j <- j + 1
     smooth <- stats::density(data, adjust = j, kernel = 'gaussian',
                       bw = 'SJ', give.Rkern = FALSE)
     deriv <- numeric(length(smooth$x))
-    deriv2 <- numeric(length(smooth$x))
     max_list <- c()
-    max2_list <- c()
-    smooth_list <- c()
-    y_vals <- c()
+
     for (i in 2:(length(smooth$x)-1)){
       deriv[i] <- smooth$y[i+1] - smooth$y[i-1]
-      deriv2[i] <- smooth$y[i+1] - 2*smooth$y[i] + smooth$y[i-1]
     }
+    
     for (i in 2:(length(smooth$x)-1)){
       if ((deriv[i+1] < 0 ) && (deriv[i] >= 0) ) {
         max_list <- c(max_list, i)
-        y_vals <- c(y_vals, smooth$y[i])
-      }
-      if ((deriv2[i+1] < 0 ) && (deriv2[i] >= 0) ) {
-        max2_list <- c(max2_list, i)
       }
     }
-
-    y_vals <- y_vals[order(y_vals, decreasing = TRUE)][1:2]
-    x_vals <- c()
-    for (y in y_vals) {
-      i <- which(smooth$y==y)
-      # x_vals is a vector containing the count values where maxima occur in the density curve
-      x_vals <- c(x_vals, smooth$x[i])
-    }
-    x_vals <- matrix(x_vals[order(x_vals, decreasing=FALSE)], nrow = 1, ncol = 2)
     
-    change <- num_peaks - length(max_list)
-    num_peaks <- length(max_list)
+    plotdata <- data.frame(Value = data)
+    linedata <- data.frame(x = smooth$x, y = sqrt(smooth$y))
   }
 
-  cutoff_res <- PlotCutoff(data, smooth, label)
-  cutoff <- cutoff_res[['cutoff']]
-  plotdata <- cutoff_res[['plotdata']]
-  linedata <- cutoff_res[['linedata']]
-  if ((cutoff == max(data))) {
+  peak_df <- data.frame(index = max_list, dens = smooth$y[max_list], count = smooth$x[max_list])
+  peak_df <- peak_df[order(-peak_df$dens),]
+  if (length(peak_df$index) < 2) {
+    print(paste0('Only one peak found, using max value as cutoff: ', label))
+    ind_min <- max(data)
+    ind1 <- peak_df$index[1]
+    ind2 <- ind_min
+  } else if (length(peak_df$index) == 2) {
+    top2_df <- peak_df
+    top2_df <- top2_df[order(top2_df$index),]
+    ind1 <- top2_df$index[1]
+    ind2 <- top2_df$index[2]
+    minval <- min(smooth$y[ind1:ind2])
+    ind_range <- which(smooth$y[ind1:ind2]==minval)
+    ind_min <- ind_range + ind1 - 1
+  } else if (length(peak_df$index) > 2){
+    if (peak_df$dens[2] > 10*peak_df$dens[3]) {
+      top2_df <- peak_df[1:2,]
+      top2_df <- top2_df[order(top2_df$index),]
+      ind1 <- top2_df$index[1]
+      ind2 <- top2_df$index[2]
+      minval <- min(smooth$y[ind1:ind2])
+      ind_range <- which(smooth$y[ind1:ind2]==minval)
+      ind_min <- ind_range + ind1 - 1
+    } else {
+      top2_df_a <- peak_df[1:2,]
+      top2_df_a <- top2_df_a[order(top2_df_a$index),]
+      ind1_a <- top2_df_a$index[1]
+      ind2_a <- top2_df_a$index[2]
+      minval_a <- min(smooth$y[ind1_a:ind2_a])
+      diff_a <- min(top2_df_a$dens) - minval_a
+      
+      top2_df_b <- peak_df[c(1,3),]
+      top2_df_b <- top2_df_b[order(top2_df_b$index),]
+      ind1_b <- top2_df_b$index[1]
+      ind2_b <- top2_df_b$index[2]
+      minval_b <- min(smooth$y[ind1_b:ind2_b])
+      diff_b <- min(top2_df_b$dens) - minval_b
+
+      if (diff_a > diff_b) {
+        ind_range <- which(smooth$y[ind1_a:ind2_a]==minval_a)
+        ind_min <- ind_range + ind1_a - 1
+        ind1 <- ind1_a
+        ind2 <- ind2_a
+      } else {
+        ind_range <- which(smooth$y[ind1_b:ind2_b]==minval_b)
+        ind_min <- ind_range + ind1_b - 1
+        ind1 <- ind1_b
+        ind2 <- ind2_b
+      }
+    }
+  }
+  
+  cutoff <- smooth$x[ind_min]
+  neg_mode <- smooth$x[ind1]
+  pos_mode <- smooth$x[ind2]
+
+  if (cutoff == max(data)) {
     barcodeBlocklist <- c(barcodeBlocklist, label)
   }
-
+  
   return(list(
     cutoff = cutoff,
+    neg_mode = neg_mode,
+    pos_mode = pos_mode,
     barcodeBlocklist = barcodeBlocklist,
-    x_vals = x_vals,
     plotdata = plotdata,
     linedata = linedata
   ))
 }
 
 generateBFFGridPlot <- function(barcodeMatrix, xlab, maintitle, universal_cutoff = NULL) {
-  barcodeBlocklist = NULL
+  barcodeBlocklist <- NULL
   plotdata <- NULL
   linedata <- NULL
   cutoffs <- NULL
+  poslist <- NULL
+  neglist <- NULL
   discrete <- barcodeMatrix
   discrete[discrete > 0] <- 0
 
   for (hto in rownames(barcodeMatrix)) {
     cells <- barcodeMatrix[hto, colnames(barcodeMatrix), drop = FALSE]
-    cutoffresults <- getCountCutoff(cells, hto, 4, barcodeBlocklist)
+    cutoffresults <- getCountCutoff(cells, hto, 3, barcodeBlocklist)
     cutoffval <- cutoffresults[['cutoff']]
-    x_vals <- cutoffresults[['x_vals']]
+    pos_mode <- cutoffresults[['pos_mode']]
+    neg_mode <- cutoffresults[['neg_mode']]
 
     if (!is.null(universal_cutoff)) {
       cutoffval <- universal_cutoff
@@ -267,7 +221,25 @@ generateBFFGridPlot <- function(barcodeMatrix, xlab, maintitle, universal_cutoff
     toAdd$Barcode <- hto
     toAdd$y <- -0.1
     cutoffs <- rbind(toAdd, cutoffs)
+    
+    toAdd <- data.frame(pos_mode = pos_mode)
+    toAdd$Barcode <- hto
+    
+    if (is.null(poslist)) {
+      poslist <- toAdd
+    } else {
+      poslist <- rbind(toAdd, poslist)
+    }
 
+    toAdd <- data.frame(neg_mode = neg_mode)
+    toAdd$Barcode <- hto
+    
+    if (is.null(neglist)) {
+      neglist <- toAdd
+    } else {
+      neglist <- rbind(toAdd, neglist)
+    }
+    
     barcodeBlocklist <- cutoffresults[['barcodeBlocklist']]
     discrete[hto, colnames(barcodeMatrix)] <- ifelse(cells > 10^cutoffval, yes = 1, no = 0)
   }
@@ -301,9 +273,11 @@ generateBFFGridPlot <- function(barcodeMatrix, xlab, maintitle, universal_cutoff
     barcodeBlocklist = barcodeBlocklist,
     cutoffslist = cutoffslist,
     discrete = discrete,
-    x_vals = x_vals
+    poslist = poslist,
+    neglist = neglist
   ))
 }
+
 
 GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_reads = 10, verbose = TRUE, simple_threshold = FALSE, doublet_thresh = 0.05, neg_thresh = 0.05, dist_frac = 0.1, metricsFile = NULL){
   if (verbose) {
@@ -323,7 +297,7 @@ GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_r
   }
 
   tryCatch({
-    seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
+    seuratObj <- suppressWarnings(Seurat::CreateSeuratObject(barcodeMatrix, assay = assay))
     seuratObj <- BFFDemux(seuratObj = seuratObj, assay = assay, simple_threshold = simple_threshold, doublet_thresh = doublet_thresh, neg_thresh = neg_thresh, dist_frac=dist_frac, metricsFile = metricsFile)
     if (as.logical(simple_threshold) == TRUE) {
       SummarizeHashingCalls(seuratObj, label = "bff_raw", columnSuffix = "bff_raw", assay = assay, doHeatmap = TRUE)
@@ -373,18 +347,17 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
   }
   
   discrete <- thresholdres[['discrete']]
-  x_vals <- thresholdres[['x_vals']]
-  
+
   if (simple_threshold == TRUE) {
     seuratObj <- .AssignCallsToMatrix(seuratObj, discrete, suffix = 'bff_raw', assay = assay)
     return(seuratObj)
   } else {
-    #   Quantile method compares the distance between the top 2 normalized barcode counts to the
+    #   Cluster method compares the distance between the top 2 normalized barcode counts to the
     #   distance between the nearest peak and the threshold.  The bc count for a cell considered for negative 
     #   recovery must be close to the threshold.  Likewise, the 2nd highest bc count for a cell considered for
     #   doublet recovery must be close to the threshold.
 
-    #outputs from NormalizeBimodalQuantile: discrete, tot_normed, log10(tot_normed+1), barcodeBlocklist
+    # outputs from NormalizeBimodalQuantile: discrete, tot_normed, log10(tot_normed+1), barcodeBlocklist
     normedres <- NULL
     tryCatch({
       normedres <- NormalizeBimodalQuantile(barcodeMatrix)
@@ -401,23 +374,13 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     discrete <- normedres[['discrete']]
     tot_normed <- normedres[['tot_normed']]
     lognormedcounts <- normedres[['lognormedcounts']]
-    barcodeBlocklist <- normedres[['barcodeBlocklist']]
-    
+
     #generateBFFGridPlot outputs barcodeBlocklist, cutoffslist, discrete, x_vals
     normedplotres <- generateBFFGridPlot(t(tot_normed), "Log(Counts + 1)", "Normalized Count Distributions with Fitted Threshold")
-
-    x_vals <- normedplotres[['x_vals']]
     normed_cutoffs <- normedplotres[['cutoffslist']]
-
-    max_list <- x_vals
-    norm_cutoff <- mean(unlist(normed_cutoffs))
-
-    # invisible(generateBFFGridPlot(t(tot_normed), "Log(Counts + 1)", "Normalized Count Distributions with Final Threshold", universal_cutoff = norm_cutoff))
-
-    maxima <- colMeans(max_list)
-    neg_mode <- maxima[1]
-    pos_mode <- maxima[2]
-
+    neg_mode <- mean(normedplotres[['neglist']]$neg_mode)
+    pos_mode <- mean(normedplotres[['poslist']]$pos_mode)
+    
     snr <- SNR(lognormedcounts)
     singlets <- c()
     negs <- c()
@@ -426,7 +389,6 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     doublethi <- c()
     doubletsecond <- c()
     
-
     highest_dist <- stats::density(snr$Highest, adjust = 1, kernel = 'gaussian',
                                    bw = 'SJ', give.Rkern = FALSE)
     second_dist <- stats::density(snr$Second, adjust = 1, kernel = 'gaussian',

@@ -42,7 +42,7 @@ GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux
 
 		ret <- data.frame(cellbarcode = df$cellbarcode, method = methodName, classification = df$classification, classification.global = df$classification.global, stringsAsFactors = FALSE)
 		assay <- 'HTO'
-		seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
+		seuratObj <- suppressWarnings(Seurat::CreateSeuratObject(barcodeMatrix, assay = assay))
 
 		toMerge <- ret$classification
 		names(toMerge) <- ret$cellbarcode

@@ -94,7 +94,7 @@ NormalizeLog2 <- function(mat, mean.center = TRUE) {
 }
 
 NormalizeCLR <- function(mat) {
-  seuratObj <- Seurat::CreateSeuratObject(mat, assay = 'Hashing')
+  seuratObj <- suppressWarnings(Seurat::CreateSeuratObject(mat, assay = 'Hashing'))
   seuratObj <- Seurat::NormalizeData(seuratObj, assay = 'Hashing', normalization.method = "CLR", verbose = FALSE)
 
   return(seuratObj@assays$Hashing@data)
@@ -131,13 +131,13 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
     } else if (method  == 'CLR') {
       toQC[['CLR']] <- NormalizeCLR(barcodeData)
     } else if (method  == 'log2Center') {
-      toQC[['log2Center']] = NormalizeLog2(barcodeData, mean.center = TRUE)
+      toQC[['log2Center']] <- NormalizeLog2(barcodeData, mean.center = TRUE)
     } else {
       stop(paste0('Unknown method: ', method))
     }
   }
-  uniqueRows = c()
-  uniqueCols = c()
+  uniqueRows <- c()
+  uniqueCols <- c()
 
   for (norm in names(toQC)) {
     uniqueRows <- unique(c(uniqueRows, nrow(toQC[[norm]])))
@@ -170,12 +170,16 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
 
   maxPerPlot <- 3
   totalPages <- GetTotalPlotPages(totalValues = length(unique(df$Barcode)), perPage = maxPerPlot)
+  if ('Raw' %in% levels(df$Normalization)) {
+    df$Normalization <- forcats::fct_relevel(Normalization, 'Raw')
+  }
+
   for (i in 1:totalPages) {
     print(ggplot2::ggplot(df, aes(x = NormCount, color = Barcode)) +
       egg::theme_presentation(base_size = 14) +
       geom_density(aes(y = sqrt(..density..)), size = 1) + 
       labs(y = 'sqrt(Density)', x = 'Value') + ggtitle('Normalized Data') +
-      ggforce::facet_wrap_paginate(Barcode ~ forcats::fct_relevel(Normalization, "Raw"), scales = 'free', ncol = length(unique(df$Normalization)), nrow = min(3, length(unique(df$Barcode))), strip.position = 'top', drop = FALSE, labeller = labeller(.multi_line = FALSE), page = i)
+      ggforce::facet_wrap_paginate(Barcode ~ Normalization, scales = 'free', ncol = length(unique(df$Normalization)), nrow = min(3, length(unique(df$Barcode))), strip.position = 'top', drop = FALSE, labeller = labeller(.multi_line = FALSE), page = i)
     )
   }
 
@@ -216,10 +220,9 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
 }
 
 PerformHashingClustering <- function(barcodeMatrix, norm) {
-  seuratObj <- CreateSeuratObject(barcodeMatrix, assay = norm)
+  seuratObj <- suppressWarnings(CreateSeuratObject(barcodeMatrix, assay = norm))
 
   # Calculate tSNE embeddings with a distance matrix
-  success <- FALSE
   tryCatch({
     perplexity <- .InferPerplexityFromSeuratObj(seuratObj, 100)
     print(paste0('Running tSNE with perplexity: ', perplexity, ' for normalization: ', norm))
@@ -275,12 +278,12 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 }
 
 .CreateClusterTilePlot <- function(seuratObj, assay) {
-  average.expression <- AverageExpression(
+  average.expression <- suppressWarnings(Seurat::AverageExpression(
     object = seuratObj,
     assays = c(assay),
     verbose = FALSE,
     return.seurat = TRUE
-  )
+  ))
 
   df <- reshape2::melt(GetAssayData(average.expression, assay = assay))
   names(df) <- c('Cluster', 'Barcode', 'AvgExpression')

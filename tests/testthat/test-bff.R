@@ -9,18 +9,18 @@ test_that("BFF Works", {
 
 	expectedCalls <- list(
 		Bar1 = 193,
-		Bar2 = 151,
+		Bar2 = 150,
 		Bar3 = 429,
-		Bar4 = 483,
+		Bar4 = 481,
 		Bar5 = 147,
 		Bar6 = 526,
-		Bar7 = 600,
+		Bar7 = 598,
 		Bar8 = 564,
 		Bar9 = 482,
-		Bar10 = 535,
-		Bar11 = 507,
+		Bar10 = 534,
+		Bar11 = 506,
 		Bar12 = 683,
-		Doublet = 428,
+		Doublet = 435,
 		Negative = 68
 	)
 

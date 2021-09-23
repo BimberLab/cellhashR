@@ -12,7 +12,7 @@ GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95,
 		print('Starting HTODemux')
 	}
 
-	seuratObj <- CreateSeuratObject(barcodeMatrix, assay = 'HTO')
+	seuratObj <- suppressWarnings(CreateSeuratObject(barcodeMatrix, assay = 'HTO'))
 
 	tryCatch({
 		seuratObj <- DoHtoDemux(seuratObj, positive.quantile = positive.quantile, verbose = verbose, metricsFile = metricsFile)
@@ -94,12 +94,12 @@ HTODemux <- function(
 
 	#average hto signals per cluster
 	#work around so we don't average all the RNA levels which takes time
-	average.expression <- AverageExpression(
+	average.expression <- suppressWarnings(Seurat::AverageExpression(
 		object = object,
 		assays = c(assay),
 		slot = 'counts',
 		verbose = FALSE
-	)[[assay]]
+	))[[assay]]
 
 	#create a matrix to store classification result
 	discrete <- GetAssayData(object = object, assay = assay)
