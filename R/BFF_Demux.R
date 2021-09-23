@@ -46,7 +46,6 @@ getNegNormedData <- function(discrete, barcodeMatrix) {
   is.na(negdiscrete) <- negdiscrete==0
   negvals <- negdiscrete * barcodeMatrix
   neg_normed <- NormalizeQuantile(t(as.matrix(negvals)))
-  neg_normed_na <- neg_normed
   neg_normed[is.na(neg_normed)] <- 0
 
   return(neg_normed)
@@ -83,7 +82,6 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
     smooth <- stats::density(data, adjust = j, kernel = 'gaussian',
                       bw = 'SJ', give.Rkern = FALSE)
     deriv <- numeric(length(smooth$x))
-    deriv2 <- numeric(length(smooth$x))
     max_list <- c()
 
     for (i in 2:(length(smooth$x)-1)){
@@ -98,17 +96,16 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
     
     plotdata <- data.frame(Value = data)
     linedata <- data.frame(x = smooth$x, y = sqrt(smooth$y))
-    derivdata <- data.frame(x = smooth$x, y = 10*deriv)
   }
 
   peak_df <- data.frame(index = max_list, dens = smooth$y[max_list], count = smooth$x[max_list])
   peak_df <- peak_df[order(-peak_df$dens),]
-  if (length(peak_df$index)<2) {
+  if (length(peak_df$index) < 2) {
     print(paste0('Only one peak found, using max value as cutoff: ', label))
     ind_min <- max(data)
     ind1 <- peak_df$index[1]
     ind2 <- ind_min
-  } else if (length(peak_df$index)==2) {
+  } else if (length(peak_df$index) == 2) {
     top2_df <- peak_df
     top2_df <- top2_df[order(top2_df$index),]
     ind1 <- top2_df$index[1]
@@ -116,7 +113,7 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
     minval <- min(smooth$y[ind1:ind2])
     ind_range <- which(smooth$y[ind1:ind2]==minval)
     ind_min <- ind_range + ind1 - 1
-  } else if (length(peak_df$index)>2){
+  } else if (length(peak_df$index) > 2){
     if (peak_df$dens[2] > 10*peak_df$dens[3]) {
       top2_df <- peak_df[1:2,]
       top2_df <- top2_df[order(top2_df$index),]
@@ -139,7 +136,7 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
       ind2_b <- top2_df_b$index[2]
       minval_b <- min(smooth$y[ind1_b:ind2_b])
       diff_b <- min(top2_df_b$dens) - minval_b
-      
+
       if (diff_a > diff_b) {
         ind_range <- which(smooth$y[ind1_a:ind2_a]==minval_a)
         ind_min <- ind_range + ind1_a - 1
@@ -157,8 +154,8 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
   cutoff <- smooth$x[ind_min]
   neg_mode <- smooth$x[ind1]
   pos_mode <- smooth$x[ind2]
-  
-  if ((cutoff == max(data))) {
+
+  if (cutoff == max(data)) {
     barcodeBlocklist <- c(barcodeBlocklist, label)
   }
   
@@ -173,7 +170,7 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
 }
 
 generateBFFGridPlot <- function(barcodeMatrix, xlab, maintitle, universal_cutoff = NULL) {
-  barcodeBlocklist = NULL
+  barcodeBlocklist <- NULL
   plotdata <- NULL
   linedata <- NULL
   cutoffs <- NULL
@@ -377,12 +374,10 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     discrete <- normedres[['discrete']]
     tot_normed <- normedres[['tot_normed']]
     lognormedcounts <- normedres[['lognormedcounts']]
-    barcodeBlocklist <- normedres[['barcodeBlocklist']]
-    
+
     #generateBFFGridPlot outputs barcodeBlocklist, cutoffslist, discrete, x_vals
     normedplotres <- generateBFFGridPlot(t(tot_normed), "Log(Counts + 1)", "Normalized Count Distributions with Fitted Threshold")
     normed_cutoffs <- normedplotres[['cutoffslist']]
-    norm_cutoff <- mean(unlist(normed_cutoffs))
     neg_mode <- mean(normedplotres[['neglist']]$neg_mode)
     pos_mode <- mean(normedplotres[['poslist']]$pos_mode)
     
