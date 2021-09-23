@@ -278,12 +278,12 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
 }
 
 .CreateClusterTilePlot <- function(seuratObj, assay) {
-  average.expression <- AverageExpression(
+  average.expression <- suppressWarnings(Seurat::AverageExpression(
     object = seuratObj,
     assays = c(assay),
     verbose = FALSE,
     return.seurat = TRUE
-  )
+  ))
 
   df <- reshape2::melt(GetAssayData(average.expression, assay = assay))
   names(df) <- c('Cluster', 'Barcode', 'AvgExpression')
