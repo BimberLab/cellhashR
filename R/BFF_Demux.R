@@ -82,7 +82,6 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
     smooth <- stats::density(data, adjust = j, kernel = 'gaussian',
                       bw = 'SJ', give.Rkern = FALSE)
     deriv <- numeric(length(smooth$x))
-    deriv2 <- numeric(length(smooth$x))
     max_list <- c()
 
     for (i in 2:(length(smooth$x)-1)){
@@ -97,7 +96,6 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
     
     plotdata <- data.frame(Value = data)
     linedata <- data.frame(x = smooth$x, y = sqrt(smooth$y))
-    derivdata <- data.frame(x = smooth$x, y = 10*deriv)
   }
 
   peak_df <- data.frame(index = max_list, dens = smooth$y[max_list], count = smooth$x[max_list])
@@ -107,22 +105,22 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
     ind_min <- length(smooth$x)
     ind1 <- peak_df$index[1]
     ind2 <- ind_min
-  } else if (length(peak_df$index)==2) {
+  } else if (length(peak_df$index) == 2) {
     top2_df <- peak_df
     top2_df <- top2_df[order(top2_df$index),]
     ind1 <- top2_df$index[1]
     ind2 <- top2_df$index[2]
     minval <- min(smooth$y[ind1:ind2])
-    ind_range <- which(smooth$y[ind1:ind2]==minval)
+    ind_range <- which(smooth$y[ind1:ind2] == minval)
     ind_min <- ind_range + ind1 - 1
-  } else if (length(peak_df$index)>2){
+  } else if (length(peak_df$index) > 2){
     if (peak_df$dens[2] > 10*peak_df$dens[3]) {
       top2_df <- peak_df[1:2,]
       top2_df <- top2_df[order(top2_df$index),]
       ind1 <- top2_df$index[1]
       ind2 <- top2_df$index[2]
       minval <- min(smooth$y[ind1:ind2])
-      ind_range <- which(smooth$y[ind1:ind2]==minval)
+      ind_range <- which(smooth$y[ind1:ind2] == minval)
       ind_min <- ind_range + ind1 - 1
     } else {
       top2_df_a <- peak_df[1:2,]
@@ -140,12 +138,12 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
       diff_b <- min(top2_df_b$dens) - minval_b
       
       if (diff_a > diff_b) {
-        ind_range <- which(smooth$y[ind1_a:ind2_a]==minval_a)
+        ind_range <- which(smooth$y[ind1_a:ind2_a] == minval_a)
         ind_min <- ind_range + ind1_a - 1
         ind1 <- ind1_a
         ind2 <- ind2_a
       } else {
-        ind_range <- which(smooth$y[ind1_b:ind2_b]==minval_b)
+        ind_range <- which(smooth$y[ind1_b:ind2_b] == minval_b)
         ind_min <- ind_range + ind1_b - 1
         ind1 <- ind1_b
         ind2 <- ind2_b
@@ -156,12 +154,10 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
   cutoff <- smooth$x[ind_min]
   neg_mode <- smooth$x[ind1]
   pos_mode <- smooth$x[ind2]
-  
  
-  if ((cutoff == max(smooth$x))) {
+  if (cutoff == max(smooth$x)) {
     barcodeBlocklist <- c(barcodeBlocklist, label)
   }
-  
 
   return(list(
     cutoff = cutoff,
