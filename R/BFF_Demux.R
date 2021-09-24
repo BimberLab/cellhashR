@@ -102,7 +102,6 @@ getCountCutoff <- function(data, label, num_deriv_peaks, barcodeBlocklist = NULL
 
   peak_df <- data.frame(index = max_list, dens = smooth$y[max_list], count = smooth$x[max_list])
   peak_df <- peak_df[order(-peak_df$dens),]
-  # print(peak_df)
   if ((length(peak_df$index)<2)|(peak_df$dens[1] > 100*peak_df$dens[2])) {
     print(paste0('Only one peak found, using max value as cutoff: ', label))
     ind_min <- length(smooth$x)
