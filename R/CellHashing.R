@@ -7,7 +7,8 @@
 #' @include Threshold_Demux.R
 #' @include DropletUtils_Demux.R
 #' @include GMM_Demux.R
-
+#' @include DemuxEM.R
+#'
 utils::globalVariables(
   names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall', 'consensuscall.global', 'topFraction', 'totalReadsPerCell'),
   package = 'cellhashR',
@@ -116,7 +117,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @title Generate Cell Hashing Calls
 #'
 #' @param barcodeMatrix The filtered matrix of hashing count data
-#' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux, multiseq, dropletutils, gmm_demux, bff_raw, and bff_cluster
+#' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux, multiseq, dropletutils, gmm_demux, demuxem, bff_raw, and bff_cluster
 #' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
 #' @param metricsFile If provided, summary metrics will be written to this file.
 #' @param doTSNE If true, tSNE will be run on the resulting hashing calls after each caller. This can be useful as a sanity check; however, adds time.
@@ -172,6 +173,16 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     } else if (method == 'gmm_demux'){
       fnArgs$barcodeMatrix <- barcodeMatrix
       calls <- do.call(GenerateCellHashCallsGMMDemux, fnArgs)
+      if (!is.null(calls)) {
+        callList[[method]] <- calls
+      }
+    } else if (method == 'demuxem'){
+      fnArgs$barcodeMatrix <- barcodeMatrix
+      if (!'rawFeatureMatrixH5' %in% names(fnArgs)) {
+        stop('demuxEM requires the path to the 10x gene expression raw_feature_bc_matrix.h5 file. Please provide this as the argument demuxem.rawFeatureMatrixH5 = <filepath>')
+      }
+
+      calls <- do.call(GenerateCellHashCallsDemuxEM, fnArgs)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
