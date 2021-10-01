@@ -74,17 +74,6 @@ jobs:
             eval sudo $cmd
           done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "20.04"))')
 
-      # NOTE: this is a temporary fix to manually install a patched remotes to allow it to properly install bioconductor-devel packages
-      - name: Install Custom Remotes
-        if: matrix.config.bioc == 'devel'
-        run: |
-          git clone -b git_head https://github.com/bbimber/remotes.git
-          cd remotes
-          R CMD build --no-build-vignettes .
-          R CMD INSTALL --build remotes_2.3.0.9000.tar.gz
-          cd ../
-          rm -Rf remotes
-
       - name: Install dependencies
         run: |
           remotes::install_deps(dependencies = TRUE, upgrade = "always")
