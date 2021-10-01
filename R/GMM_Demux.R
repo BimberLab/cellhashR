@@ -1,6 +1,7 @@
 #' @include Utils.R
 #' @include Visualization.R
-
+#' @importFrom dplyr %>%
+#'
 GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux', label = 'GMM Demux', verbose= TRUE, metricsFile = NULL) {
 	if (verbose) {
 		print('Starting GMM-Demux')
@@ -21,17 +22,31 @@ GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux
 
 		reportPath <- tempfile()
 		outPath <- tempfile()
-		pyOut = system2(reticulate::py_exe(), c("-m", "GMM_Demux.GMM_Demux", inputFile, paste0(rownames(barcodeMatrix), collapse=','), '-c', '-f', reportPath, '-o', outPath), stdout = TRUE, stderr = TRUE)
+		pyOut <- system2(reticulate::py_exe(), c("-m", "GMM_Demux.GMM_Demux", inputFile, paste0(rownames(barcodeMatrix), collapse=','), '-c', '-f', reportPath, '-o', outPath), stdout = TRUE, stderr = TRUE)
 		print(pyOut)
 
 		clusterNames <- read.table(paste0(reportPath, '/GMM_full.config'), header = FALSE, sep = ',')
 		names(clusterNames) <- c('Cluster_id', 'classification')
 		clusterNames$classification <- gsub(x = clusterNames$classification, pattern = '^ ', replacement = '')
 
-		df <- read.table(paste0(reportPath, '/GMM_full.csv'), header = TRUE, sep = ',', row.names = 1)
+		df <- read.table(paste0(reportPath, '/GMM_full.csv'), header = TRUE, sep = ',', row.names = 1, stringsAsFactors = FALSE)
 		df$cellbarcode <- rownames(df)
 		df <- merge(df, clusterNames, by = 'Cluster_id')
 		df$classification[df$classification == 'negative'] <- 'Negative'
+
+		# Note: gmm-demux seems to replace hyphen with underscores, so check/replace these:
+		for (hto in rownames(barcodeMatrix)) {
+			gmmVersion <- gsub(hto, pattern = '-', replacement = '_')
+			if (gmmVersion == hto) {
+				next
+			}
+
+			if (gmmVersion %in% unique(df$classification)) {
+				print(paste0('updating HTO renamed by gmm-demux from ', gmmVersion, ' back to: ', replacement))
+				df$classification[df$classification == gmmVersion] <- hto
+			}
+		}
+
 		df$classification[!df$classification %in% c('Negative', rownames(barcodeMatrix))] <- 'Doublet'
 		df$classification.global <- df$classification
 		df$classification.global[!df$classification.global %in% c('Negative', 'Doublet')] <- 'Singlet'
