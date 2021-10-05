@@ -151,8 +151,12 @@ GetSeed <- function() {
 		}
 
 		if (changedVersion %in% unique(df$classification)) {
-			print(paste0('updating HTO renamed by Seurat from ', changedVersion, ' back to: ', replacement))
+			isFactor <- is.factor(df$classification)
+			df$classification <- as.character(df$classification)
 			df$classification[df$classification == changedVersion] <- hto
+			if (isFactor) {
+				df$classification <- naturalsort::naturalfactor(df$classification)
+			}
 		}
 	}
 

@@ -73,7 +73,7 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 
 	if (doHeatmap) {
 		tryCatch({
-			P1 <- HTOHeatmap(seuratObj, assay = assay, classification = htoClassificationField, global.classification = globalClassificationField, ncells = min(4000, ncol(seuratObj)), singlet.names = NULL)
+			P1 <- suppressWarnings(HTOHeatmap(seuratObj, assay = assay, classification = htoClassificationField, global.classification = globalClassificationField, ncells = min(4000, ncol(seuratObj)), singlet.names = NULL))
 			if (!is.null(P1)) {
 				P1 <- P1 + ggtitle(label)
 				suppressWarnings(print(P1))

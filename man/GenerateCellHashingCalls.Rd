@@ -25,7 +25,7 @@ GenerateCellHashingCalls(
 
 \item{doTSNE}{If true, tSNE will be run on the resulting hashing calls after each caller. This can be useful as a sanity check; however, adds time.}
 
-\item{doHeatmap}{If true, Seurat::HTOHeatmap will be run on the results of each caller}
+\item{doHeatmap}{If true, Seurat::HTOHeatmap will be run on the results of each caller. Not supported by all callers.}
 
 \item{\dots}{Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).}
 }

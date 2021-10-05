@@ -2,7 +2,7 @@
 #' @include Visualization.R
 #' @importFrom dplyr %>%
 #'
-GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux', label = 'GMM Demux', verbose= TRUE, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE) {
+GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux', label = 'GMM Demux', verbose= TRUE, metricsFile = NULL, doTSNE = TRUE) {
 	if (verbose) {
 		print('Starting GMM-Demux')
 	}
@@ -45,7 +45,8 @@ GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux
 		assay <- 'HTO'
 		seuratObj <- suppressWarnings(Seurat::CreateSeuratObject(barcodeMatrix, assay = assay))
 
-		toMerge <- ret$classification
+		# NOTE: perform this replacement b/c seurat will rename the features anyway:
+		toMerge <- gsub(as.character(ret$classification), pattern = '_', replacement = '-')
 		names(toMerge) <- ret$cellbarcode
 		seuratObj$classification.gmm_demux <- toMerge[colnames(seuratObj)]
 		seuratObj$classification.gmm_demux <- naturalsort::naturalfactor(seuratObj$classification.gmm_demux)
@@ -54,7 +55,7 @@ GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux
 		names(toMerge) <- ret$cellbarcode
 		seuratObj$classification.global.gmm_demux <- toMerge[colnames(seuratObj)]
 		seuratObj$classification.global.gmm_demux <- naturalsort::naturalfactor(seuratObj$classification.global.gmm_demux)
-		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'gmm_demux', assay = assay, doTSNE = doTSNE, doHeatmap = doHeatmap)
+		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'gmm_demux', assay = assay, doTSNE = doTSNE, doHeatmap = F)
 
 		return(ret)
 	}, error = function(e){

@@ -18,8 +18,11 @@ GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO', autoThre
 		if (doRelNorm) {
 			print('Performing relative normalization instead of log2')
 			seuratObj[[assay]]@data <- NormalizeRelative(barcodeMatrix)
+			# NOTE: perform this rename to match the rename Seurat will perform anyway:
+			rownames(seuratObj[[assay]]@data) <- gsub(rownames(seuratObj[[assay]]@data), pattern = '_', replacement = '-')
 		} else {
 			seuratObj[[assay]]@data <- NormalizeLog2(barcodeMatrix)
+			rownames(seuratObj[[assay]]@data) <- gsub(rownames(seuratObj[[assay]]@data), pattern = '_', replacement = '-')
 		}
 
 		seuratObj <- MULTIseqDemux(seuratObj, assay = assay, quantile = quantile, verbose = verbose, autoThresh = autoThresh, maxiter = maxiter, qrange = qrange, metricsFile = metricsFile)
