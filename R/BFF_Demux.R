@@ -279,7 +279,7 @@ generateBFFGridPlot <- function(barcodeMatrix, xlab, maintitle, universal_cutoff
 }
 
 
-GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_reads = 10, verbose = TRUE, simple_threshold = FALSE, doublet_thresh = 0.05, neg_thresh = 0.05, dist_frac = 0.1, metricsFile = NULL){
+GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_reads = 10, verbose = TRUE, simple_threshold = FALSE, doublet_thresh = 0.05, neg_thresh = 0.05, dist_frac = 0.1, metricsFile = NULL, doTSNE = TRUE){
   if (verbose) {
     print('Starting BFF')
   }
@@ -300,12 +300,14 @@ GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_r
     seuratObj <- suppressWarnings(Seurat::CreateSeuratObject(barcodeMatrix, assay = assay))
     seuratObj <- BFFDemux(seuratObj = seuratObj, assay = assay, simple_threshold = simple_threshold, doublet_thresh = doublet_thresh, neg_thresh = neg_thresh, dist_frac=dist_frac, metricsFile = metricsFile)
     if (as.logical(simple_threshold) == TRUE) {
-      SummarizeHashingCalls(seuratObj, label = "bff_raw", columnSuffix = "bff_raw", assay = assay, doHeatmap = TRUE)
+      SummarizeHashingCalls(seuratObj, label = "bff_raw", columnSuffix = "bff_raw", assay = assay, doTSNE = doTSNE, doHeatmap = F)
       df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = "bff_raw", classification = seuratObj$classification.bff_raw, classification.global = seuratObj$classification.global.bff_raw, stringsAsFactors = FALSE)
+      df <- .RestoreUnderscoreToHtoNames(df, rownames(barcodeMatrix))
       return(df)
     } else {
-      SummarizeHashingCalls(seuratObj, label = 'bff_cluster', columnSuffix = 'bff_cluster', assay = assay, doHeatmap = TRUE)
+      SummarizeHashingCalls(seuratObj, label = 'bff_cluster', columnSuffix = 'bff_cluster', assay = assay, doTSNE = doTSNE, doHeatmap = F)
       df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = 'bff_cluster', classification = seuratObj$classification.bff_cluster, classification.global = seuratObj$classification.global.bff_cluster, stringsAsFactors = FALSE)
+      df <- .RestoreUnderscoreToHtoNames(df, rownames(barcodeMatrix))
       return(df)
     }
   }, error = function(e){

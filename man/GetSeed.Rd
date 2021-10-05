@@ -4,10 +4,7 @@
 \alias{GetSeed}
 \title{Get random seed}
 \usage{
-GetSeed(seed)
-}
-\arguments{
-\item{seed}{The random seed}
+GetSeed()
 }
 \description{
 Sets a random seed, which should be used in all internal functions

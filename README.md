@@ -7,6 +7,7 @@ An R package designed to demultiplex cell hashing data. [Please see our document
 * [Overview](#overview)
 * [Example Usage](#example)
 * [Installation](#installation)
+* [Known Issues](#issues)
 * [Development Guidelines](#developers)
 
 
@@ -75,6 +76,18 @@ Pre-packaged Docker images with all needed dependencies installed can be found o
 ```
 docker pull ghcr.io/bimberlab/cellhashr:latest
 ```
+
+### <a name="issues">Known Issues</a>
+
+If you receive an error along the lines of:
+```
+"ERROR; return code from pthread_create() is 22\n"
+```
+Please manually install preprocessCore with threading disabled:
+```
+devtools::install_github('bmbolstad/preprocessCore', dependencies = T, upgrade = 'always', configure.args = '--disable-threading')
+```
+
 
 ### <a name="developers">Development Guidelines</a>
 

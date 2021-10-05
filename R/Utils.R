@@ -1,4 +1,4 @@
-pkg.env <- new.env(parent=emptyenv());
+pkg.env <- new.env(parent=emptyenv())
 
 pkg.env$RANDOM_SEED <- 1234
 set.seed(pkg.env$RANDOM_SEED)
@@ -137,8 +137,28 @@ SetSeed <- function(seed) {
 #' @title Get random seed
 #'
 #' @description Sets a random seed, which should be used in all internal functions
-#' @param seed The random seed
 #' @export
-GetSeed <- function(seed) {
+GetSeed <- function() {
 	return(pkg.env$RANDOM_SEED)
+}
+
+.RestoreUnderscoreToHtoNames <- function(df, originalBarcodeNames) {
+	# Note: Seurat seems to replace underscores with hyphen, so check/replace these:
+	for (hto in originalBarcodeNames) {
+		changedVersion <- gsub(hto, pattern = '_', replacement = '-')
+		if (changedVersion == hto) {
+			next
+		}
+
+		if (changedVersion %in% unique(df$classification)) {
+			isFactor <- is.factor(df$classification)
+			df$classification <- as.character(df$classification)
+			df$classification[df$classification == changedVersion] <- hto
+			if (isFactor) {
+				df$classification <- naturalsort::naturalfactor(df$classification)
+			}
+		}
+	}
+
+	return(df)
 }
