@@ -145,7 +145,7 @@ GetSeed <- function() {
 .RestoreUnderscoreToHtoNames <- function(df, originalBarcodeNames) {
 	# Note: Seurat seems to replace underscores with hyphen, so check/replace these:
 	for (hto in originalBarcodeNames) {
-		changedVersion <- gsub(hto, pattern = '-', replacement = '_')
+		changedVersion <- gsub(hto, pattern = '_', replacement = '-')
 		if (changedVersion == hto) {
 			next
 		}
