@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">cellhashR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.1</span>
       </span>
     </div>
 
@@ -97,6 +97,7 @@
 <li><a href="#overview">Overview</a></li>
 <li><a href="#example">Example Usage</a></li>
 <li><a href="#installation">Installation</a></li>
+<li><a href="#issues">Known Issues</a></li>
 <li><a href="#developers">Development Guidelines</a></li>
 </ul>
 <div id="overview" class="section level3">
@@ -159,6 +160,15 @@ local({options(repos = BiocManager::repositories())})
 devtools::install_github(repo = 'bimberlab/cellhashR', ref = 'master', dependencies = TRUE, upgrade = 'always')</a></code></pre>
 <p>Pre-packaged Docker images with all needed dependencies installed can be found on our <a href="https://github.com/orgs/BimberLab/packages/container/package/cellhashr">GitHub Packages page</a>. We recommend using a specific release, which you can do using tags:</p>
 <pre><code>docker pull ghcr.io/bimberlab/cellhashr:latest</code></pre>
+</div>
+<div id="known-issues" class="section level3">
+<h3 class="hasAnchor">
+<a href="#known-issues" class="anchor"></a><a name="issues">Known Issues</a>
+</h3>
+<p>If you receive an error along the lines of:</p>
+<pre><code>"ERROR; return code from pthread_create() is 22\n"</code></pre>
+<p>Please manually install preprocessCore with threading disabled:</p>
+<pre><code><a href="https://devtools.r-lib.org//reference/remote-reexports.html">devtools::install_github('bmbolstad/preprocessCore', dependencies = T, upgrade = 'always', configure.args = '--disable-threading')</a></code></pre>
 </div>
 <div id="development-guidelines" class="section level3">
 <h3 class="hasAnchor">

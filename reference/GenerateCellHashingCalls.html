@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">cellhashR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.1</span>
       </span>
     </div>
 
@@ -140,6 +140,8 @@
   methods <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"bff_cluster"</span>, <span class='st'>"multiseq"</span>, <span class='st'>"dropletutils"</span><span class='op'>)</span>,
   cellbarcodeWhitelist <span class='op'>=</span> <span class='cn'>NULL</span>,
   metricsFile <span class='op'>=</span> <span class='cn'>NULL</span>,
+  doTSNE <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  doHeatmap <span class='op'>=</span> <span class='cn'>TRUE</span>,
   <span class='va'>...</span>
 <span class='op'>)</span></pre>
 
@@ -161,6 +163,14 @@
     <tr>
       <th>metricsFile</th>
       <td><p>If provided, summary metrics will be written to this file.</p></td>
+    </tr>
+    <tr>
+      <th>doTSNE</th>
+      <td><p>If true, tSNE will be run on the resulting hashing calls after each caller. This can be useful as a sanity check; however, adds time.</p></td>
+    </tr>
+    <tr>
+      <th>doHeatmap</th>
+      <td><p>If true, Seurat::HTOHeatmap will be run on the results of each caller. Not supported by all callers.</p></td>
     </tr>
     <tr>
       <th>...</th>
