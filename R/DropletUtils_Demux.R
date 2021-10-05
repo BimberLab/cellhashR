@@ -9,7 +9,7 @@ utils::globalVariables(
 )
 
 
-GenerateCellHashCallsDropletUtils <- function(barcodeMatrix, verbose = TRUE, assay = 'HTO', methodName = 'dropletutils', label = 'DropletUtils hashedDrops', runEmptyDrops = FALSE, metricsFile = NULL) {
+GenerateCellHashCallsDropletUtils <- function(barcodeMatrix, verbose = TRUE, assay = 'HTO', methodName = 'dropletutils', label = 'DropletUtils hashedDrops', runEmptyDrops = FALSE, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE) {
 	if (verbose) {
 		print(paste0('Starting ', label))
 	}
@@ -18,9 +18,10 @@ GenerateCellHashCallsDropletUtils <- function(barcodeMatrix, verbose = TRUE, ass
 		seuratObj <- suppressWarnings(Seurat::CreateSeuratObject(barcodeMatrix, assay = assay))
 		seuratObj <- ThresholdHashedDrops(seuratObj = seuratObj, assay = assay, columnSuffix = 'dropletutils', runEmptyDrops = runEmptyDrops, metricsFile = metricsFile)
 
-		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'dropletutils', assay = assay, doTSNE = FALSE, doHeatmap = FALSE)
+		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'dropletutils', assay = assay, doTSNE = doTSNE, doHeatmap = doHeatmap)
 
 		df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = methodName, classification = seuratObj$classification.dropletutils, classification.global = seuratObj$classification.global.dropletutils, stringsAsFactors = FALSE)
+		df <- .RestoreUnderscoreToHtoNames(df, rownames(barcodeMatrix))
 		return(df)
 	}, error = function(e){
 		print('Error generating hashedDrops calls, aborting')

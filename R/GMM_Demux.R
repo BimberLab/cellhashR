@@ -2,7 +2,7 @@
 #' @include Visualization.R
 #' @importFrom dplyr %>%
 #'
-GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux', label = 'GMM Demux', verbose= TRUE, metricsFile = NULL) {
+GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux', label = 'GMM Demux', verbose= TRUE, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE) {
 	if (verbose) {
 		print('Starting GMM-Demux')
 	}
@@ -33,20 +33,6 @@ GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux
 		df$cellbarcode <- rownames(df)
 		df <- merge(df, clusterNames, by = 'Cluster_id')
 		df$classification[df$classification == 'negative'] <- 'Negative'
-
-		# Note: gmm-demux seems to replace hyphen with underscores, so check/replace these:
-		for (hto in rownames(barcodeMatrix)) {
-			gmmVersion <- gsub(hto, pattern = '-', replacement = '_')
-			if (gmmVersion == hto) {
-				next
-			}
-
-			if (gmmVersion %in% unique(df$classification)) {
-				print(paste0('updating HTO renamed by gmm-demux from ', gmmVersion, ' back to: ', replacement))
-				df$classification[df$classification == gmmVersion] <- hto
-			}
-		}
-
 		df$classification[!df$classification %in% c('Negative', rownames(barcodeMatrix))] <- 'Doublet'
 		df$classification.global <- df$classification
 		df$classification.global[!df$classification.global %in% c('Negative', 'Doublet')] <- 'Singlet'
@@ -68,7 +54,7 @@ GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux
 		names(toMerge) <- ret$cellbarcode
 		seuratObj$classification.global.gmm_demux <- toMerge[colnames(seuratObj)]
 		seuratObj$classification.global.gmm_demux <- naturalsort::naturalfactor(seuratObj$classification.global.gmm_demux)
-		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'gmm_demux', assay = assay, doTSNE = F, doHeatmap = F)
+		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'gmm_demux', assay = assay, doTSNE = doTSNE, doHeatmap = doHeatmap)
 
 		return(ret)
 	}, error = function(e){

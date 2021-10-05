@@ -75,8 +75,9 @@ GenerateCellHashCallsSeqND <- function(barcodeMatrix, assay = "HTO", min_quantil
 
 		SummarizeHashingCalls(seuratObj, label = 'SeqND', columnSuffix = 'seqnd', assay = assay)
 
-    df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = methodName, classification = seuratObj$classification.seqnd, classification.global = seuratObj$classification.global.seqnd, stringsAsFactors = FALSE)
-    return(df)
+        df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = methodName, classification = seuratObj$classification.seqnd, classification.global = seuratObj$classification.global.seqnd, stringsAsFactors = FALSE)
+        df <- .RestoreUnderscoreToHtoNames(df, rownames(barcodeMatrix))
+        return(df)
   }, error = function(e){
 		print('Error generating seqnd calls, aborting')
 		print(conditionMessage(e))

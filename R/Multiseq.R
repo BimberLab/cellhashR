@@ -8,7 +8,7 @@ utils::globalVariables(
 	add = TRUE
 )
 
-GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO', autoThresh = TRUE, quantile = NULL, maxiter = 20, qrange = seq(from = 0.2, to = 0.95, by = 0.05), doRelNorm = FALSE, methodName = 'multiseq', label = 'Multiseq deMULTIplex', verbose = TRUE, metricsFile = NULL) {
+GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO', autoThresh = TRUE, quantile = NULL, maxiter = 20, qrange = seq(from = 0.2, to = 0.95, by = 0.05), doRelNorm = FALSE, methodName = 'multiseq', label = 'Multiseq deMULTIplex', verbose = TRUE, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE) {
 	if (verbose) {
 		print(paste0('Starting ', label))
 	}
@@ -24,9 +24,11 @@ GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO', autoThre
 
 		seuratObj <- MULTIseqDemux(seuratObj, assay = assay, quantile = quantile, verbose = verbose, autoThresh = autoThresh, maxiter = maxiter, qrange = qrange, metricsFile = metricsFile)
 
-		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'multiseq', assay = assay)
+		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'multiseq', assay = assay, doTSNE = doTSNE, doHeatmap = doHeatmap)
 
-		return(data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = methodName, classification = seuratObj$classification.multiseq, classification.global = seuratObj$classification.global.multiseq, stringsAsFactors = FALSE))
+		df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = methodName, classification = seuratObj$classification.multiseq, classification.global = seuratObj$classification.global.multiseq, stringsAsFactors = FALSE)
+		df <- .RestoreUnderscoreToHtoNames(df, rownames(barcodeMatrix))
+		return(df)
 	}, error = function(e){
 		print('Error generating multiseq calls, aborting')
 		print(conditionMessage(e))

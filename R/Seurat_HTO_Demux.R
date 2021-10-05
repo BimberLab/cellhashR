@@ -7,7 +7,7 @@ utils::globalVariables(
 	add = TRUE
 )
 
-GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95, methodName = 'htodemux', verbose= TRUE, metricsFile = NULL) {
+GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95, methodName = 'htodemux', verbose= TRUE, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE) {
 	if (verbose) {
 		print('Starting HTODemux')
 	}
@@ -15,9 +15,11 @@ GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95,
 	seuratObj <- suppressWarnings(CreateSeuratObject(barcodeMatrix, assay = 'HTO'))
 
 	tryCatch({
-		seuratObj <- DoHtoDemux(seuratObj, positive.quantile = positive.quantile, verbose = verbose, metricsFile = metricsFile)
+		seuratObj <- DoHtoDemux(seuratObj, positive.quantile = positive.quantile, verbose = verbose, metricsFile = metricsFile, doTSNE = doTSNE, doHeatmap = doHeatmap)
 
-		return(data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = methodName, classification = seuratObj$classification.htodemux, classification.global = seuratObj$classification.global.htodemux, stringsAsFactors = FALSE))
+		df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = methodName, classification = seuratObj$classification.htodemux, classification.global = seuratObj$classification.global.htodemux, stringsAsFactors = FALSE)
+		df <- .RestoreUnderscoreToHtoNames(df, rownames(barcodeMatrix))
+		return(df)
 	}, error = function(e){
 		print('Error generating seurat htodemux calls, aborting')
 		if (!is.null(e)) {
@@ -30,13 +32,13 @@ GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95,
 }
 
 
-DoHtoDemux <- function(seuratObj, positive.quantile, label = 'Seurat HTODemux', plotDist = FALSE, verbose = TRUE, metricsFile = NULL) {
+DoHtoDemux <- function(seuratObj, positive.quantile, label = 'Seurat HTODemux', plotDist = FALSE, verbose = TRUE, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE) {
 	# Normalize HTO data, here we use centered log-ratio (CLR) transformation
 	seuratObj <- NormalizeData(seuratObj, assay = "HTO", normalization.method = "CLR", verbose = FALSE)
 
 	seuratObj <- HTODemux(seuratObj, positive.quantile =  positive.quantile, plotDist = plotDist, verbose = verbose, metricsFile = metricsFile)
 
-	SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'htodemux')
+	SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'htodemux', doTSNE = doTSNE, doHeatmap = doHeatmap)
 
 	return(seuratObj)
 }

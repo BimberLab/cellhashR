@@ -7,7 +7,7 @@ utils::globalVariables(
 )
 
 SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T, doTSNE = T, assay = 'HTO') {
-	htoClassificationField = paste0('classification.', columnSuffix)
+	htoClassificationField <- paste0('classification.', columnSuffix)
 	globalClassificationField <- paste0('classification.global.', columnSuffix)
 
 	if (!(htoClassificationField %in% names(seuratObj@meta.data))) {
@@ -72,6 +72,16 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 	}
 
 	if (doHeatmap) {
-		suppressWarnings(print(HTOHeatmap(seuratObj, assay = assay, classification = htoClassificationField, global.classification = globalClassificationField, ncells = min(4000, ncol(seuratObj)), singlet.names = NULL) + ggtitle(label)))
+		tryCatch({
+			P1 <- HTOHeatmap(seuratObj, assay = assay, classification = htoClassificationField, global.classification = globalClassificationField, ncells = min(4000, ncol(seuratObj)), singlet.names = NULL)
+			if (!is.null(P1)) {
+				P1 <- P1 + ggtitle(label)
+				suppressWarnings(print(P1))
+			}
+		}, error = function(e){
+			print('Error creating heatmap, skipping')
+			print(conditionMessage(e))
+			traceback()
+		})
 	}
 }

@@ -18,6 +18,7 @@ GenerateCellHashCallsThreshold <- function(barcodeMatrix, verbose = TRUE, assay 
 		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'threshold', assay = assay)
 
 		df <- data.frame(cellbarcode = as.factor(colnames(seuratObj)), method = methodName, classification = seuratObj$classification.threshold, classification.global = seuratObj$classification.global.threshold, stringsAsFactors = FALSE)
+		df <- .RestoreUnderscoreToHtoNames(df, rownames(barcodeMatrix))
 		return(df)
 	}, error = function(e){
 		print('Error generating threshold calls, aborting')
