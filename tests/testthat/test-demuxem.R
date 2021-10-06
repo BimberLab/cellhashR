@@ -3,7 +3,9 @@ context("scRNAseq")
 source('testing-data.R')
 
 test_that("demuxEM Works", {
-	barcodeMatrix <- t(as.matrix(read.csv('../testdata/MS/cell_type_counts.csv', row.names = 1)))
+	rawData <- '../testdata/438-21-GEX/umi_count'
+	h5File <- '../testdata/438-21-GEX/438-21-raw_feature_bc_matrix.h5'
+	mat <- ProcessCountMatrix(rawCountData = rawData)
 	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeMatrix, methods = c('demuxem'), demuxem.rawFeatureMatrixH5 = h5File)
 	print(table(df$consensuscall))
 	
