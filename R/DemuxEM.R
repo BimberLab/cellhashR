@@ -2,7 +2,7 @@
 #' @include Visualization.R
 
 # rawFeatureMatrixH5 is the raw_feature_bc_matrix.h5 file from the gene expression data
-GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, methodName = 'demuxem', label = 'demuxEM', verbose= TRUE, metricsFile = NULL) {
+GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, methodName = 'demuxem', label = 'demuxEM', verbose= TRUE, metricsFile = NULL, doTSNE = TRUE) {
 	if (verbose) {
 		print('Starting demuxEM')
 	}
@@ -71,7 +71,7 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 		names(toMerge) <- ret$cellbarcode
 		seuratObj$classification.global.demuxEM <- toMerge[colnames(seuratObj)]
 		seuratObj$classification.global.demuxEM <- naturalsort::naturalfactor(seuratObj$classification.global.demuxEM)
-		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'demuxEM', assay = assay, doTSNE = F, doHeatmap = F)
+		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'demuxEM', assay = assay, doTSNE = doTSNE, doHeatmap = F)
 
 		return(ret)
 	}, error = function(e){
