@@ -18,10 +18,14 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 	tryCatch({
 		#Save to disk:
 		inputHtoFile <- tempfile(fileext = '.csv')
-		write.table(data.frame("HTO"=rownames(barcodeMatrix), barcodeMatrix), inputHtoFile, row.names=FALSE, sep = ',')
+		df <- data.frame("HTO"=rownames(barcodeMatrix), barcodeMatrix)
+		print(head(df))
+		write.table(df, inputHtoFile, row.names=FALSE, sep = ',')
 
 		outPath <- tempfile()
-		pyOut <- system2(reticulate::py_exe(), c("-m", "demuxEM", "-random-state", GetSeed(), "--generate-diagnostic-plots", inputHtoFile, rawFeatureMatrixH5, outPath), stdout = TRUE, stderr = TRUE)
+		args <- c("-m", "demuxEM", "--random-state", GetSeed(), "--generate-diagnostic-plots", inputHtoFile, rawFeatureMatrixH5, outPath)
+		print(args)
+		pyOut <- system2(reticulate::py_exe(), args, stdout = TRUE, stderr = TRUE)
 		print(pyOut)
 
 		csvOut <- tempfile()
@@ -71,7 +75,7 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 		names(toMerge) <- ret$cellbarcode
 		seuratObj$classification.global.demuxEM <- toMerge[colnames(seuratObj)]
 		seuratObj$classification.global.demuxEM <- naturalsort::naturalfactor(seuratObj$classification.global.demuxEM)
-		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'demuxEM', assay = assay, doTSNE = doTSNE, doHeatmap = F)
+		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'demuxEM', assay = assay, doTSNE = F, doHeatmap = F)
 
 		return(ret)
 	}, error = function(e){
