@@ -139,12 +139,13 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
       vals <- vals[grepl(names(vals), pattern = paste0('^', method, '\\.'))]
       names(vals) <- gsub(names(vals), pattern = paste0('^', method, '\\.'), replacement = '')
 
-      print('The following custom parameters are being applied:')
-      for (v in names(vals)) {
-        print(paste0(v, ': ', vals[v]))
+      if (length(vals) > 0) {
+        print('The following custom parameters are being applied:')
+        for (v in names(vals)) {
+          print(paste0(v, ': ', vals[v]))
+          fnArgs[[v]] <- vals[v]
+        }
       }
-
-      fnArgs <- vals
     }
 
     fnArgs$doTSNE <- doTSNE
