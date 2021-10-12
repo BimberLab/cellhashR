@@ -126,6 +126,11 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @return A data frame of results.
 #' @export
 GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'multiseq', 'dropletutils'), cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, ...) {
+  if (is.data.frame(barcodeMatrix)) {
+    print('Converting input data.frame to a matrix')
+    barcodeMatrix <- as.matrix(barcodeMatrix)
+  }
+
   callList <- list()
   for (method in methods) {
     fnArgs <- list()
