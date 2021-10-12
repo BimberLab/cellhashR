@@ -126,6 +126,11 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @return A data frame of results.
 #' @export
 GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'multiseq', 'dropletutils'), cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, ...) {
+  if (is.data.frame(barcodeMatrix)) {
+    print('Converting input data.frame to a matrix')
+    barcodeMatrix <- as.matrix(barcodeMatrix)
+  }
+
   callList <- list()
   for (method in methods) {
     fnArgs <- list()
@@ -139,12 +144,13 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
       vals <- vals[grepl(names(vals), pattern = paste0('^', method, '\\.'))]
       names(vals) <- gsub(names(vals), pattern = paste0('^', method, '\\.'), replacement = '')
 
-      print('The following custom parameters are being applied:')
-      for (v in names(vals)) {
-        print(paste0(v, ': ', vals[v]))
+      if (length(vals) > 0) {
+        print('The following custom parameters are being applied:')
+        for (v in names(vals)) {
+          print(paste0(v, ': ', vals[v]))
+          fnArgs[[v]] <- vals[v]
+        }
       }
-
-      fnArgs <- vals
     }
 
     fnArgs$doTSNE <- doTSNE
