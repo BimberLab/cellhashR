@@ -35,6 +35,8 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 
 			names(df)[2:length(names(df))] <- paste0(names(df)[2:length(names(df))], '-', suffixes[1])
 			suffixAdded <- TRUE
+
+			print(paste0('matching cellbarcodes: ', length(intersect(names(df), mat$Barcode))))
 		}
 
 		write.table(df, inputHtoFile, row.names=FALSE, sep = ',')
@@ -47,8 +49,16 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 
 		csvOut <- tempfile()
 		zip <- paste0(outPath, '_demux.zarr.zip')
+		if (!file.exists(zip)) {
+			stop(paste0('Unable to find ZIP: ', zip))
+		}
+
 		pyOut2 <- system2(reticulate::py_exe(), c("-c", paste0('import pegasusio as io; data = io.read_input("', zip, '"); data.obs.to_csv("', csvOut, '")')), stdout = TRUE, stderr = TRUE)
 		print(pyOut2)
+
+		if (!file.exists(csvOut)) {
+			stop(paste0('Unable to find CSV: ', csvOut))
+		}
 
 		df <- read.table(csvOut, header = TRUE, sep = ',')
 		names(df) <- c('cellbarcode', 'classification.global', 'classification')
