@@ -37,13 +37,15 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 			suffixAdded <- TRUE
 
 			print(paste0('matching cellbarcodes: ', length(intersect(names(df), mat$Barcode))))
+			print(head(names(df)))
+			print(head(mat$Barcode))
 		}
 
-		write.table(df, inputHtoFile, row.names=FALSE, sep = ',')
+		write.table(df, inputHtoFile, row.names=FALSE, sep = ',', quote = FALSE)
 
 		outPath <- tempfile()
 		args <- c("-m", "demuxEM", "--random-state", GetSeed(), "--generate-diagnostic-plots", rawFeatureMatrixH5, inputHtoFile, outPath)
-		print(args)
+		#print(args)
 		pyOut <- system2(reticulate::py_exe(), args, stdout = TRUE, stderr = TRUE)
 		print(pyOut)
 
