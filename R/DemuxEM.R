@@ -19,11 +19,28 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 		#Save to disk:
 		inputHtoFile <- tempfile(fileext = '.csv')
 		df <- data.frame("HTO"=rownames(barcodeMatrix), barcodeMatrix)
-		print(head(df))
+
+		# read h5, find unique suffix, append to barcodes as needed:
+		suffixAdded <- FALSE
+		mat <- DropletUtils::read10xCounts(rawFeatureMatrixH5)
+		if (sum(grepl(mat$Barcode, pattern = '-')) > 0 && sum(grepl(colnames(barcodeMatrix), pattern = '-')) == 0) {
+			print('Adding cell barcode suffixes to input data to match h5 file')
+			suffixes <- unique(sapply(mat$Barcode, function(x){
+				return(unlist(strsplit(x, split = '-'))[2])
+			}))
+
+			if (length(suffixes) > 1) {
+				stop('Input H5 file has multiple cellbarcode suffixes, cannot process')
+			}
+
+			names(df)[2:length(names(df))] <- paste0(names(df)[2:length(names(df))], '-', suffixes[1])
+			suffixAdded <- TRUE
+		}
+
 		write.table(df, inputHtoFile, row.names=FALSE, sep = ',')
 
 		outPath <- tempfile()
-		args <- c("-m", "demuxEM", "--random-state", GetSeed(), "--generate-diagnostic-plots", inputHtoFile, rawFeatureMatrixH5, outPath)
+		args <- c("-m", "demuxEM", "--random-state", GetSeed(), "--generate-diagnostic-plots", rawFeatureMatrixH5, inputHtoFile, outPath)
 		print(args)
 		pyOut <- system2(reticulate::py_exe(), args, stdout = TRUE, stderr = TRUE)
 		print(pyOut)
@@ -35,6 +52,12 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 
 		df <- read.table(csvOut, header = TRUE, sep = ',')
 		names(df) <- c('cellbarcode', 'classification.global', 'classification')
+		if (suffixAdded) {
+			df$cellbarcode <- sapply(df$cellbarcode, function(x){
+				return(unlist(strsplit(x, split = '-'))[2])
+			})
+		}
+
 		df$classification[df$classification == ''] <- 'Negative'
 		df$classification[is.na(df$classification)] <- 'Negative'
 		df$classification[df$classification == 'singlet'] <- 'Singlet'
