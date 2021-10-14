@@ -63,9 +63,11 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 			stop(paste0('Unable to find CSV: ', csvOut))
 		}
 
-		df <- read.table(csvOut, header = TRUE, sep = ',')
+		df <- read.table(csvOut, header = TRUE, sep = ',', stringsAsFactors = FALSE)
+print(head(df))
 		names(df) <- c('cellbarcode', 'classification.global', 'classification')
 		if (!all(is.null(newToOldCellbarcode))) {
+			print('Replacing original cell barcodes in demuxEM output')
 			toFix <- data.frame(updatedBarcode = df$cellbarcode, sortOrder = 1:length(df$cellbarcode))
 			toFix <- merge(toFix, newToOldCellbarcode, by = 'updatedBarcode', all.x = TRUE)
 			toFix <- dplyr::arrange(toFix, sortOrder)
@@ -74,14 +76,14 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 		}
 
 		df$classification[df$classification == ''] <- 'Negative'
-		df$classification[is.na(df$classification)] <- 'Negative'
+		df$classification[is.na(df$classification) | df$classification == 'unknown'] <- 'Negative'
 		df$classification[df$classification == 'singlet'] <- 'Singlet'
 		df$classification[df$classification == 'doublet'] <- 'Doublet'
 
 		df$classification[grepl(df$classification, pattern = ',')] <- 'Doublet'
 		df$classification.global <- df$classification
 		df$classification.global[!df$classification.global %in% c('Negative', 'Doublet')] <- 'Singlet'
-
+print(head(df))
 		# Ensure order matches input:
 		toMerge <- data.frame(cellbarcode = colnames(barcodeMatrix), sortOrder = 1:length(barcodeMatrix))
 		df <- merge(df, toMerge, by = 'cellbarcode', all.x = FALSE, all.y = TRUE)
@@ -102,6 +104,8 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 		unlink(tempScript)
 
 		ret <- data.frame(cellbarcode = df$cellbarcode, method = methodName, classification = df$classification, classification.global = df$classification.global, stringsAsFactors = FALSE)
+print(head(ret))
+
 		assay <- 'HTO'
 		seuratObj <- suppressWarnings(Seurat::CreateSeuratObject(barcodeMatrix, assay = assay))
 
@@ -115,6 +119,8 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 		seuratObj$classification.global.demuxEM <- toMerge[colnames(seuratObj)]
 		seuratObj$classification.global.demuxEM <- naturalsort::naturalfactor(seuratObj$classification.global.demuxEM)
 		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'demuxEM', assay = assay, doTSNE = F, doHeatmap = F)
+
+print(head(ret))
 
 		return(ret)
 	}, error = function(e){
