@@ -25,7 +25,8 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 		#Save to disk:
 		inputHtoFile <- tempfile(fileext = '.csv')
 		df <- data.frame("HTO"=rownames(barcodeMatrix), barcodeMatrix)
-
+print(paste0('1: ', ncol(barcodeMatrix)))
+print(paste0('1B: ', nrow(df)))
 		# demuxEM seems to expect the cellbarcodes in the HTO CSV to lack the suffix, even if the h5 data has them
 		newToOldCellbarcode <- NULL
 		if (sum(grepl(names(df), pattern = '-[0-9]')) > 0) {
@@ -57,7 +58,7 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 		close(fileConn)
 
 		pyOut2 <- system2(reticulate::py_exe(), tempScript, stdout = TRUE, stderr = TRUE)
-		print(pyOut2)
+		#print(pyOut2)
 
 		if (!file.exists(csvOut)) {
 			stop(paste0('Unable to find CSV: ', csvOut))
@@ -65,6 +66,7 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 
 		df <- read.table(csvOut, header = TRUE, sep = ',', stringsAsFactors = FALSE)
 print(head(df))
+print(paste0('1: ', nrow(df)))
 		names(df) <- c('cellbarcode', 'classification.global', 'classification')
 		if (!all(is.null(newToOldCellbarcode))) {
 			print('Replacing original cell barcodes in demuxEM output')
@@ -83,6 +85,7 @@ print(head(df))
 		df$classification[grepl(df$classification, pattern = ',')] <- 'Doublet'
 		df$classification.global <- df$classification
 		df$classification.global[!df$classification.global %in% c('Negative', 'Doublet')] <- 'Singlet'
+print(paste0('3: ', nrow(df)))
 print(head(df))
 		# Ensure order matches input:
 		toMerge <- data.frame(cellbarcode = colnames(barcodeMatrix), sortOrder = 1:length(barcodeMatrix))
@@ -104,6 +107,7 @@ print(head(df))
 		unlink(tempScript)
 
 		ret <- data.frame(cellbarcode = df$cellbarcode, method = methodName, classification = df$classification, classification.global = df$classification.global, stringsAsFactors = FALSE)
+print(paste0('3: ', nrow(ret)))
 print(head(ret))
 
 		assay <- 'HTO'
@@ -111,17 +115,17 @@ print(head(ret))
 
 		toMerge <- ret$classification
 		names(toMerge) <- ret$cellbarcode
-		seuratObj$classification.demuxEM <- toMerge[colnames(seuratObj)]
-		seuratObj$classification.demuxEM <- naturalsort::naturalfactor(seuratObj$classification.demuxEM)
+		seuratObj$classification.demuxem <- toMerge[colnames(seuratObj)]
+		seuratObj$classification.demuxem <- naturalsort::naturalfactor(seuratObj$classification.demuxem)
 
 		toMerge <- ret$classification.global
 		names(toMerge) <- ret$cellbarcode
-		seuratObj$classification.global.demuxEM <- toMerge[colnames(seuratObj)]
-		seuratObj$classification.global.demuxEM <- naturalsort::naturalfactor(seuratObj$classification.global.demuxEM)
-		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'demuxEM', assay = assay, doTSNE = F, doHeatmap = F)
-
+		seuratObj$classification.global.demuxem <- toMerge[colnames(seuratObj)]
+		seuratObj$classification.global.demuxem <- naturalsort::naturalfactor(seuratObj$classification.global.demuxem)
+		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'demuxem', assay = assay, doTSNE = F, doHeatmap = F)
+print(paste0('4: ', nrow(ret)))
 print(head(ret))
-
+print(ret(ret))
 		return(ret)
 	}, error = function(e){
 		print('Error generating demuxEM calls, aborting')

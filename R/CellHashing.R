@@ -271,6 +271,8 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     dataClassificationGlobal <- allCalls[c('cellbarcode', 'method', 'classification.global')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification.global, values_fill = 'Negative')
   }, error = function(e){
     print('Error pivoting calls table!')
+    print(head(allCalls))
+    print(str(allCalls))
     if (!is.null(metricsFile)) {
       fn <- paste0(dirname(metricsFile), '/allCalls.txt')
       write.table(allCalls, file = fn, sep = '\t', quote = FALSE, row.names = FALSE)
