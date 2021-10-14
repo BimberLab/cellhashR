@@ -51,7 +51,12 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 			stop(paste0('Unable to find ZIP: ', zip))
 		}
 
-		pyOut2 <- system2(reticulate::py_exe(), c("-c", paste0('import pegasusio as io; data = io.read_input("', zip, '"); data.obs.to_csv("', csvOut, '")')), stdout = TRUE, stderr = TRUE)
+		tempScript <- tempfile(fileext = '.py')
+		fileConn <- file(tempScript)
+		writeLines(c("import pegasusio as io", paste0("data = io.read_input('", zip, "')"), paste0("data.obs.to_csv('", csvOut, "')")), fileConn)
+		close(fileConn)
+
+		pyOut2 <- system2(reticulate::py_exe(), tempScript, stdout = TRUE, stderr = TRUE)
 		print(pyOut2)
 
 		if (!file.exists(csvOut)) {
@@ -94,6 +99,7 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 		unlink(inputHtoFile)
 		unlink(outPath)
 		unlink(csvOut)
+		unlink(tempScript)
 
 		ret <- data.frame(cellbarcode = df$cellbarcode, method = methodName, classification = df$classification, classification.global = df$classification.global, stringsAsFactors = FALSE)
 		assay <- 'HTO'
