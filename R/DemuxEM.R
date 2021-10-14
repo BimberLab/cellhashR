@@ -1,6 +1,12 @@
 #' @include Utils.R
 #' @include Visualization.R
 
+utils::globalVariables(
+	names = c('sortOrder'),
+	package = 'cellhashR',
+	add = TRUE
+)
+
 # rawFeatureMatrixH5 is the raw_feature_bc_matrix.h5 file from the gene expression data
 GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, methodName = 'demuxem', label = 'demuxEM', verbose= TRUE, metricsFile = NULL, doTSNE = TRUE) {
 	if (verbose) {
@@ -20,32 +26,22 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 		inputHtoFile <- tempfile(fileext = '.csv')
 		df <- data.frame("HTO"=rownames(barcodeMatrix), barcodeMatrix)
 
-		# read h5, find unique suffix, append to barcodes as needed:
-		suffixAdded <- FALSE
-		mat <- DropletUtils::read10xCounts(rawFeatureMatrixH5)
-		if (sum(grepl(mat$Barcode, pattern = '-')) > 0 && sum(grepl(colnames(barcodeMatrix), pattern = '-')) == 0) {
-			print('Adding cell barcode suffixes to input data to match h5 file')
-			suffixes <- unique(sapply(mat$Barcode, function(x){
-				return(unlist(strsplit(x, split = '-'))[2])
+		# demuxEM seems to expect the cellbarcodes in the HTO CSV to lack the suffix, even if the h5 data has them
+		newToOldCellbarcode <- NULL
+		if (sum(grepl(names(df), pattern = '-[0-9]')) > 0) {
+			print('Adding removing cell barcode suffixes from input HTO matrix')
+			newToOldCellbarcode <- data.frame(origCellbarcode = names(df))
+			names(df) <- unique(sapply(names(df), function(x){
+				return(unlist(strsplit(x, split = '-[0-9]'))[1])
 			}))
 
-			if (length(suffixes) > 1) {
-				stop('Input H5 file has multiple cellbarcode suffixes, cannot process')
-			}
-
-			names(df)[2:length(names(df))] <- paste0(names(df)[2:length(names(df))], '-', suffixes[1])
-			suffixAdded <- TRUE
-
-			print(paste0('matching cellbarcodes: ', length(intersect(names(df), mat$Barcode))))
-			print(head(names(df)))
-			print(head(mat$Barcode))
+			newToOldCellbarcode$updatedBarcode <- names(df)
 		}
 
 		write.table(df, inputHtoFile, row.names=FALSE, sep = ',', quote = FALSE)
 
 		outPath <- tempfile()
 		args <- c("-m", "demuxEM", "--random-state", GetSeed(), "--generate-diagnostic-plots", rawFeatureMatrixH5, inputHtoFile, outPath)
-		#print(args)
 		pyOut <- system2(reticulate::py_exe(), args, stdout = TRUE, stderr = TRUE)
 		print(pyOut)
 
@@ -64,10 +60,12 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 
 		df <- read.table(csvOut, header = TRUE, sep = ',')
 		names(df) <- c('cellbarcode', 'classification.global', 'classification')
-		if (suffixAdded) {
-			df$cellbarcode <- sapply(df$cellbarcode, function(x){
-				return(unlist(strsplit(x, split = '-'))[2])
-			})
+		if (!all(is.null(newToOldCellbarcode))) {
+			toFix <- data.frame(updatedBarcode = df$cellbarcode, sortOrder = 1:length(df$cellbarcode))
+			toFix <- merge(toFix, newToOldCellbarcode, by = 'updatedBarcode', all.x = TRUE)
+			toFix <- dplyr::arrange(toFix, sortOrder)
+
+			df$cellbarcode <- toFix$origCellbarcode
 		}
 
 		df$classification[df$classification == ''] <- 'Negative'
