@@ -25,7 +25,7 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 		#Save to disk:
 		inputHtoFile <- tempfile(fileext = '.csv')
 print(paste0('1: ', ncol(barcodeMatrix)))
-		df <- as.data.frame(barcodeMatrix)
+		df <- as.data.frame(as.matrix(barcodeMatrix))
 print(paste0('1a: ', nrow(df)))
 		df <- cbind(data.frame("HTO"=rownames(barcodeMatrix)), df)
 print(paste0('1B: ', nrow(df)))
