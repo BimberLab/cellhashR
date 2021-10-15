@@ -79,7 +79,7 @@ print(paste0('1: ', nrow(df)))
 			df$cellbarcode <- toFix$origCellbarcode
 		}
 
-		df$cellbarcode <- df[df$cellbarcode %in% colnames(barcodeMatrix)]
+		df$cellbarcode <- df[df$cellbarcode %in% colnames(barcodeMatrix),]
 print(paste0('1c: ', nrow(df)))
 		df$classification[df$classification == ''] <- 'Negative'
 		df$classification[is.na(df$classification) | df$classification == 'unknown'] <- 'Negative'
