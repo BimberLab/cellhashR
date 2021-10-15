@@ -77,6 +77,8 @@ print(paste0('1: ', nrow(df)))
 			df$cellbarcode <- toFix$origCellbarcode
 		}
 
+		df$cellbarcode <- df[df$cellbarcode %in% colnames(barcodeMatrix)]
+print(paste0('1c: ', nrow(df)))
 		df$classification[df$classification == ''] <- 'Negative'
 		df$classification[is.na(df$classification) | df$classification == 'unknown'] <- 'Negative'
 		df$classification[df$classification == 'singlet'] <- 'Singlet'
@@ -107,7 +109,7 @@ print(head(df))
 		unlink(tempScript)
 
 		ret <- data.frame(cellbarcode = df$cellbarcode, method = methodName, classification = df$classification, classification.global = df$classification.global, stringsAsFactors = FALSE)
-print(paste0('3: ', nrow(ret)))
+print(paste0('3b: ', nrow(ret)))
 print(head(ret))
 
 		assay <- 'HTO'
@@ -125,7 +127,7 @@ print(head(ret))
 		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'demuxem', assay = assay, doTSNE = F, doHeatmap = F)
 print(paste0('4: ', nrow(ret)))
 print(head(ret))
-print(ret(ret))
+print(nrow(ret))
 		return(ret)
 	}, error = function(e){
 		print('Error generating demuxEM calls, aborting')
