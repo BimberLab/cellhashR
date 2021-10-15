@@ -24,17 +24,9 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 	tryCatch({
 		#Save to disk:
 		inputHtoFile <- tempfile(fileext = '.csv')
-print(paste0('1: ', ncol(barcodeMatrix)))
-		print(str(barcodeMatrix))
-		print('bb')
-		mat <- as.matrix(barcodeMatrix)
-		print('cc')
-		print(str(mat))
-		print('aa')
-		df <- as.data.frame(mat)
-print(paste0('1a: ', nrow(df)))
+		df <- as.data.frame(as.matrix(barcodeMatrix))
 		df <- cbind(data.frame("HTO"=rownames(barcodeMatrix)), df)
-print(paste0('1B: ', nrow(df)))
+
 		# demuxEM seems to expect the cellbarcodes in the HTO CSV to lack the suffix, even if the h5 data has them
 		newToOldCellbarcode <- NULL
 		if (sum(grepl(names(df), pattern = '-[0-9]')) > 0) {
@@ -85,7 +77,7 @@ print(paste0('1: ', nrow(df)))
 			df$cellbarcode <- toFix$origCellbarcode
 		}
 
-		df$cellbarcode <- df[df$cellbarcode %in% colnames(barcodeMatrix),]
+		df <- df[df$cellbarcode %in% colnames(barcodeMatrix),]
 print(paste0('1c: ', nrow(df)))
 		df$classification[df$classification == ''] <- 'Negative'
 		df$classification[is.na(df$classification) | df$classification == 'unknown'] <- 'Negative'
