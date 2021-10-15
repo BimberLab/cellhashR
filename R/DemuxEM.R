@@ -24,7 +24,7 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 	tryCatch({
 		#Save to disk:
 		inputHtoFile <- tempfile(fileext = '.csv')
-		df <- data.frame("HTO"=rownames(barcodeMatrix), barcodeMatrix)
+		df <- cbind(data.frame("HTO"=rownames(barcodeMatrix)), as.data.frame(barcodeMatrix))
 print(paste0('1: ', ncol(barcodeMatrix)))
 print(paste0('1B: ', nrow(df)))
 		# demuxEM seems to expect the cellbarcodes in the HTO CSV to lack the suffix, even if the h5 data has them
