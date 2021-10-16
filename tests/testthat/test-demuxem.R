@@ -8,6 +8,7 @@ test_that("demuxEM Works", {
 	barcodeMatrix <- ProcessCountMatrix(rawCountData = rawData, barcodeWhitelist = c('MS-11', 'MS-12'))
 	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeMatrix, methods = c('demuxem'), demuxem.rawFeatureMatrixH5 = h5File)
 	print(table(df$consensuscall))
+	print(unique(df$consensuscall))
 	
 	expectedCalls <- list(
 		'MS-11' = 4380,
