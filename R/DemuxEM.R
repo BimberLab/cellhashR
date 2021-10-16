@@ -101,6 +101,7 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 		unlink(outPath)
 		unlink(csvOut)
 		unlink(tempScript)
+		unlink(zip)
 
 		ret <- data.frame(cellbarcode = df$cellbarcode, method = methodName, classification = df$classification, classification.global = df$classification.global, stringsAsFactors = FALSE)
 
