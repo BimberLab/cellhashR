@@ -58,15 +58,11 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 		close(fileConn)
 
 		pyOut2 <- system2(reticulate::py_exe(), tempScript, stdout = TRUE, stderr = TRUE)
-		#print(pyOut2)
-
 		if (!file.exists(csvOut)) {
 			stop(paste0('Unable to find CSV: ', csvOut))
 		}
 
 		df <- read.table(csvOut, header = TRUE, sep = ',', stringsAsFactors = FALSE)
-print(head(df))
-print(paste0('1: ', nrow(df)))
 		names(df) <- c('cellbarcode', 'classification.global', 'classification')
 		if (!all(is.null(newToOldCellbarcode))) {
 			print('Replacing original cell barcodes in demuxEM output')
@@ -78,7 +74,6 @@ print(paste0('1: ', nrow(df)))
 		}
 
 		df <- df[df$cellbarcode %in% colnames(barcodeMatrix),]
-print(paste0('1c: ', nrow(df)))
 		df$classification[df$classification == ''] <- 'Negative'
 		df$classification[is.na(df$classification) | df$classification == 'unknown'] <- 'Negative'
 		df$classification[df$classification == 'singlet'] <- 'Singlet'
@@ -87,8 +82,7 @@ print(paste0('1c: ', nrow(df)))
 		df$classification[grepl(df$classification, pattern = ',')] <- 'Doublet'
 		df$classification.global <- df$classification
 		df$classification.global[!df$classification.global %in% c('Negative', 'Doublet')] <- 'Singlet'
-print(paste0('3: ', nrow(df)))
-print(head(df))
+
 		# Ensure order matches input:
 		toMerge <- data.frame(cellbarcode = colnames(barcodeMatrix), sortOrder = 1:length(colnames(barcodeMatrix)))
 		df <- merge(df, toMerge, by = 'cellbarcode', all.x = FALSE, all.y = FALSE)
@@ -109,8 +103,6 @@ print(head(df))
 		unlink(tempScript)
 
 		ret <- data.frame(cellbarcode = df$cellbarcode, method = methodName, classification = df$classification, classification.global = df$classification.global, stringsAsFactors = FALSE)
-print(paste0('3b: ', nrow(ret)))
-print(head(ret))
 
 		assay <- 'HTO'
 		seuratObj <- suppressWarnings(Seurat::CreateSeuratObject(barcodeMatrix, assay = assay))
@@ -125,9 +117,7 @@ print(head(ret))
 		seuratObj$classification.global.demuxem <- toMerge[colnames(seuratObj)]
 		seuratObj$classification.global.demuxem <- naturalsort::naturalfactor(seuratObj$classification.global.demuxem)
 		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'demuxem', assay = assay, doTSNE = F, doHeatmap = F)
-print(paste0('4: ', nrow(ret)))
-print(head(ret))
-print(nrow(ret))
+
 		return(ret)
 	}, error = function(e){
 		print('Error generating demuxEM calls, aborting')
