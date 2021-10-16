@@ -16,8 +16,21 @@ test_that("demuxEM Works", {
 		'Negative' = 514
 	)
 
+	if (sum(is.na(df$consensuscall)) > 0) {
+		print('NA found in consensuscall')
+		print(df[is.na(df$consensuscall)])
+	}
+
+	if (sum(is.null(df$consensuscall)) > 0) {
+		print('NULL found in consensuscall')
+		print(df[is.null(df$consensuscall)])
+	}
+
 	# Note: we probably need to set the python / nympy random seed to make this deterministic
 	for (hto in unique(df$consensuscall)) {
+		print(hto)
+		print(sum(df$consensuscall == hto))
+		print(expectedCalls[[hto]])
 		expect_equal(sum(df$consensuscall == hto), expectedCalls[[hto]], info = hto)
 	}
 })
