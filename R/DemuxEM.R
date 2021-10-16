@@ -90,8 +90,8 @@ print(paste0('1c: ', nrow(df)))
 print(paste0('3: ', nrow(df)))
 print(head(df))
 		# Ensure order matches input:
-		toMerge <- data.frame(cellbarcode = colnames(barcodeMatrix), sortOrder = 1:length(barcodeMatrix))
-		df <- merge(df, toMerge, by = 'cellbarcode', all.x = FALSE, all.y = TRUE)
+		toMerge <- data.frame(cellbarcode = colnames(barcodeMatrix), sortOrder = 1:length(colnames(barcodeMatrix)))
+		df <- merge(df, toMerge, by = 'cellbarcode', all.x = FALSE, all.y = FALSE)
 		df <- arrange(df, sortOrder)
 		df <- df[c('cellbarcode', 'classification.global', 'classification')]
 		df$classification[is.na(df$classification)] <- 'Negative'
