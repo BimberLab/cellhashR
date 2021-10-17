@@ -8,7 +8,7 @@ RUN apt-get update -y \
 		libhdf5-dev \
 		libpython3-dev \
 		python3-pip \
-	&& pip3 install umap-learn GMM_Demux \
+	&& pip3 install umap-learn GMM_Demux demuxEM \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 

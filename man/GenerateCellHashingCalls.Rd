@@ -17,7 +17,7 @@ GenerateCellHashingCalls(
 \arguments{
 \item{barcodeMatrix}{The filtered matrix of hashing count data}
 
-\item{methods}{A vector of one or more calling methods to use. Currently supported are: htodemux, multiseq, dropletutils, gmm_demux, bff_raw, and bff_cluster}
+\item{methods}{A vector of one or more calling methods to use. Currently supported are: htodemux, multiseq, dropletutils, gmm_demux, demuxem, bff_raw, and bff_cluster}
 
 \item{cellbarcodeWhitelist}{A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.}
 

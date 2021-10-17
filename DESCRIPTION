@@ -37,7 +37,9 @@ Imports:
     preprocessCore,
     data.table,
     reticulate,
-    ggExtra
+    ggExtra,
+    magick,
+    pdftools
 Suggests:
     devtools,
     testthat (>= 2.1.0),
@@ -51,7 +53,8 @@ Remotes:
 Config/reticulate:
   list(
     packages = list(
-      list(package = "GMM_Demux")
+      list(package = "GMM_Demux"),
+      list(package = "demuxEM")
     )
   )
 Collate:
@@ -59,6 +62,7 @@ Collate:
     'Visualization.R'
     'Normalization.R'
     'BFF_Demux.R'
+    'DemuxEM.R'
     'GMM_Demux.R'
     'DropletUtils_Demux.R'
     'Threshold_Demux.R'
