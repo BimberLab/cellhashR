@@ -122,7 +122,9 @@ DoTest <- function(test, methods = c('multiseq', 'htodemux'), skipNormalizationQ
 	if (file.exists(metricsFile)) {
 		unlink(metricsFile)
 	}
-	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, metricsFile = metricsFile)
+
+	# NOTE: extraneous argument added, since at one point this broke caller-specific argument parsing
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, metricsFile = metricsFile, extraArgument = 'foo')
 
 	return(list(barcodeData = barcodeData, df = df, metricsFile = metricsFile))
 }
