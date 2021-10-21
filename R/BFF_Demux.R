@@ -8,6 +8,164 @@ utils::globalVariables(
   add = TRUE
 )
 
+
+#' @title Perform a parameter scan with BFF parameters
+#'
+#' @param lognormedcounts Count matrix after BQN and log transformation
+#' @description Prints plots that demonstrate the impact of BFF parameters.
+#' Parameters alpha_c, beta_c, and delta_c can take values between 0 and 1.
+#' Reasonable parameter values are less than 0.25.  The scan is over parameter
+#' values (0.05, 0.1, 0.15, 0.2, 0.25, 0.5) for each of the parameters.
+#' @export
+ParameterScan <- function(lognormedcounts) {
+  snr <- SNR(lognormedcounts)
+  tot_normed <- normedres[['tot_normed']]
+
+  normedplotres <- generateBFFGridPlot(t(tot_normed), "Log(Counts + 1)", "Normalized Count Distributions with Fitted Threshold")
+  normed_cutoffs <- normedplotres[['cutoffslist']]
+  univ_thresh <- mean(unlist(normed_cutoffs))
+  neg_mode <- mean(normedplotres[['neglist']]$neg_mode)
+  pos_mode <- mean(normedplotres[['poslist']]$pos_mode)
+
+  highest_dist <- stats::density(snr$Highest, adjust = 1, kernel = 'gaussian',
+                                 bw = 'SJ', give.Rkern = FALSE)
+  second_dist <- stats::density(snr$Second, adjust = 1, kernel = 'gaussian',
+                                bw = 'SJ', give.Rkern = FALSE)
+  #loop over parameter values
+  neg_thresh_list <- c(NA, 0.5, 0.25,0.2,0.15,0.1,0.05)
+  doublet_thresh_list <- c(NA, 0.5, 0.25,0.2,0.15,0.1,0.05)
+  dist_frac_list <- c(0.5, 0.25,0.2,0.15,0.1,0.05)
+  neg_counts <- c()
+  neg_cutoffs <- c()
+  for (neg_thresh in neg_thresh_list){
+    vals <- c()
+    if (!is.na(neg_thresh)) {
+      for (i in 2:length(highest_dist$y)) {
+        if (highest_dist$y[[i-1]] <= neg_thresh*max(highest_dist$y) & highest_dist$y[[i]] > neg_thresh*max(highest_dist$y)) {
+          vals <- c(vals, i)
+        }
+      }
+      if (length(vals) == 0) {
+        print('Cannot find negative threshold.  Exiting BFF')
+        return(NULL)
+      }
+      val <- min(vals)
+      neg_cutoff <- highest_dist$x[[val]]
+    } else {
+      neg_cutoff <- univ_thresh
+    }
+    
+    neg_cutoffs <- c(neg_cutoffs, neg_cutoff)
+    neg_mat <- snr[snr$Highest < neg_cutoff,]
+    neg_counts <- c(neg_counts, dim(neg_mat)[1])
+  }
+  neg_df <- data.frame(alpha_c = c(neg_thresh_list), alpha = neg_cutoffs, Negatives = neg_counts)
+
+  Pneg <- ggplot2::ggplot(neg_df[-1,], aes(alpha_c, alpha)) +
+    geom_tile(aes(fill = Negatives), colour = "black") +
+    geom_hline(yintercept = neg_df[1,"alpha"]) +
+    geom_text(aes(0.25,neg_df[1,"alpha"],label = neg_df[1,"Negatives"], vjust = -1)) +
+    geom_text(aes(label=Negatives)) +
+    ggthemes::theme_clean(base_size = 12) +
+    scale_x_continuous(breaks = unique(neg_df$alpha_c)) +
+    scale_y_continuous(breaks = unique(neg_df$alpha), labels = scales::number_format(accuracy = 0.001)) +
+    scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = mean(neg_df$Negatives)) +
+    ggtitle("Alpha vs. Alpha_c and resulting negative classifications", subtitle= "Horizontal line shows BQN threshold") +
+    theme(
+      plot.background = element_blank(),
+      panel.grid.major.x = element_line(colour = "gray", linetype = "dotted")
+    )
+  
+  print(Pneg)
+  
+  doublet_counts <- c()
+  doublet_cutoffs <- c()
+  
+  for (doublet_thresh in doublet_thresh_list) {
+    vals <- c()
+    if (!is.na(doublet_thresh)) {
+      for (i in 2:length(second_dist$y)) {
+        if (second_dist$y[[i-1]] > doublet_thresh*max(second_dist$y) & second_dist$y[[i]] <= doublet_thresh*max(second_dist$y)) {
+          vals <- c(vals, i)
+        }
+      }
+      if (length(vals) == 0) {
+        print('Cannot find doublet threshold.  Exiting BFF')
+        return(NULL)
+      }
+      val <- max(vals)
+      doublet_cutoff <- second_dist$x[[val]]
+    } else {
+      doublet_cutoff <- univ_thresh
+    }
+    
+    doublet_cutoffs <- c(doublet_cutoffs, doublet_cutoff)
+    doublet_mat <- snr[snr$Second > doublet_cutoff,]
+    doublet_counts <- c(doublet_counts, dim(doublet_mat)[1])
+  }
+  doublet_df <- data.frame(beta_c = doublet_thresh_list, beta = doublet_cutoffs, Doublets = doublet_counts)
+
+  Pdub <- ggplot2::ggplot(doublet_df[-1,], aes(beta_c, beta)) +
+    geom_tile(aes(fill = Doublets), colour = "black") +
+    geom_hline(yintercept = doublet_df[1,"beta"]) +
+    geom_text(aes(0.25,doublet_df[1,"beta"],label = doublet_df[1,"Doublets"], vjust = 2)) +
+    geom_text(aes(label=Doublets)) +
+    ggthemes::theme_clean(base_size = 12) +
+    scale_x_continuous(breaks = unique(doublet_df$beta_c)) +
+    scale_y_continuous(breaks = unique(doublet_df$beta), labels = scales::number_format(accuracy = 0.001)) +
+    scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = mean(doublet_df$Doublets)) +
+    ggtitle("Beta vs. Beta_c and resulting doublet classifications", subtitle= "Horizontal line shows BQN threshold") +
+    theme(
+      plot.background = element_blank(),
+      panel.grid.major.x = element_line(colour = "gray", linetype = "dotted")
+    )
+  
+  print(Pdub)
+  
+  unidentified_counts <- c()
+  distances <- c()
+  for (dist_frac in dist_frac_list) {
+    distance <- dist_frac * (pos_mode - neg_mode)
+    distances <- c(distances, distance)
+    unidentified_mat <- snr[(snr$Highest - snr$Second) < distance,]
+    unidentified_counts <- c(unidentified_counts, dim(unidentified_mat)[1])
+  }
+  unid_df <- data.frame(delta_c = dist_frac_list, delta = distances, Unidentifieds = unidentified_counts)
+
+  Pun <- ggplot2::ggplot(unid_df, aes(delta_c, delta)) +
+    geom_tile(aes(fill = Unidentifieds), colour = "black") +
+    geom_text(aes(label=Unidentifieds)) +
+    ggthemes::theme_clean(base_size = 12) +
+    scale_x_continuous(breaks = unique(unid_df$delta_c)) +
+    scale_y_continuous(breaks = unique(unid_df$delta), labels = scales::number_format(accuracy = 0.001)) +
+    scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = mean(unid_df$Unidentifieds)) +
+    ggtitle("Delta vs. Delta_c and resulting unidentified classifications") +
+    theme(
+      plot.background = element_blank(),
+      panel.grid.major.x = element_line(colour = "gray", linetype = "dotted")
+    )
+  
+  print(Pun)
+
+  P1 <- (ggplot2::ggplot(snr, aes(x=Highest, y=Second)) +
+    geom_point(cex=0.25) +
+    egg::theme_presentation(base_size = 12)) + theme(legend.position = c(0.1, 0.65), legend.text=element_text(size=10)) +
+    geom_vline(xintercept = neg_df$alpha[-1], size=0.25, linetype = "dashed") +
+    geom_vline(xintercept = neg_df$alpha[1], color="red", size=0.25) +
+    geom_hline(yintercept = doublet_df$beta[-1], size=0.25, linetype = "dotted") +
+    geom_hline(yintercept = doublet_df$beta[1], color="red", size=0.25) +
+    geom_abline(slope=1, intercept = -unid_df$delta, size=0.25) +
+    geom_label(aes(x=Inf, y=-Inf, hjust=1, vjust=-0.1, label="Red lines: BQN thresholds
+    Black lines: Parameter effects
+    Values: (0.05, 0.1, 0.15, 0.2, 0.25, 0.5)
+    Beta_c (horizontal/dashed): Top: 0.05, Bottom: 0.5
+    Alpha_c (vertical/dotted): Left: 0.05, Right: 0.5
+    Delta_c (diag): Top: 0.05, Bottom: 0.5 "), size=2.5)
+  
+  P2 <- suppressWarnings(ggExtra::ggMarginal(P1, size=6, groupColour = FALSE))
+  print(P2)
+}
+
 SNR <- function(barcodeData) {
   # SNR extracts the minimum data necessary from an input barcode matrix and
   # places this info in a data frame.  Extracted data are (1) the barcode with
