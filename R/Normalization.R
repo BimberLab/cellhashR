@@ -115,8 +115,13 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
   for (method in methods) {
     if (method == 'bimodalQuantile') {
       bqn <- NULL
+      
       tryCatch({
-        temp <- NormalizeBimodalQuantile(barcodeData)[['lognormedcounts']]
+        normedres <- NormalizeBimodalQuantile(barcodeData)
+        temp <- normedres[['lognormedcounts']]
+
+        ParameterScan(temp)
+
         bqn <- TransposeDF(data.frame(temp, check.names=FALSE))
         toQC[['bimodalQuantile']] <- bqn
       }, error = function(e){
@@ -215,7 +220,7 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
       )
 
     P3 <- suppressWarnings(ggExtra::ggMarginal(P1, size=4, groupColour = TRUE))
-    print(P2 | P3)
+    print(P2 + P3)
   }
 }
 
