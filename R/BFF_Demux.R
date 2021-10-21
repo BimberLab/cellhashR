@@ -26,7 +26,7 @@ ParameterScan <- function(lognormedcounts) {
   univ_thresh <- mean(unlist(normed_cutoffs))
   neg_mode <- mean(normedplotres[['neglist']]$neg_mode)
   pos_mode <- mean(normedplotres[['poslist']]$pos_mode)
-  
+
   highest_dist <- stats::density(snr$Highest, adjust = 1, kernel = 'gaussian',
                                  bw = 'SJ', give.Rkern = FALSE)
   second_dist <- stats::density(snr$Second, adjust = 1, kernel = 'gaussian',
@@ -146,20 +146,21 @@ ParameterScan <- function(lognormedcounts) {
     )
   
   print(Pun)
-  
+
   P1 <- (ggplot2::ggplot(snr, aes(x=Highest, y=Second)) +
-           geom_point(cex=0.25) +
-           egg::theme_presentation(base_size = 12)) + theme(legend.position = c(0.1, 0.65), legend.text=element_text(size=10)) +
-    geom_vline(xintercept = neg_df$alpha[-1], size=0.25) + geom_vline(xintercept = neg_df$alpha[1], color="red", size=0.25) + 
-    geom_hline(yintercept = doublet_df$beta[-1], size=0.25) + geom_hline(yintercept = doublet_df$beta[1], color="red", size=0.25) + 
+    geom_point(cex=0.25) +
+    egg::theme_presentation(base_size = 12)) + theme(legend.position = c(0.1, 0.65), legend.text=element_text(size=10)) +
+    geom_vline(xintercept = neg_df$alpha[-1], size=0.25, linetype = "dashed") +
+    geom_vline(xintercept = neg_df$alpha[1], color="red", size=0.25) +
+    geom_hline(yintercept = doublet_df$beta[-1], size=0.25, linetype = "dotted") +
+    geom_hline(yintercept = doublet_df$beta[1], color="red", size=0.25) +
     geom_abline(slope=1, intercept = -unid_df$delta, size=0.25) +
-    geom_label(aes(x=Inf, y=-Inf, hjust=1, vjust=-0.1, label="Red lines: BQN thresholds 
-    Black lines: Parameter effects 
-    Values: (0.05, 0.1, 0.15, 0.2, 0.25, 0.5) 
-    Beta_c (horizontal): Top: 0.05, Bottom: 0.5 
-    Alpha_c (vertical): Left: 0.05, Right: 0.5 
+    geom_label(aes(x=Inf, y=-Inf, hjust=1, vjust=-0.1, label="Red lines: BQN thresholds
+    Black lines: Parameter effects
+    Values: (0.05, 0.1, 0.15, 0.2, 0.25, 0.5)
+    Beta_c (horizontal/dashed): Top: 0.05, Bottom: 0.5
+    Alpha_c (vertical/dotted): Left: 0.05, Right: 0.5
     Delta_c (diag): Top: 0.05, Bottom: 0.5 "), size=2.5)
-  
   
   P2 <- suppressWarnings(ggExtra::ggMarginal(P1, size=6, groupColour = FALSE))
   print(P2)
