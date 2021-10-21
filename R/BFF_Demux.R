@@ -61,10 +61,20 @@ ParameterScan <- function(lognormedcounts) {
   }
   neg_df <- data.frame(alpha_c = c(neg_thresh_list), alpha = neg_cutoffs, Negatives = neg_counts)
 
-  Pneg <- ggplot2::ggplot(neg_df[-1,], aes(alpha_c, alpha)) + geom_tile(aes(fill = Negatives), colour = "white") + geom_hline(yintercept = neg_df[1,"alpha"]) + geom_text(aes(0.25,neg_df[1,"alpha"],label = neg_df[1,"Negatives"], vjust = -1)) +
+  Pneg <- ggplot2::ggplot(neg_df[-1,], aes(alpha_c, alpha)) +
+    geom_tile(aes(fill = Negatives), colour = "black") +
+    geom_hline(yintercept = neg_df[1,"alpha"]) +
+    geom_text(aes(0.25,neg_df[1,"alpha"],label = neg_df[1,"Negatives"], vjust = -1)) +
     geom_text(aes(label=Negatives)) +
+    ggthemes::theme_clean(base_size = 12) +
+    scale_x_continuous(breaks = unique(neg_df$alpha_c)) +
+    scale_y_continuous(breaks = unique(neg_df$alpha), labels = scales::number_format(accuracy = 0.001)) +
     scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = mean(neg_df$Negatives)) +
-    ggtitle("Alpha vs. Alpha_c and resulting negative classifications", subtitle= "Horizontal line shows BQN threshold")
+    ggtitle("Alpha vs. Alpha_c and resulting negative classifications", subtitle= "Horizontal line shows BQN threshold") +
+    theme(
+      plot.background = element_blank(),
+      panel.grid.major.x = element_line(colour = "gray", linetype = "dotted")
+    )
   
   print(Pneg)
   
@@ -95,10 +105,20 @@ ParameterScan <- function(lognormedcounts) {
   }
   doublet_df <- data.frame(beta_c = doublet_thresh_list, beta = doublet_cutoffs, Doublets = doublet_counts)
 
-  Pdub <- ggplot2::ggplot(doublet_df[-1,], aes(beta_c, beta)) + geom_tile(aes(fill = Doublets), colour = "white") + geom_hline(yintercept = doublet_df[1,"beta"]) + geom_text(aes(0.25,doublet_df[1,"beta"],label = doublet_df[1,"Doublets"], vjust = 2)) +
+  Pdub <- ggplot2::ggplot(doublet_df[-1,], aes(beta_c, beta)) +
+    geom_tile(aes(fill = Doublets), colour = "black") +
+    geom_hline(yintercept = doublet_df[1,"beta"]) +
+    geom_text(aes(0.25,doublet_df[1,"beta"],label = doublet_df[1,"Doublets"], vjust = 2)) +
     geom_text(aes(label=Doublets)) +
+    ggthemes::theme_clean(base_size = 12) +
+    scale_x_continuous(breaks = unique(doublet_df$beta_c)) +
+    scale_y_continuous(breaks = unique(doublet_df$beta), labels = scales::number_format(accuracy = 0.001)) +
     scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = mean(doublet_df$Doublets)) +
-    ggtitle("Beta vs. Beta_c and resulting doublet classifications", subtitle= "Horizontal line shows BQN threshold")
+    ggtitle("Beta vs. Beta_c and resulting doublet classifications", subtitle= "Horizontal line shows BQN threshold") +
+    theme(
+      plot.background = element_blank(),
+      panel.grid.major.x = element_line(colour = "gray", linetype = "dotted")
+    )
   
   print(Pdub)
   
@@ -112,10 +132,18 @@ ParameterScan <- function(lognormedcounts) {
   }
   unid_df <- data.frame(delta_c = dist_frac_list, delta = distances, Unidentifieds = unidentified_counts)
 
-  Pun <- ggplot2::ggplot(unid_df, aes(delta_c, delta)) + geom_tile(aes(fill = Unidentifieds), colour = "white") + 
+  Pun <- ggplot2::ggplot(unid_df, aes(delta_c, delta)) +
+    geom_tile(aes(fill = Unidentifieds), colour = "black") +
     geom_text(aes(label=Unidentifieds)) +
+    ggthemes::theme_clean(base_size = 12) +
+    scale_x_continuous(breaks = unique(unid_df$delta_c)) +
+    scale_y_continuous(breaks = unique(unid_df$delta), labels = scales::number_format(accuracy = 0.001)) +
     scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = mean(unid_df$Unidentifieds)) +
-    ggtitle("Delta vs. Delta_c and resulting unidentified classifications")
+    ggtitle("Delta vs. Delta_c and resulting unidentified classifications") +
+    theme(
+      plot.background = element_blank(),
+      panel.grid.major.x = element_line(colour = "gray", linetype = "dotted")
+    )
   
   print(Pun)
   

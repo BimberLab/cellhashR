@@ -39,7 +39,8 @@ Imports:
     reticulate,
     ggExtra,
     magick,
-    pdftools
+    pdftools,
+    ggthemes
 Suggests:
     devtools,
     testthat (>= 2.1.0),
