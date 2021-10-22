@@ -19,7 +19,7 @@ Once the count matrix is created, an algorithm must be used to demultiplex cells
 - Quality control reports for the cell hashing library, covering read counts and normalization. Think [FASTQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/), except for cell hashing data.
 - A single interface to run one or more demutiplexing algorithms, including the novel demultiplexing algorithms BFF_raw and BFF_cluster.  Each algorithm has pros and cons, and will perform better or worse under certain conditions (though in our experience, of the algorithms we have tested, the BFF algorithms work most consistently and under the widest variety of conditions). If you select multiple algorithms (our default workflow), cellhashR will score cells using the consensus call from the set. Various QC summaries are produced during this process as well, if debugging is needed.  In addition to the BFF demultiplexing algorithms, other algorithms that can be run from cellhashR include:
     - [GMM-Demux](https://github.com/CHPGenetics/GMM-Demux)
-    - [demuxEM](https://github.com/klarman-cell-observatory/demuxEM)
+    - [demuxEM](https://github.com/klarman-cell-observatory/demuxEM) [(see extra requirements below)](#demuxEM)
     - [deMULTIplex](https://github.com/chris-mcginnis-ucsf/MULTI-seq)
     - [HTODemux from Seurat](https://satijalab.org/seurat/v3.1/hashing_vignette.html)
     - [hashedDrops from DropletUtils](https://github.com/MarioniLab/DropletUtils)
@@ -89,6 +89,16 @@ Please manually install preprocessCore with threading disabled:
 devtools::install_github('bmbolstad/preprocessCore', dependencies = T, upgrade = 'always', configure.args = '--disable-threading')
 ```
 
+
+### <a name="demuxEM">demuxEM</a>
+
+Unlike the other algorithms, which just require the HTO count matrix, demuxEM also requires the 10x h5 gene expression counts. This can be supplied as follows. This example runs BFF and demuxEM:
+```
+  rawData <- '../testdata/438-21-GEX/umi_count'
+  h5File <- '../testdata/438-21-GEX/438-21-raw_feature_bc_matrix.h5'
+  barcodeMatrix <- ProcessCountMatrix(rawCountData = rawData, barcodeWhitelist = c('MS-11', 'MS-12'))
+  df <- GenerateCellHashingCalls(barcodeMatrix = barcodeMatrix, methods = c('bff_cluster', 'demuxem'), demuxem.rawFeatureMatrixH5 = h5File)
+```
 
 ### <a name="developers">Development Guidelines</a>
 
