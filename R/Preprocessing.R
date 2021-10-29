@@ -436,3 +436,56 @@ PlotLibrarySaturationByMarker <- function(citeseqCountDir) {
 	print(P1)
 	print(P2)
 }
+
+
+#' @title Calculate Saturation For 10x
+#' @description Calculate per-cell saturation for 10x data
+#' @param barcodeMatrix The matrix holding HTO count data. The columns should match cells
+#' @param molInfoFile The 10x molecule_info.h5 file
+#' @param cellbarcodePrefix An optional string appended to the barcodes parsed from the molecule_info.h5 file. This is necessary if the seurat object has a prefix applied to cell barcodes. This value is directly concatenated and must include any delimiter. Note: if this is absent, but the seuratObj has the columns DatasetId or BarcodePrefix, the latter will be used.
+#' @param doPlot If true, plots summarizing saturation will be generated.
+#' @return A dataframe with the cellbarcode and per-cell saturation
+#' @export
+CalculateSaturationFor10x <- function(barcodeMatrix, molInfoFile, doPlot = TRUE) {
+	df <- DropletUtils::get10xMolInfoStats(molInfoFile)
+	df$cellbarcode <- df$cell
+
+	if (length(intersect(colnames(barcodeMatrix), df$cellbarcode)) == 0) {
+		bc1 <- paste0(head(df$cellbarcode, n = 2), collapse = ';')
+		bc2 <- paste0(head(colnames(barcodeMatrix), n = 2), collapse = ';')
+		print(paste0('No overlapping barcodes found (example: ', bc1, ' / ', bc2,'), adding gem_group'))
+		df$cellbarcode <- paste0(df$cellbarcode, '-', df$gem_group)
+	}
+
+	if (length(intersect(colnames(barcodeMatrix), df$cellbarcode)) == 0) {
+		bc1 <- paste0(head(df$cellbarcode, n = 2), collapse = ';')
+		bc2 <- paste0(head(colnames(barcodeMatrix), n = 2), collapse = ';')
+		stop(paste0('No overlapping barcodes found between barcodeMatrix and molecule_info.h5 file, example: ', bc1, ' / ', bc2))
+	}
+
+	df <- data.frame(cellbarcode = df$cellbarcode, num.umis = df$num.umis, CountsPerCell = df$num.reads)
+	df <- df[df$cellbarcode %in% colnames(barcodeMatrix),]
+	df$Saturation <- 1 - (df$num.umis / df$CountsPerCell)
+
+	if (doPlot) {
+		overall <- 1 - round((sum(df$num.umis) / sum(df$CountsPerCell)), 2)
+		print(ggplot(df, aes(x = CountsPerCell, y = Saturation)) +
+				  labs(x = 'Counts/Cell', y = '% Saturation') +
+				  egg::theme_presentation(base_size = 18) +
+				  geom_point() +
+				  annotate("text", x = max(df$CountsPerCell), y = min(df$Saturation), hjust = 1, vjust = -1, label = paste0(
+					  'Total Counts: ', format(sum(df$CountsPerCell), big.mark=','), '\n',
+					  'UMI Counts: ', format(sum(df$num.umis), big.mark=','), '\n',
+					  'Saturation: ', overall
+				  )) + ggtitle('Library Saturation')
+		)
+	}
+
+	print(paste0('Adding saturation for ', nrow(df), ' cells'))
+
+	dat <- data.frame(cellbarcode = colnames(barcodeMatrix), sortOrder = 1:ncol(barcodeMatrix))
+	dat <- merge(dat, data.frame(cellbarcode = df$cellbarcode, saturation = df$Saturation), by = 'cellbarcode', all.x = T)
+	dat <- dplyr::arrange(dat, sortOrder)
+
+	return(dat[c('cellbarcode', 'saturation')])
+}
