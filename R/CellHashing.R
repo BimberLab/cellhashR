@@ -348,7 +348,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
   }
 
   # Concordance across all callers:
-  dataClassification$consensuscall <- apply(dataClassification[,methods], 1, MakeConsensusCall)
+  dataClassification$consensuscall <- apply(dataClassification[,methods, drop = F], 1, MakeConsensusCall)
   dataClassificationGlobal$consensuscall <- apply(dataClassificationGlobal[,methods], 1, MakeConsensusCall)
 
   # It's possible for the global call to be singlet, but the barcodes to differ. Dont allow this:
