@@ -54,7 +54,7 @@ test_that("Workflow works", {
 
 	expect_true(file.exists(metricsFile))
 	metrics <- read.table(metricsFile, sep = '\t', header = FALSE)
-	expect_equal(nrow(metrics), 23)
+	expect_equal(nrow(metrics), 22)
 
 	expect_true(file.exists(rawCountsExport))
 	rawCountsMat <- readRDS(file = rawCountsExport)
