@@ -62,6 +62,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
     print('Adding HTO columns to seurat object')
     seuratObj$HTO <- c(NA)
     seuratObj$HTO.Classification <- c(NA)
+    seuratObj$Saturation.HTO <- c(NA)
   }
 
   datasetSelect <- seuratObj$BarcodePrefix == barcodePrefix
@@ -110,6 +111,10 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
   seuratObj$HTO <- naturalsort::naturalfactor(consensuscall)
   seuratObj$HTO.Classification <- naturalsort::naturalfactor(consensuscall.global)
 
+  if ('saturation' %in% names(df)) {
+    seuratObj$Saturation.HTO <- df$saturation
+  }
+
   return(seuratObj)
 }
 
@@ -122,11 +127,12 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @param metricsFile If provided, summary metrics will be written to this file.
 #' @param doTSNE If true, tSNE will be run on the resulting hashing calls after each caller. This can be useful as a sanity check; however, adds time.
 #' @param doHeatmap If true, Seurat::HTOHeatmap will be run on the results of each caller. Not supported by all callers.
+#' @param perCellSaturation An optional dataframe with the columns cellbarcode and saturation. This will be merged into the final output.
 #' @param \dots Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).
 #' @description The primary methods to generating cell hashing calls from a filtered matrix of count data.
 #' @return A data frame of results.
 #' @export
-GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'multiseq', 'dropletutils'), cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, ...) {
+GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'multiseq', 'dropletutils'), cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, perCellSaturation = NULL, ...) {
   if (is.data.frame(barcodeMatrix)) {
     print('Converting input data.frame to a matrix')
     barcodeMatrix <- as.matrix(barcodeMatrix)
@@ -211,13 +217,13 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
       stop(paste0('Unknown method: ', method))
     }
   }
-  return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile))
+  return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = perCellSaturation))
 }
 
 #' @import ggplot2
 #' @import patchwork
 #' @importFrom dplyr %>% group_by summarise
-.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, cellbarcodeWhitelist = NULL, metricsFile = NULL) {
+.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL) {
   print('Generating consensus calls')
 
   if (length(callList) == 0){
@@ -289,6 +295,18 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
 
     stop(e)
   })
+
+  if (!is.null(perCellSaturation)) {
+    if (!('cellbarcode' %in% names(perCellSaturation))) {
+      stop('perCellSaturation must have the column cellbarcode')
+    }
+
+    if (!('saturation' %in% names(perCellSaturation))) {
+      stop('perCellSaturation must have the column saturation')
+    }
+
+    dataClassification <- merge(dataClassification, perCellSaturation, by = 'cellbarcode', all.x = T)
+  }
 
   for (method in methods) {
     if (!(method %in% names(dataClassification))) {
@@ -532,16 +550,16 @@ GetExampleMarkdown <- function(dest) {
 #' @param barcodeWhitelist A vector of barcode names to retain.
 #' @param cellbarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), a file with one cellbarcode per line, or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
 #' @param methods The set of methods to use for calling. See GenerateCellHashingCalls for options.
-#' @param citeSeqCountDir This is the root folder of the Cite-seq-Count output, containing umi_count and read_count folders. If provided, this will be used to generate a library saturation plot
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
 #' @param metricsFile If provided, summary metrics will be written to this file.
 #' @param rawCountsExport If provided, the raw count matrix, after processing, will be written as an RDS object to this file. This can be useful for debugging.
 #' @param skipNormalizationQc If true, the normalization/QC plots will be skipped. These can be time consuming on large input data.
 #' @param keepMarkdown If true, the markdown file will be saved, in addition to the HTML file
+#' @param molInfoFile An optional path to the 10x molecule_info.h5.
 #' @param title A title for the HTML report
 #' @importFrom rmdformats html_clean
 #' @export
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), citeSeqCountDir = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE) {
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL) {
   rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
   if (!file.exists(rmd)) {
     stop(paste0('Unable to find file: ', rmd))
@@ -558,8 +576,8 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhi
   outputOptions[['keep_md']] <- keepMarkdown
 
   rawCountData <- normalizePath(rawCountData)
-  if (!is.null(citeSeqCountDir)) {
-    citeSeqCountDir <- normalizePath(citeSeqCountDir)
+  if (!is.null(molInfoFile)) {
+    molInfoFile <- normalizePath(molInfoFile)
   }
 
   reportFile <- normalizePath(reportFile, mustWork = F)

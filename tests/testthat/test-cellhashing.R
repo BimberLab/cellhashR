@@ -46,7 +46,7 @@ test_that("Workflow works", {
 	subsetCountDir <- normalizePath('./subsetCounts/', mustWork = FALSE)
 	DropletUtils::write10xCounts(path = subsetCountDir, countData, overwrite = TRUE)
 
-	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile, rawCountsExport = rawCountsExport)
+	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile, rawCountsExport = rawCountsExport)
 
 	df <- read.table(output, sep = '\t', header = TRUE)
 	expect_equal(nrow(df), 2500)
@@ -54,7 +54,7 @@ test_that("Workflow works", {
 
 	expect_true(file.exists(metricsFile))
 	metrics <- read.table(metricsFile, sep = '\t', header = FALSE)
-	expect_equal(nrow(metrics), 23)
+	expect_equal(nrow(metrics), 22)
 
 	expect_true(file.exists(rawCountsExport))
 	rawCountsMat <- readRDS(file = rawCountsExport)
@@ -68,7 +68,7 @@ test_that("Workflow works", {
 	unlink(rawCountsExport)
 
 	# Repeat with skip normalization
-	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, citeSeqCountDir = test$citeSeqCountDir, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile, skipNormalizationQc = TRUE, keepMarkdown = TRUE)
+	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile, skipNormalizationQc = TRUE, keepMarkdown = TRUE)
 
 	expect_true(file.exists(md))
 	
@@ -85,7 +85,7 @@ test_that("Workflow works", {
 })
 
 test_that("Saturation plot works", {
-  saturation <- PlotLibrarySaturation('../testdata/438-21-GEX/')
+	saturation <- PlotLibrarySaturation('../testdata/438-21-GEX/')
 	expect_equal(0.36, saturation)
 })
 

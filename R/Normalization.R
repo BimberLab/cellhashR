@@ -1,7 +1,7 @@
 #' @include Utils.R
 
 utils::globalVariables(
-  names = c('NormCount', 'Saturation', 'Cluster', 'AvgExpression', 'cutoff', 'count'),
+  names = c('NormCount', 'Saturation', 'Cluster', 'AvgExpression', 'cutoff', 'count', 'Normalization'),
   package = 'cellhashR',
   add = TRUE
 )
