@@ -11,13 +11,13 @@ CallAndGenerateReport(
   barcodeWhitelist = NULL,
   cellbarcodeWhitelist = "inputMatrix",
   methods = c("multiseq", "htodemux"),
-  citeSeqCountDir = NULL,
   minCountPerCell = 5,
   title = NULL,
   metricsFile = NULL,
   rawCountsExport = NULL,
   skipNormalizationQc = FALSE,
-  keepMarkdown = FALSE
+  keepMarkdown = FALSE,
+  molInfoFile = NULL
 )
 }
 \arguments{
@@ -33,8 +33,6 @@ CallAndGenerateReport(
 
 \item{methods}{The set of methods to use for calling. See GenerateCellHashingCalls for options.}
 
-\item{citeSeqCountDir}{This is the root folder of the Cite-seq-Count output, containing umi_count and read_count folders. If provided, this will be used to generate a library saturation plot}
-
 \item{minCountPerCell}{Cells (columns) will be dropped if their total count is less than this value.}
 
 \item{title}{A title for the HTML report}
@@ -46,6 +44,8 @@ CallAndGenerateReport(
 \item{skipNormalizationQc}{If true, the normalization/QC plots will be skipped. These can be time consuming on large input data.}
 
 \item{keepMarkdown}{If true, the markdown file will be saved, in addition to the HTML file}
+
+\item{molInfoFile}{An optional path to the 10x molecule_info.h5.}
 }
 \description{
 Runs the default processing pipeline
