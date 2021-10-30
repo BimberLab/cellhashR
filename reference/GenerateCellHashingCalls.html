@@ -142,6 +142,7 @@
   metricsFile <span class='op'>=</span> <span class='cn'>NULL</span>,
   doTSNE <span class='op'>=</span> <span class='cn'>TRUE</span>,
   doHeatmap <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  perCellSaturation <span class='op'>=</span> <span class='cn'>NULL</span>,
   <span class='va'>...</span>
 <span class='op'>)</span></pre>
 
@@ -171,6 +172,10 @@
     <tr>
       <th>doHeatmap</th>
       <td><p>If true, Seurat::HTOHeatmap will be run on the results of each caller. Not supported by all callers.</p></td>
+    </tr>
+    <tr>
+      <th>perCellSaturation</th>
+      <td><p>An optional dataframe with the columns cellbarcode and saturation. This will be merged into the final output.</p></td>
     </tr>
     <tr>
       <th>...</th>

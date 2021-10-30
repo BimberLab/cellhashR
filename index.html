@@ -156,11 +156,11 @@
 <h3 class="hasAnchor">
 <a href="#installation" class="anchor"></a><a name="installation">Installation</a>
 </h3>
-<pre class="{r}"><code><a href="https://rdrr.io/r/base/eval.html"># Make sure to update your Rprofile to include Bioconductor repos, such as adding this line to ~/.Rprofile:
+<pre class="{r}"><code># Make sure to update your Rprofile to include Bioconductor repos, such as adding this line to ~/.Rprofile:
 local({options(repos = BiocManager::repositories())})
 
 #Latest version:
-devtools::install_github(repo = 'bimberlab/cellhashR', ref = 'master', dependencies = TRUE, upgrade = 'always')</a></code></pre>
+devtools::install_github(repo = 'bimberlab/cellhashR', ref = 'master', dependencies = TRUE, upgrade = 'always')</code></pre>
 <p>Pre-packaged Docker images with all needed dependencies installed can be found on our <a href="https://github.com/orgs/BimberLab/packages/container/package/cellhashr">GitHub Packages page</a>. We recommend using a specific release, which you can do using tags:</p>
 <pre><code>docker pull ghcr.io/bimberlab/cellhashr:latest</code></pre>
 </div>
@@ -171,7 +171,7 @@ devtools::install_github(repo = 'bimberlab/cellhashR', ref = 'master', dependenc
 <p>If you receive an error along the lines of:</p>
 <pre><code>"ERROR; return code from pthread_create() is 22\n"</code></pre>
 <p>Please manually install preprocessCore with threading disabled:</p>
-<pre><code><a href="https://devtools.r-lib.org//reference/remote-reexports.html">devtools::install_github('bmbolstad/preprocessCore', dependencies = T, upgrade = 'always', configure.args = '--disable-threading')</a></code></pre>
+<pre><code>devtools::install_github('bmbolstad/preprocessCore', dependencies = T, upgrade = 'always', configure.args = '--disable-threading')</code></pre>
 </div>
 <div id="demuxem" class="section level3">
 <h3 class="hasAnchor">

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Call Cell Hashing And Generate Report — CallAndGenerateReport • cellhashR</title>
+<title>Calculate Saturation For 10x — CalculateSaturationFor10x • cellhashR</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Call Cell Hashing And Generate Report — CallAndGenerateReport" />
-<meta property="og:description" content="Runs the default processing pipeline" />
+<meta property="og:title" content="Calculate Saturation For 10x — CalculateSaturationFor10x" />
+<meta property="og:description" content="Calculate per-cell saturation for 10x data" />
 
 
 
@@ -126,88 +126,37 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Call Cell Hashing And Generate Report</h1>
-    <small class="dont-index">Source: <a href='https://github.com/BimberLab/cellhashR/blob/master/R/CellHashing.R'><code>R/CellHashing.R</code></a></small>
-    <div class="hidden name"><code>CallAndGenerateReport.Rd</code></div>
+    <h1>Calculate Saturation For 10x</h1>
+    <small class="dont-index">Source: <a href='https://github.com/BimberLab/cellhashR/blob/master/R/Preprocessing.R'><code>R/Preprocessing.R</code></a></small>
+    <div class="hidden name"><code>CalculateSaturationFor10x.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Runs the default processing pipeline</p>
+    <p>Calculate per-cell saturation for 10x data</p>
     </div>
 
-    <pre class="usage"><span class='fu'>CallAndGenerateReport</span><span class='op'>(</span>
-  <span class='va'>rawCountData</span>,
-  <span class='va'>reportFile</span>,
-  <span class='va'>callFile</span>,
-  barcodeWhitelist <span class='op'>=</span> <span class='cn'>NULL</span>,
-  cellbarcodeWhitelist <span class='op'>=</span> <span class='st'>"inputMatrix"</span>,
-  methods <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"multiseq"</span>, <span class='st'>"htodemux"</span><span class='op'>)</span>,
-  minCountPerCell <span class='op'>=</span> <span class='fl'>5</span>,
-  title <span class='op'>=</span> <span class='cn'>NULL</span>,
-  metricsFile <span class='op'>=</span> <span class='cn'>NULL</span>,
-  rawCountsExport <span class='op'>=</span> <span class='cn'>NULL</span>,
-  skipNormalizationQc <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  keepMarkdown <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  molInfoFile <span class='op'>=</span> <span class='cn'>NULL</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>CalculateSaturationFor10x</span><span class='op'>(</span><span class='va'>barcodeMatrix</span>, <span class='va'>molInfoFile</span>, doPlot <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>rawCountData</th>
-      <td><p>The input barcode file or umi_count folder</p></td>
-    </tr>
-    <tr>
-      <th>reportFile</th>
-      <td><p>The file to which the HTML report will be written</p></td>
-    </tr>
-    <tr>
-      <th>callFile</th>
-      <td><p>The file to which the table of calls will be written</p></td>
-    </tr>
-    <tr>
-      <th>barcodeWhitelist</th>
-      <td><p>A vector of barcode names to retain.</p></td>
-    </tr>
-    <tr>
-      <th>cellbarcodeWhitelist</th>
-      <td><p>Either a vector of expected barcodes (such as all cells with passing gene expression data), a file with one cellbarcode per line, or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.</p></td>
-    </tr>
-    <tr>
-      <th>methods</th>
-      <td><p>The set of methods to use for calling. See GenerateCellHashingCalls for options.</p></td>
-    </tr>
-    <tr>
-      <th>minCountPerCell</th>
-      <td><p>Cells (columns) will be dropped if their total count is less than this value.</p></td>
-    </tr>
-    <tr>
-      <th>title</th>
-      <td><p>A title for the HTML report</p></td>
-    </tr>
-    <tr>
-      <th>metricsFile</th>
-      <td><p>If provided, summary metrics will be written to this file.</p></td>
-    </tr>
-    <tr>
-      <th>rawCountsExport</th>
-      <td><p>If provided, the raw count matrix, after processing, will be written as an RDS object to this file. This can be useful for debugging.</p></td>
-    </tr>
-    <tr>
-      <th>skipNormalizationQc</th>
-      <td><p>If true, the normalization/QC plots will be skipped. These can be time consuming on large input data.</p></td>
-    </tr>
-    <tr>
-      <th>keepMarkdown</th>
-      <td><p>If true, the markdown file will be saved, in addition to the HTML file</p></td>
+      <th>barcodeMatrix</th>
+      <td><p>The matrix holding HTO count data. The columns should match cells</p></td>
     </tr>
     <tr>
       <th>molInfoFile</th>
-      <td><p>An optional path to the 10x molecule_info.h5.</p></td>
+      <td><p>The 10x molecule_info.h5 file</p></td>
+    </tr>
+    <tr>
+      <th>doPlot</th>
+      <td><p>If true, plots summarizing saturation will be generated.</p></td>
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>A dataframe with the cellbarcode and per-cell saturation</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
