@@ -12,8 +12,6 @@ CalculateSaturationFor10x(barcodeMatrix, molInfoFile, doPlot = TRUE)
 \item{molInfoFile}{The 10x molecule_info.h5 file}
 
 \item{doPlot}{If true, plots summarizing saturation will be generated.}
-
-\item{cellbarcodePrefix}{An optional string appended to the barcodes parsed from the molecule_info.h5 file. This is necessary if the seurat object has a prefix applied to cell barcodes. This value is directly concatenated and must include any delimiter. Note: if this is absent, but the seuratObj has the columns DatasetId or BarcodePrefix, the latter will be used.}
 }
 \value{
 A dataframe with the cellbarcode and per-cell saturation

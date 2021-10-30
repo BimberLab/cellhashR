@@ -442,7 +442,6 @@ PlotLibrarySaturationByMarker <- function(citeseqCountDir) {
 #' @description Calculate per-cell saturation for 10x data
 #' @param barcodeMatrix The matrix holding HTO count data. The columns should match cells
 #' @param molInfoFile The 10x molecule_info.h5 file
-#' @param cellbarcodePrefix An optional string appended to the barcodes parsed from the molecule_info.h5 file. This is necessary if the seurat object has a prefix applied to cell barcodes. This value is directly concatenated and must include any delimiter. Note: if this is absent, but the seuratObj has the columns DatasetId or BarcodePrefix, the latter will be used.
 #' @param doPlot If true, plots summarizing saturation will be generated.
 #' @return A dataframe with the cellbarcode and per-cell saturation
 #' @export
