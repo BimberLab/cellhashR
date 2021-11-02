@@ -62,7 +62,7 @@ ParameterScan <- function(lognormedcounts) {
   neg_df <- data.frame(alpha_c = c(neg_thresh_list), alpha = neg_cutoffs, Negatives = neg_counts)
 
   Pneg <- ggplot2::ggplot(neg_df[-1,], aes(alpha_c, alpha)) +
-    geom_tile(aes(fill = Negatives), colour = "black", height = 0.25) +
+    geom_tile(aes(fill = Negatives), colour = "black", height = 0.05) +
     geom_hline(yintercept = neg_df[1,"alpha"]) +
     geom_text(aes(0.25,neg_df[1,"alpha"],label = neg_df[1,"Negatives"], vjust = -1)) +
     geom_text(aes(label=Negatives)) +
