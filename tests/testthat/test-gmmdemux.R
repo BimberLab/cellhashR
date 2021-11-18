@@ -24,8 +24,7 @@ test_that("GMM-Demux Works", {
 		Negative = 204
 	)
 
-	# Note: we probably need to set the python / nympy random seed to make this deterministic
-	# for (hto in unique(df$consensuscall)) {
-	# 	expect_equal(sum(df$consensuscall == hto), expectedCalls[[hto]], info = hto)
-	# }
+	for (hto in unique(df$consensuscall)) {
+		expect_equal(sum(df$consensuscall == hto), expectedCalls[[hto]], info = hto)
+	}
 })
