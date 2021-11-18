@@ -43,7 +43,8 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -yq libharfbuzz-dev libfribidi-dev python3 python3-pip
           python3 -m pip install --upgrade pip
-          python3 -m pip install --user GMM_Demux demuxEM
+          python3 -m pip install --user demuxEM
+          python3 -m pip install git+https://github.com/bbimber/GMM-Demux.git@random_seed
 
       - name: Query dependencies
         run: |
@@ -52,6 +53,7 @@ jobs:
           BiocManager::install(version = "${{ matrix.config.bioc }}", ask = FALSE);
           cat(append = TRUE, file = "~/.Rprofile", "options(repos = BiocManager::repositories());")
           cat(append = TRUE, file = "~/.Rprofile", "Sys.setenv(R_BIOC_VERSION=as.character(BiocManager::version()));");
+          cat(append = TRUE, file = "~/.Rprofile", "Sys.setenv(USE_GMMDEMUX_SEED=1);");
           install.packages('remotes')
           saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
           writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")

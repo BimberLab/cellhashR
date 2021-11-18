@@ -22,7 +22,14 @@ GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux
 
 		reportPath <- tempfile()
 		outPath <- tempfile()
-		pyOut <- system2(reticulate::py_exe(), c("-m", "GMM_Demux.GMM_Demux", inputFile, paste0(rownames(barcodeMatrix), collapse=','), '-c', '-f', reportPath, '-o', outPath), stdout = TRUE, stderr = TRUE)
+
+		gmmArgs <- c("-m", "GMM_Demux.GMM_Demux", inputFile, paste0(rownames(barcodeMatrix), collapse=','), '-c', '-f', reportPath, '-o', outPath)
+		if (Sys.getenv('USE_GMMDEMUX_SEED', unset = 0) == 1) {
+			print('Setting random seed for GMM_Demux')
+			gmmArgs <- c(gmmArgs, '--random_seed', GetSeed())
+		}
+
+		pyOut <- system2(reticulate::py_exe(), gmmArgs, stdout = TRUE, stderr = TRUE)
 		print(pyOut)
 
 		clusterNames <- read.table(paste0(reportPath, '/GMM_full.config'), header = FALSE, sep = ',')
