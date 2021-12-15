@@ -148,6 +148,7 @@ test_that("Distinct methods and consensus work", {
 	
 	print(paste0('Running test: ', testName))
 	test <- tests[[testName]]
+	barcodeFile <- test$input
 	barcodeData <- ProcessCountMatrix(rawCountData = barcodeFile, barcodeWhitelist = test$htos)
 	if (ncol(barcodeData) > 5000) {
 		print('Subsetting barcodeData to 5000 cells')
