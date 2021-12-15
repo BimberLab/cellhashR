@@ -141,11 +141,7 @@ test_that("BFF calling works", {
 
 
 test_that("Distinct methods and consensus work", {
-	html <- paste0(getwd(), '/test.html')
-	output <- paste0(getwd(), '/test.txt')
-
 	testName <- names(tests)[4]
-	
 	print(paste0('Running test: ', testName))
 	test <- tests[[testName]]
 	barcodeFile <- test$input

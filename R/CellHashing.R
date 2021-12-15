@@ -382,10 +382,8 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     egg::theme_presentation(base_size = 14) +
     labs(x = '', y = 'Cells', fill = 'Caller') +
     theme(
-      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
-      legend.position = 'bottom'
-    ) +
-    facet_grid(. ~ IsConsensusMethod, space = 'free_x')
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+    )
 
   summary <- dataClassificationGlobal[c('cellbarcode', 'consensuscall')]
   summary$method <- 'consensus'
@@ -401,10 +399,9 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     egg::theme_presentation(base_size = 14) +
     labs(x = '', y = 'Cells', fill = 'Classification') +
     theme(
-      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
-      legend.position = 'bottom'
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
     ) +
-    facet_grid(. ~ IsConsensusMethod, space = 'free_x')
+    facet_grid(. ~ IsConsensusMethod, space = 'free_x', scales = 'free')
 
   print(P2 + P1 + plot_layout(widths = c(1, 2)))
 
