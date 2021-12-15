@@ -382,7 +382,8 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     egg::theme_presentation(base_size = 14) +
     labs(x = '', y = 'Cells', fill = 'Caller') +
     theme(
-      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+      legend.position = 'bottom'
     ) +
     facet_grid(. ~ IsConsensusMethod, space = 'free_x')
 
@@ -400,7 +401,8 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     egg::theme_presentation(base_size = 14) +
     labs(x = '', y = 'Cells', fill = 'Classification') +
     theme(
-      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+      legend.position = 'bottom'
     ) +
     facet_grid(. ~ IsConsensusMethod, space = 'free_x')
 
