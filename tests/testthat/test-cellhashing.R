@@ -155,9 +155,6 @@ test_that("Distinct methods and consensus work", {
 	}
 	
 	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'gmm_demux'), methodsForConsensus = c('gmm_demux'))
-	
-	
-
 	print(table(df$consensuscall))
 	
 	expectedCalls <- list(
