@@ -578,7 +578,8 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
       print('Cannot find doublet threshold.  Exiting BFF')
       return(NULL)
     }
-    val <- max(vals)
+    vals <- vals[vals > which.max(second_dist$y)]
+    val <- min(vals)
     doublet_cutoff <- second_dist$x[[val]]
 
     classification <- c()
