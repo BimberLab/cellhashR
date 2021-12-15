@@ -19,6 +19,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-home">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -31,18 +33,12 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">cellhashR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.1</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-<li>
-  <a href="index.html">
-    <span class="fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
 <li>
   <a href="reference/index.html">Reference</a>
 </li>
@@ -67,7 +63,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/BimberLab/cellhashR/">
+  <a href="https://github.com/BimberLab/cellhashR/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -85,14 +81,16 @@
       </header><div class="row">
   <div class="contents col-md-9">
 
-<p><img src="https://github.com/BimberLab/cellhashR/workflows/R%20Build%20and%20Checks/badge.svg" alt="R Build and Checks"></p>
-<div id="cellhashr" class="section level1">
-<div class="page-header"><h1 class="hasAnchor">
-<a href="#cellhashr" class="anchor"></a>cellhashR</h1></div>
-<p>An R package designed to demultiplex cell hashing data. <a href="https://bimberlab.github.io/cellhashR/">Please see our documentation for more detail</a>.</p>
-<div id="table-of-contents" class="section level2">
-<h2 class="hasAnchor">
-<a href="#table-of-contents" class="anchor"></a>Table of Contents</h2>
+<div class="figure">
+<img src="https://github.com/BimberLab/cellhashR/workflows/R%20Build%20and%20Checks/badge.svg" alt=""><p class="caption">R Build and Checks</p>
+</div>
+<div class="section level1">
+<div class="page-header"><h1 id="cellhashr">cellhashR<a class="anchor" aria-label="anchor" href="#cellhashr"></a>
+</h1></div>
+<p>An R package designed to demultiplex cell hashing data. <a href="https://bimberlab.github.io/cellhashR/" class="external-link">Please see our documentation for more detail</a>.</p>
+<div class="section level2">
+<h2 id="table-of-contents">Table of Contents<a class="anchor" aria-label="anchor" href="#table-of-contents"></a>
+</h2>
 <ul>
 <li><a href="#overview">Overview</a></li>
 <li><a href="#example">Example Usage</a></li>
@@ -100,33 +98,18 @@
 <li><a href="#issues">Known Issues</a></li>
 <li><a href="#developers">Development Guidelines</a></li>
 </ul>
-<div id="overview" class="section level3">
-<h3 class="hasAnchor">
-<a href="#overview" class="anchor"></a><a name="overview">Overview</a>
+<div class="section level3">
+<h3 id="overview">
+<a name="overview">Overview</a><a class="anchor" aria-label="anchor" href="#overview"></a>
 </h3>
-<p>Cell hashing is a method that allows sample multiplexing or super-loading within single-cell RNA-seq platforms, such as 10x genomics, originally developed at New York Genome Center in collaboration with the Satija lab. <a href="https://cite-seq.com/cell-hashing/">See here for more detail on the technique</a>. The general idea is that cells are labeled with a staining reagent (such as an antibody) tagged with a short nucleotide barcode. Other staining methods have been published, such as the lipid-based Multi-Seq (<a href="https://www.ncbi.nlm.nih.gov/pubmed/31209384">https://www.ncbi.nlm.nih.gov/pubmed/31209384</a>). In all methods, the hashtag oligo/barcode is sequenced in parallel with cellular mRNA, creating a separate cell hashing library. After sequencing, the cell barcode and hashing index are parsed using tools like Cite-seq-Count (<a href="https://github.com/Hoohm/CITE-seq-Count">https://github.com/Hoohm/CITE-seq-Count</a>), creating a count matrix with the total hash tag counts per cell.</p>
-<p>Once the count matrix is created, an algorithm must be used to demultiplex cells and assign them to hash tags (i.e. sample). This is where cellhashR comes in. This package provides several functions:</p>
-<ul>
-<li>Quality control reports for the cell hashing library, covering read counts and normalization. Think <a href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/">FASTQC</a>, except for cell hashing data.</li>
-<li>A single interface to run one or more demutiplexing algorithms, including the novel demultiplexing algorithms BFF_raw and BFF_cluster. Each algorithm has pros and cons, and will perform better or worse under certain conditions (though in our experience, of the algorithms we have tested, the BFF algorithms work most consistently and under the widest variety of conditions). If you select multiple algorithms (our default workflow), cellhashR will score cells using the consensus call from the set. Various QC summaries are produced during this process as well, if debugging is needed. In addition to the BFF demultiplexing algorithms, other algorithms that can be run from cellhashR include:
-<ul>
-<li><a href="https://github.com/CHPGenetics/GMM-Demux">GMM-Demux</a></li>
-<li>
-<a href="https://github.com/klarman-cell-observatory/demuxEM">demuxEM</a> <a href="#demuxEM">(see extra requirements below)</a>
-</li>
-<li><a href="https://github.com/chris-mcginnis-ucsf/MULTI-seq">deMULTIplex</a></li>
-<li><a href="https://satijalab.org/seurat/v3.1/hashing_vignette.html">HTODemux from Seurat</a></li>
-<li><a href="https://github.com/MarioniLab/DropletUtils">hashedDrops from DropletUtils</a></li>
-</ul>
-</li>
-<li>The workflow produces a unified table with the results of each caller and the consensus call. Final QC plots and summaries are created.</li>
-</ul>
+<p>Cell hashing is a method that allows sample multiplexing or super-loading within single-cell RNA-seq platforms, such as 10x genomics, originally developed at New York Genome Center in collaboration with the Satija lab. <a href="https://cite-seq.com/cell-hashing/" class="external-link">See here for more detail on the technique</a>. The general idea is that cells are labeled with a staining reagent (such as an antibody) tagged with a short nucleotide barcode. Other staining methods have been published, such as the lipid-based Multi-Seq (<a href="https://www.ncbi.nlm.nih.gov/pubmed/31209384" class="external-link">https://www.ncbi.nlm.nih.gov/pubmed/31209384</a>). In all methods, the hashtag oligo/barcode is sequenced in parallel with cellular mRNA, creating a separate cell hashing library. After sequencing, the cell barcode and hashing index are parsed using tools like Cite-seq-Count (<a href="https://github.com/Hoohm/CITE-seq-Count" class="external-link">https://github.com/Hoohm/CITE-seq-Count</a>), creating a count matrix with the total hash tag counts per cell.</p>
+<p>Once the count matrix is created, an algorithm must be used to demultiplex cells and assign them to hash tags (i.e. sample). This is where cellhashR comes in. This package provides several functions: - Quality control reports for the cell hashing library, covering read counts and normalization. Think <a href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/" class="external-link">FASTQC</a>, except for cell hashing data. - A single interface to run one or more demutiplexing algorithms, including the novel demultiplexing algorithms BFF_raw and BFF_cluster. Each algorithm has pros and cons, and will perform better or worse under certain conditions (though in our experience, of the algorithms we have tested, the BFF algorithms work most consistently and under the widest variety of conditions). If you select multiple algorithms (our default workflow), cellhashR will score cells using the consensus call from the set. Various QC summaries are produced during this process as well, if debugging is needed. In addition to the BFF demultiplexing algorithms, other algorithms that can be run from cellhashR include: - <a href="https://github.com/CHPGenetics/GMM-Demux" class="external-link">GMM-Demux</a> - <a href="https://github.com/klarman-cell-observatory/demuxEM" class="external-link">demuxEM</a> <a href="#demuxEM">(see extra requirements below)</a> - <a href="https://github.com/chris-mcginnis-ucsf/MULTI-seq" class="external-link">deMULTIplex</a> - <a href="https://satijalab.org/seurat/v3.1/hashing_vignette.html" class="external-link">HTODemux from Seurat</a> - <a href="https://github.com/MarioniLab/DropletUtils" class="external-link">hashedDrops from DropletUtils</a> - The workflow produces a unified table with the results of each caller and the consensus call. Final QC plots and summaries are created.</p>
 <p>Each step of the workflow can either be run interactively in R (through the terminal or RStudio), or it can be executed as a pipeline that runs all commands and creates the call table and an HTML report.</p>
-<p><a href="https://bimberlab.github.io/cellhashR/articles/V01-QC-example.html">Click here to view an example QC report</a></p>
+<p><a href="https://bimberlab.github.io/cellhashR/articles/V01-QC-example.html" class="external-link">Click here to view an example QC report</a></p>
 </div>
-<div id="example-usage" class="section level3">
-<h3 class="hasAnchor">
-<a href="#example-usage" class="anchor"></a><a name="example">Example Usage</a>
+<div class="section level3">
+<h3 id="example-usage">
+<a name="example">Example Usage</a><a class="anchor" aria-label="anchor" href="#example-usage"></a>
 </h3>
 <p>Below are the primary functions of cellhashR needed to QC and score hashing data:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
@@ -134,13 +117,13 @@
 <span class="va">barcodeData</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ProcessCountMatrix.html">ProcessCountMatrix</a></span><span class="op">(</span>rawCountData <span class="op">=</span> <span class="st">'myCountDir/umi_count'</span>, minCountPerCell <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>
 
 <span class="co"># Example 2: parse CITE-seq-Count output, providing a barcode whitelist. </span>
-<span class="va">barcodeData</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ProcessCountMatrix.html">ProcessCountMatrix</a></span><span class="op">(</span>rawCountData <span class="op">=</span> <span class="st">'myCountDir/umi_count'</span>, minCountPerCell <span class="op">=</span> <span class="fl">5</span>, barcodeWhitelist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">'HTO-1'</span>, <span class="st">'HTO-2'</span>, <span class="st">'HTO-3'</span>, <span class="st">'HTO-4'</span>, <span class="st">'HTO-6'</span><span class="op">)</span><span class="op">)</span>
+<span class="va">barcodeData</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ProcessCountMatrix.html">ProcessCountMatrix</a></span><span class="op">(</span>rawCountData <span class="op">=</span> <span class="st">'myCountDir/umi_count'</span>, minCountPerCell <span class="op">=</span> <span class="fl">5</span>, barcodeWhitelist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'HTO-1'</span>, <span class="st">'HTO-2'</span>, <span class="st">'HTO-3'</span>, <span class="st">'HTO-4'</span>, <span class="st">'HTO-6'</span><span class="op">)</span><span class="op">)</span>
 
 <span class="co"># Create QC plots of barcode normalization</span>
 <span class="fu"><a href="reference/PlotNormalizationQC.html">PlotNormalizationQC</a></span><span class="op">(</span><span class="va">barcodeData</span><span class="op">)</span>
 
 <span class="co"># Generate the final cell hashing calls</span>
-<span class="va">calls</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">'multiseq'</span>, <span class="st">'htodemux'</span><span class="op">)</span><span class="op">)</span>
+<span class="va">calls</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'multiseq'</span>, <span class="st">'htodemux'</span><span class="op">)</span><span class="op">)</span>
 
 <span class="co"># Inspect negative cells:</span>
 <span class="fu"><a href="reference/SummarizeCellsByClassification.html">SummarizeCellsByClassification</a></span><span class="op">(</span>calls <span class="op">=</span> <span class="va">calls</span>, barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span><span class="op">)</span>
@@ -150,50 +133,50 @@
 <code class="sourceCode R"><span class="fu"><a href="reference/GetExampleMarkdown.html">GetExampleMarkdown</a></span><span class="op">(</span>dest <span class="op">=</span> <span class="st">'cellhashR_template.rmd'</span><span class="op">)</span></code></pre></div>
 <p>Finally, the workflow can be executed using this wrapper around the Rmarkdown, producing a TSV of calls and HTML QC report:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="reference/CallAndGenerateReport.html">CallAndGenerateReport</a></span><span class="op">(</span>rawCountData <span class="op">=</span> <span class="st">'myCountDir/umi_count'</span>, reportFile <span class="op">=</span> <span class="st">'report.html'</span>, callFile <span class="op">=</span> <span class="st">'calls.txt'</span>, barcodeWhitelist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">'HTO-1'</span>, <span class="st">'HTO-2'</span>, <span class="st">'HTO-3'</span><span class="op">)</span>, title <span class="op">=</span> <span class="st">'Cell Hashing For Experiment 1'</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="fu"><a href="reference/CallAndGenerateReport.html">CallAndGenerateReport</a></span><span class="op">(</span>rawCountData <span class="op">=</span> <span class="st">'myCountDir/umi_count'</span>, reportFile <span class="op">=</span> <span class="st">'report.html'</span>, callFile <span class="op">=</span> <span class="st">'calls.txt'</span>, barcodeWhitelist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'HTO-1'</span>, <span class="st">'HTO-2'</span>, <span class="st">'HTO-3'</span><span class="op">)</span>, title <span class="op">=</span> <span class="st">'Cell Hashing For Experiment 1'</span><span class="op">)</span></code></pre></div>
 </div>
-<div id="installation" class="section level3">
-<h3 class="hasAnchor">
-<a href="#installation" class="anchor"></a><a name="installation">Installation</a>
+<div class="section level3">
+<h3 id="installation">
+<a name="installation">Installation</a><a class="anchor" aria-label="anchor" href="#installation"></a>
 </h3>
-<pre class="{r}"><code># Make sure to update your Rprofile to include Bioconductor repos, such as adding this line to ~/.Rprofile:
-local({options(repos = BiocManager::repositories())})
+<pre class="{r}"><code><span class="co"># Make sure to update your Rprofile to include Bioconductor repos, such as adding this line to ~/.Rprofile:</span>
+<span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">local</a></span><span class="op">(</span><span class="op">{</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>repos <span class="op">=</span> <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/repositories.html" class="external-link">repositories</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">}</span><span class="op">)</span>
 
-#Latest version:
-devtools::install_github(repo = 'bimberlab/cellhashR', ref = 'master', dependencies = TRUE, upgrade = 'always')</code></pre>
-<p>Pre-packaged Docker images with all needed dependencies installed can be found on our <a href="https://github.com/orgs/BimberLab/packages/container/package/cellhashr">GitHub Packages page</a>. We recommend using a specific release, which you can do using tags:</p>
+<span class="co">#Latest version:</span>
+<span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/remote-reexports.html" class="external-link">install_github</a></span><span class="op">(</span>repo <span class="op">=</span> <span class="st">'bimberlab/cellhashR'</span>, ref <span class="op">=</span> <span class="st">'master'</span>, dependencies <span class="op">=</span> <span class="cn">TRUE</span>, upgrade <span class="op">=</span> <span class="st">'always'</span><span class="op">)</span></code></pre>
+<p>Pre-packaged Docker images with all needed dependencies installed can be found on our <a href="https://github.com/orgs/BimberLab/packages/container/package/cellhashr" class="external-link">GitHub Packages page</a>. We recommend using a specific release, which you can do using tags:</p>
 <pre><code>docker pull ghcr.io/bimberlab/cellhashr:latest</code></pre>
 </div>
-<div id="known-issues" class="section level3">
-<h3 class="hasAnchor">
-<a href="#known-issues" class="anchor"></a><a name="issues">Known Issues</a>
+<div class="section level3">
+<h3 id="known-issues">
+<a name="issues">Known Issues</a><a class="anchor" aria-label="anchor" href="#known-issues"></a>
 </h3>
 <p>If you receive an error along the lines of:</p>
-<pre><code>"ERROR; return code from pthread_create() is 22\n"</code></pre>
+<pre><code><span class="st">"ERROR; return code from pthread_create() is 22\n"</span></code></pre>
 <p>Please manually install preprocessCore with threading disabled:</p>
-<pre><code>devtools::install_github('bmbolstad/preprocessCore', dependencies = T, upgrade = 'always', configure.args = '--disable-threading')</code></pre>
+<pre><code><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/remote-reexports.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">'bmbolstad/preprocessCore'</span>, dependencies <span class="op">=</span> <span class="cn">T</span>, upgrade <span class="op">=</span> <span class="st">'always'</span>, configure.args <span class="op">=</span> <span class="st">'--disable-threading'</span><span class="op">)</span></code></pre>
 </div>
-<div id="demuxem" class="section level3">
-<h3 class="hasAnchor">
-<a href="#demuxem" class="anchor"></a><a name="demuxEM">demuxEM</a>
+<div class="section level3">
+<h3 id="demuxem">
+<a name="demuxEM">demuxEM</a><a class="anchor" aria-label="anchor" href="#demuxem"></a>
 </h3>
 <p>Unlike the other algorithms, which just require the HTO count matrix, demuxEM also requires the 10x h5 gene expression counts. This can be supplied as follows. This example runs BFF and demuxEM:</p>
-<pre><code>  rawData &lt;- '../testdata/438-21-GEX/umi_count'
-  h5File &lt;- '../testdata/438-21-GEX/438-21-raw_feature_bc_matrix.h5'
-  barcodeMatrix &lt;- ProcessCountMatrix(rawCountData = rawData, barcodeWhitelist = c('MS-11', 'MS-12'))
-  df &lt;- GenerateCellHashingCalls(barcodeMatrix = barcodeMatrix, methods = c('bff_cluster', 'demuxem'), demuxem.rawFeatureMatrixH5 = h5File)</code></pre>
+<pre><code><span class="va">rawData</span> <span class="op">&lt;-</span> <span class="st">'../testdata/438-21-GEX/umi_count'</span>
+  <span class="va">h5File</span> <span class="op">&lt;-</span> <span class="st">'../testdata/438-21-GEX/438-21-raw_feature_bc_matrix.h5'</span>
+  <span class="va">barcodeMatrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ProcessCountMatrix.html">ProcessCountMatrix</a></span><span class="op">(</span>rawCountData <span class="op">=</span> <span class="va">rawData</span>, barcodeWhitelist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'MS-11'</span>, <span class="st">'MS-12'</span><span class="op">)</span><span class="op">)</span>
+  <span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeMatrix</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'bff_cluster'</span>, <span class="st">'demuxem'</span><span class="op">)</span>, demuxem.rawFeatureMatrixH5 <span class="op">=</span> <span class="va">h5File</span><span class="op">)</span></code></pre>
 </div>
-<div id="development-guidelines" class="section level3">
-<h3 class="hasAnchor">
-<a href="#development-guidelines" class="anchor"></a><a name="developers">Development Guidelines</a>
+<div class="section level3">
+<h3 id="development-guidelines">
+<a name="developers">Development Guidelines</a><a class="anchor" aria-label="anchor" href="#development-guidelines"></a>
 </h3>
 <ul>
-<li><p>New development should occur on a branch, and go through a Pull Request before merging into the master branch. <a href="https://guides.github.com/introduction/flow/">See here for information on the pull request workflow</a>. Ideally PRs would be reviewed by another person. For the PR, please review the set of changed files carefully to make sure you are only merging the changes you intend.</p></li>
-<li><p>New functions should have <a href="https://kbroman.org/pkg_primer/pages/docs.html">Roxygen2 documentation</a>.</p></li>
+<li><p>New development should occur on a branch, and go through a Pull Request before merging into the master branch. <a href="https://guides.github.com/introduction/flow/" class="external-link">See here for information on the pull request workflow</a>. Ideally PRs would be reviewed by another person. For the PR, please review the set of changed files carefully to make sure you are only merging the changes you intend.</p></li>
+<li><p>New functions should have <a href="https://kbroman.org/pkg_primer/pages/docs.html" class="external-link">Roxygen2 documentation</a>.</p></li>
 <li><p>As part of each PR, you should run ‘devtools::document()’ to update documentation and include these changes with your commits.</p></li>
-<li><p>It is a good idea to run ‘R CMD check’ locally to make sure your changes will pass. <a href="http://r-pkgs.had.co.nz/check.html">See here for more information</a></p></li>
+<li><p>It is a good idea to run ‘R CMD check’ locally to make sure your changes will pass. <a href="http://r-pkgs.had.co.nz/check.html" class="external-link">See here for more information</a></p></li>
 <li><p>Code should only be merged after the build and tests pass. The master branch should always be stable.</p></li>
-<li><p>New features should ideally have at least a basic test (see <a href="http://r-pkgs.had.co.nz/tests.html">R testthat</a>). There is existing test data in ./tests/testdata. This can be expanded, but please be conscious about file size and try to reuse data across tests if appropriate.</p></li>
+<li><p>New features should ideally have at least a basic test (see <a href="http://r-pkgs.had.co.nz/tests.html" class="external-link">R testthat</a>). There is existing test data in ./tests/testdata. This can be expanded, but please be conscious about file size and try to reuse data across tests if appropriate.</p></li>
 </ul>
 </div>
 </div>
@@ -203,37 +186,49 @@ devtools::install_github(repo = 'bimberlab/cellhashR', ref = 'master', dependenc
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <div class="links">
-<h2>Links</h2>
+<h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
-<li>Browse source code at <br><a href="https://github.com/BimberLab/cellhashR/">https://​github.com/​BimberLab/​cellhashR/​</a>
-</li>
-<li>Report a bug at <br><a href="https://github.com/BimberLab/cellhashR/issues">https://​github.com/​BimberLab/​cellhashR/​issues</a>
-</li>
+<li><a href="https://github.com/BimberLab/cellhashR/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/BimberLab/cellhashR/issues" class="external-link">Report a bug</a></li>
 </ul>
 </div>
+
 <div class="license">
-<h2>License</h2>
+<h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
-<li><a href="https://www.r-project.org/Licenses/GPL-3">GPL-3</a></li>
+<li><a href="https://www.r-project.org/Licenses/GPL-3" class="external-link">GPL-3</a></li>
 </ul>
 </div>
+
+
+<div class="citation">
+<h2 data-toc-skip>Citation</h2>
+<ul class="list-unstyled">
+<li><a href="authors.html#citation">Citing cellhashR</a></li>
+</ul>
+</div>
+
 <div class="developers">
-<h2>Developers</h2>
+<h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
 <li>The package maintainer <br><small class="roles"> Maintainer </small>  </li>
 </ul>
 </div>
+
+
 
   </div>
 </div>
 
 
       <footer><div class="copyright">
-  <p>Developed by The package maintainer.</p>
+  <p></p>
+<p>Developed by The package maintainer.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
 </div>
 
       </footer>
@@ -241,6 +236,8 @@ devtools::install_github(repo = 'bimberlab/cellhashR', ref = 'master', dependenc
 
   
 
+
+  
 
   </body>
 </html>
