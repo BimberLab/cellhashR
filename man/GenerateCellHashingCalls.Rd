@@ -7,6 +7,7 @@
 GenerateCellHashingCalls(
   barcodeMatrix,
   methods = c("bff_cluster", "multiseq", "dropletutils"),
+  methodsForConsensus = NULL,
   cellbarcodeWhitelist = NULL,
   metricsFile = NULL,
   doTSNE = TRUE,
@@ -19,6 +20,8 @@ GenerateCellHashingCalls(
 \item{barcodeMatrix}{The filtered matrix of hashing count data}
 
 \item{methods}{A vector of one or more calling methods to use. Currently supported are: htodemux, multiseq, dropletutils, gmm_demux, demuxem, bff_raw, and bff_cluster}
+
+\item{methodsForConsensus}{By default, a consensus call will be generated using all methods; however, if this parameter is provided, all algorithms specified by methods will be run, but only the list here will be used for the final consensus call. This allows one to see the results of a given caller without using it for the final calls.}
 
 \item{cellbarcodeWhitelist}{A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.}
 

@@ -123,6 +123,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #'
 #' @param barcodeMatrix The filtered matrix of hashing count data
 #' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux, multiseq, dropletutils, gmm_demux, demuxem, bff_raw, and bff_cluster
+#' @param methodsForConsensus By default, a consensus call will be generated using all methods; however, if this parameter is provided, all algorithms specified by methods will be run, but only the list here will be used for the final consensus call. This allows one to see the results of a given caller without using it for the final calls.
 #' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
 #' @param metricsFile If provided, summary metrics will be written to this file.
 #' @param doTSNE If true, tSNE will be run on the resulting hashing calls after each caller. This can be useful as a sanity check; however, adds time.
@@ -132,10 +133,20 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @description The primary methods to generating cell hashing calls from a filtered matrix of count data.
 #' @return A data frame of results.
 #' @export
-GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'multiseq', 'dropletutils'), cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, perCellSaturation = NULL, ...) {
+GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'multiseq', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, perCellSaturation = NULL, ...) {
   if (is.data.frame(barcodeMatrix)) {
     print('Converting input data.frame to a matrix')
     barcodeMatrix <- as.matrix(barcodeMatrix)
+  }
+
+  if (all(is.null(methodsForConsensus))) {
+    methodsForConsensus <- methods
+  } else {
+    methodsForConsensus <- intersect(methodsForConsensus, methods)
+  }
+
+  if (length(methodsForConsensus) == 0) {
+    stop('No methodsForConsensus were provided for consensus calling! Either leave blank (NULL), or use a subset of the methods provided under the methods argument')
   }
 
   callList <- list()
@@ -217,13 +228,13 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
       stop(paste0('Unknown method: ', method))
     }
   }
-  return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = perCellSaturation))
+  return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, methodsForConsensus = methodsForConsensus, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = perCellSaturation))
 }
 
 #' @import ggplot2
 #' @import patchwork
 #' @importFrom dplyr %>% group_by summarise
-.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL) {
+.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, methodsForConsensus, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL) {
   print('Generating consensus calls')
 
   if (length(callList) == 0){
@@ -238,10 +249,10 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
   methods <- expectedMethods
   allCalls <- NULL
   for (method in names(callList)) {
-		if (is.null(callList[[method]])) {
-			stop(paste0('Calls were NULL for ', method, ' this should not happen'))
-			next
-		}
+    if (is.null(callList[[method]])) {
+        stop(paste0('Calls were NULL for ', method, ' this should not happen'))
+        next
+    }
 
     df <- data.frame(lapply(callList[[method]], as.character), stringsAsFactors=FALSE)
 
@@ -348,8 +359,9 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
   }
 
   # Concordance across all callers:
-  dataClassification$consensuscall <- apply(dataClassification[,methods, drop = F], 1, MakeConsensusCall)
-  dataClassificationGlobal$consensuscall <- apply(dataClassificationGlobal[,methods], 1, MakeConsensusCall)
+  print(paste0('Consensus calls will be generated using: ', paste0(methodsForConsensus, collapse = ',')))
+  dataClassification$consensuscall <- apply(dataClassification[,methodsForConsensus, drop = F], 1, MakeConsensusCall)
+  dataClassificationGlobal$consensuscall <- apply(dataClassificationGlobal[,methodsForConsensus], 1, MakeConsensusCall)
 
   # It's possible for the global call to be singlet, but the barcodes to differ. Dont allow this:
   discordantBarcodes <- dataClassification$cellbarcode[dataClassification$consensuscall == 'Discordant']
@@ -360,13 +372,19 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
   summary$method <- 'consensus'
   names(summary) <- c('cellbarcode', 'classification', 'method')
   summary <- rbind(allCalls[c('cellbarcode', 'classification', 'method')], summary)
+  summary$method <- naturalsort::naturalfactor(summary$method)
+  summary$method <- forcats::fct_relevel(summary$method, 'consensus')
+  summary$IsConsensusMethod <- ifelse(summary$method %in% methodsForConsensus, yes = 'Consensus', no = 'Other')
+  summary$IsConsensusMethod[summary$method == 'consensus'] <- 'Consensus'
+
   P1 <- ggplot(summary, aes(x = classification, group = method, fill = method)) +
     geom_bar(position = position_dodge2(preserve = 'single')) +
     egg::theme_presentation(base_size = 14) +
     labs(x = '', y = 'Cells', fill = 'Caller') +
     theme(
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
-    )
+    ) +
+    facet_grid(. ~ IsConsensusMethod, space = 'free_x')
 
   summary <- dataClassificationGlobal[c('cellbarcode', 'consensuscall')]
   summary$method <- 'consensus'
@@ -374,7 +392,8 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
   summary <- rbind(allCalls[c('cellbarcode', 'classification.global', 'method')], summary)
   summary$method <- naturalsort::naturalfactor(summary$method)
   summary$method <- forcats::fct_relevel(summary$method, 'consensus')
-  summary$method <- forcats::fct_relevel(summary$method, 'consensus')
+  summary$IsConsensusMethod <- ifelse(summary$method %in% methodsForConsensus, yes = 'Consensus', no = 'Other')
+  summary$IsConsensusMethod[summary$method == 'consensus'] <- 'Consensus'
 
   P2 <- ggplot(summary, aes(x = method, group = classification.global, fill = classification.global)) +
     geom_bar() +
@@ -382,7 +401,8 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     labs(x = '', y = 'Cells', fill = 'Classification') +
     theme(
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
-    )
+    ) +
+    facet_grid(. ~ IsConsensusMethod, space = 'free_x')
 
   print(P2 + P1 + plot_layout(widths = c(1, 2)))
 
@@ -547,9 +567,11 @@ GetExampleMarkdown <- function(dest) {
 #' @param rawCountData The input barcode file or umi_count folder
 #' @param reportFile The file to which the HTML report will be written
 #' @param callFile The file to which the table of calls will be written
+#' @param h5File demuxEM requires the 10x h5 gene expression count file. This is only required when demuxEM is used.
 #' @param barcodeWhitelist A vector of barcode names to retain.
 #' @param cellbarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), a file with one cellbarcode per line, or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
 #' @param methods The set of methods to use for calling. See GenerateCellHashingCalls for options.
+#' @param methodsForConsensus By default, a consensus call will be generated using all methods; however, if this parameter is provided, all algorithms specified by methods will be run, but only the list here will be used for the final consensus call. This allows one to see the results of a given caller without using it for the final calls.
 #' @param minCountPerCell Cells (columns) will be dropped if their total count is less than this value.
 #' @param metricsFile If provided, summary metrics will be written to this file.
 #' @param rawCountsExport If provided, the raw count matrix, after processing, will be written as an RDS object to this file. This can be useful for debugging.
@@ -559,7 +581,7 @@ GetExampleMarkdown <- function(dest) {
 #' @param title A title for the HTML report
 #' @importFrom rmdformats html_clean
 #' @export
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL) {
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, h5File = NULL, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), methodsForConsensus = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL) {
   rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
   if (!file.exists(rmd)) {
     stop(paste0('Unable to find file: ', rmd))
@@ -578,6 +600,10 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, barcodeWhi
   rawCountData <- normalizePath(rawCountData)
   if (!is.null(molInfoFile)) {
     molInfoFile <- normalizePath(molInfoFile)
+  }
+
+  if (!is.null(h5File)) {
+    h5File <- normalizePath(h5File)
   }
 
   reportFile <- normalizePath(reportFile, mustWork = F)
