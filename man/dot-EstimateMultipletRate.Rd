@@ -4,12 +4,14 @@
 \alias{.EstimateMultipletRate}
 \title{Estimate Multiplet Rate}
 \usage{
-.EstimateMultipletRate(barcodeMatrix, num10xRuns = 1)
+.EstimateMultipletRate(barcodeMatrix, num10xRuns = 1, chemistry = "V3")
 }
 \arguments{
 \item{barcodeMatrix}{a barcodes-by-cells matrix of hashing counts}
 
 \item{num10xRuns}{The number of lanes the cells are loaded into (expected to be 1)}
+
+\item{chemistry}{The version of 10x chemistry reagent kit used}
 }
 \description{
 Estimates multiplet rate by using barcode matrix dimensions and formulae from the Saijita Lab's calculator (https://satijalab.org/costpercell/)
