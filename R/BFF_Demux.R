@@ -8,6 +8,24 @@ utils::globalVariables(
   add = TRUE
 )
 
+#' @title Estimate Multiplet Rate
+#'
+#' @description Estimates multiplet rate by using barcode matrix dimensions and formulae from the Saijita Lab's calculator (https://satijalab.org/costpercell/)
+#' @param barcodeMatrix a barcodes-by-cells matrix of hashing counts
+#' @param num10xRuns The number of lanes the cells are loaded into (expected to be 1)
+
+.EstimateMultipletRate<- function(barcodeMatrix, num10xRuns = 1){
+  numCellsRecovered <- ncol(barcodeMatrix)
+  numCellsLoaded <- 1.75 * numCellsRecovered
+  m <- 4.597701e-06
+  multipletRate <- m*numCellsLoaded/num10xRuns
+  #these seem unncessary for now, but just in case
+  numBatches <- nrow(barcodeMatrix)
+  multipletRateIdent <- multipletRate*(numBatches-1)/numBatches
+  multipletRateNonIdent <- multipletRate-multipletRateIdent
+  return(multipletRate)
+}
+
 
 #' @title Perform a parameter scan with BFF parameters
 #'
