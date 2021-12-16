@@ -160,9 +160,8 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
       vals <- unlist(list(...))
       vals <- vals[!is.null(names(vals))]
       vals <- vals[grepl(names(vals), pattern = paste0('^', method, '\\.'))]
-      names(vals) <- gsub(names(vals), pattern = paste0('^', method, '\\.'), replacement = '')
-
       if (length(vals) > 0) {
+        names(vals) <- gsub(names(vals), pattern = paste0('^', method, '\\.'), replacement = '')
         print('The following custom parameters are being applied:')
         for (v in names(vals)) {
           print(paste0(v, ': ', vals[v]))
