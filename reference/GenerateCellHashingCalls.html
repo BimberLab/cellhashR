@@ -69,6 +69,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">GenerateCellHashingCalls</span><span class="op">(</span>
   <span class="va">barcodeMatrix</span>,
   methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bff_cluster"</span>, <span class="st">"multiseq"</span>, <span class="st">"dropletutils"</span><span class="op">)</span>,
+  methodsForConsensus <span class="op">=</span> <span class="cn">NULL</span>,
   cellbarcodeWhitelist <span class="op">=</span> <span class="cn">NULL</span>,
   metricsFile <span class="op">=</span> <span class="cn">NULL</span>,
   doTSNE <span class="op">=</span> <span class="cn">TRUE</span>,
@@ -84,6 +85,8 @@
 <dd><p>The filtered matrix of hashing count data</p></dd>
 <dt>methods</dt>
 <dd><p>A vector of one or more calling methods to use. Currently supported are: htodemux, multiseq, dropletutils, gmm_demux, demuxem, bff_raw, and bff_cluster</p></dd>
+<dt>methodsForConsensus</dt>
+<dd><p>By default, a consensus call will be generated using all methods; however, if this parameter is provided, all algorithms specified by methods will be run, but only the list here will be used for the final consensus call. This allows one to see the results of a given caller without using it for the final calls.</p></dd>
 <dt>cellbarcodeWhitelist</dt>
 <dd><p>A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.</p></dd>
 <dt>metricsFile</dt>
