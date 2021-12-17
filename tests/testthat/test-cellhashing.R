@@ -138,3 +138,30 @@ test_that("BFF calling works", {
 	print(unique(df$bff_cluster))
 	expect_equal(expected = test[['BffQuantile']], object = sum(df$bff_cluster != 'Negative' & df$bff_cluster != 'ND'), info = testName)
 })
+
+
+test_that("Distinct methods and consensus work", {
+	testName <- names(tests)[4]
+	print(paste0('Running test: ', testName))
+	test <- tests[[testName]]
+	barcodeFile <- test$input
+	barcodeData <- ProcessCountMatrix(rawCountData = barcodeFile, barcodeWhitelist = test$htos)
+	if (ncol(barcodeData) > 5000) {
+		print('Subsetting barcodeData to 5000 cells')
+		barcodeData <- barcodeData[,1:5000]
+	}
+	
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'gmm_demux'), methodsForConsensus = c('gmm_demux'))
+	print(table(df$consensuscall))
+	
+	expectedCalls <- list(
+		'MS-11' = 1486,
+		'MS-12' = 2432,
+		'Negative' = 501,
+		'Doublet' = 581
+	)
+	
+	for (hto in unique(df$consensuscall)) {
+		expect_equal(sum(df$consensuscall == hto), expectedCalls[[hto]], info = hto)
+	}
+})
