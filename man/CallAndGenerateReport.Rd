@@ -8,9 +8,11 @@ CallAndGenerateReport(
   rawCountData,
   reportFile,
   callFile,
+  h5File = NULL,
   barcodeWhitelist = NULL,
   cellbarcodeWhitelist = "inputMatrix",
   methods = c("multiseq", "htodemux"),
+  methodsForConsensus = NULL,
   minCountPerCell = 5,
   title = NULL,
   metricsFile = NULL,
@@ -27,11 +29,15 @@ CallAndGenerateReport(
 
 \item{callFile}{The file to which the table of calls will be written}
 
+\item{h5File}{demuxEM requires the 10x h5 gene expression count file. This is only required when demuxEM is used.}
+
 \item{barcodeWhitelist}{A vector of barcode names to retain.}
 
 \item{cellbarcodeWhitelist}{Either a vector of expected barcodes (such as all cells with passing gene expression data), a file with one cellbarcode per line, or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.}
 
 \item{methods}{The set of methods to use for calling. See GenerateCellHashingCalls for options.}
+
+\item{methodsForConsensus}{By default, a consensus call will be generated using all methods; however, if this parameter is provided, all algorithms specified by methods will be run, but only the list here will be used for the final consensus call. This allows one to see the results of a given caller without using it for the final calls.}
 
 \item{minCountPerCell}{Cells (columns) will be dropped if their total count is less than this value.}
 
