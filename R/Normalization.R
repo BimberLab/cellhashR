@@ -118,12 +118,13 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
       
       tryCatch({
         normedres <- NormalizeBimodalQuantile(barcodeData)
-        temp <- normedres[['lognormedcounts']]
-
-        ParameterScan(temp)
-
-        bqn <- TransposeDF(data.frame(temp, check.names=FALSE))
-        toQC[['bimodalQuantile']] <- bqn
+        if (!all(is.null(normedres))) {
+          temp <- normedres[['lognormedcounts']]
+          ParameterScan(temp)
+          toQC[['bimodalQuantile']] <- TransposeDF(data.frame(temp, check.names=FALSE))
+        } else {
+          print('Error running BQN')
+        }
       }, error = function(e){
         print("No valid barcodes, skipping Bimodal quantile normalization")
         print(conditionMessage(e))
