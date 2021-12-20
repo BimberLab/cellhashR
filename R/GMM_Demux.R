@@ -50,7 +50,7 @@ GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux
 
 		ret <- data.frame(cellbarcode = df$cellbarcode, method = methodName, classification = df$classification, classification.global = df$classification.global, stringsAsFactors = FALSE)
 		assay <- 'HTO'
-		seuratObj <- suppressWarnings(Seurat::CreateSeuratObject(barcodeMatrix, assay = assay))
+		seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
 
 		# NOTE: perform this replacement b/c seurat will rename the features anyway:
 		toMerge <- gsub(as.character(ret$classification), pattern = '_', replacement = '-')

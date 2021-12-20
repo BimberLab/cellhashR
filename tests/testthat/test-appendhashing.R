@@ -11,7 +11,7 @@ test_that("AppendCellHashing Works", {
 	countMat <- matrix(rep(0, length(mat)), nrow = nrow(mat), ncol = ncol(mat))
 	rownames(countMat) <- rownames(mat)
 	colnames(countMat) <- paste0(datasetId1, '_', colnames(mat))
-	so1 <- suppressWarnings(Seurat::CreateSeuratObject(counts = countMat, project = datasetId1))
+	so1 <- Seurat::CreateSeuratObject(counts = countMat, project = datasetId1)
 	so1$BarcodePrefix <- datasetId1
 	so1$DatasetId <- datasetId1
 	
@@ -21,7 +21,7 @@ test_that("AppendCellHashing Works", {
 	colnames(countMat) <- paste0(datasetId2, '_', colnames(mat))
 
 	# suppressWarnings added to avoid seurat 'missing row.names' warning
-	so2 <- suppressWarnings(Seurat::CreateSeuratObject(counts = countMat, project = datasetId1))
+	so2 <- Seurat::CreateSeuratObject(counts = countMat, project = datasetId1)
 	so2$BarcodePrefix <- datasetId2
 	so2$DatasetId <- datasetId2
 	
