@@ -93,8 +93,8 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 
 		for (name in c('.ambient_hashtag.hist.pdf', '.real_content.hist.pdf', '.rna_demux.hist.pdf', '.background_probabilities.bar.pdf')) {
 			i <- paste0(outPath, name)
-			print(magick::image_read_pdf(i))
-			unlink(i)
+			plot(magick::image_read_pdf(i))
+			#unlink(i)
 		}
 
 		unlink(inputHtoFile)
