@@ -142,7 +142,10 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
   if (all(is.null(methodsForConsensus))) {
     methodsForConsensus <- methods
   } else {
-    methodsForConsensus <- intersect(methodsForConsensus, methods)
+    methodsForConsensus2 <- intersect(methodsForConsensus, methods)
+    if (length(methodsForConsensus2) != length(methodsForConsensus)) {
+      stop('All methods in methodsForConsensus must be included in methods')
+    }
   }
 
   if (length(methodsForConsensus) == 0) {
