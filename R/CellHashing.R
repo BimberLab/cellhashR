@@ -519,7 +519,14 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
       panel.grid  = element_blank()
     )
 
-  print(P1 + P2 + plot_annotation(title = paste0('Final Calls: ', nrow(dataClassification), ' cells')))
+  totalCells <- nrow(dataClassificationGlobal)
+  doubletRate <- sum(dataClassificationGlobal$consensuscall == 'Doublet') / totalCells
+  singletRate <- sum(dataClassificationGlobal$consensuscall == 'Singlet') / totalCells
+  print(P1 + P2 + plot_annotation(title = paste0(
+    'Final Calls: ', nrow(dataClassification), ' cells\n',
+    'Doublet Rate: ', round(doubletRate, digits = 3), '\n',
+    'Singlet Rate: ', round(singletRate, digits = 3)
+  )))
 
   return(dataClassification)
 }
