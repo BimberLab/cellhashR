@@ -478,7 +478,11 @@ GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_r
     print(paste0('No passing barcodes after filter using min_average_reads: ', min_average_reads))
     return(NULL)
   }
-  
+  else if (nrow(barcodeMatrix) == 1) {
+    print(paste0('Only one passing barcode after filter using min_average_reads: ', min_average_reads))
+    return(NULL)
+  }
+
   if (verbose) {
     print(paste0('rows dropped for low counts: ', sum(!sel), ' of ', length(sel)))
   }
