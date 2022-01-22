@@ -8,19 +8,19 @@ test_that("BFF Works", {
 	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('bff_cluster'))
 
 	expectedCalls <- list(
-		Bar1 = 193,
-		Bar2 = 150,
-		Bar3 = 429,
-		Bar4 = 481,
-		Bar5 = 147,
-		Bar6 = 526,
-		Bar7 = 598,
-		Bar8 = 564,
-		Bar9 = 482,
-		Bar10 = 534,
-		Bar11 = 506,
-		Bar12 = 683,
-		Doublet = 435,
+		Bar1 = 195,
+		Bar2 = 154,
+		Bar3 = 431,
+		Bar4 = 483,
+		Bar5 = 150,
+		Bar6 = 535,
+		Bar7 = 599,
+		Bar8 = 569,
+		Bar9 = 487,
+		Bar10 = 541,
+		Bar11 = 512,
+		Bar12 = 687,
+		Doublet = 385,
 		Negative = 68
 	)
 

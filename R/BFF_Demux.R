@@ -581,11 +581,18 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     singlethi <- c()
     doublethi <- c()
     doubletsecond <- c()
+    valdif <- 0.1
     
     highest_dist <- stats::density(snr$Highest, adjust = 1, kernel = 'gaussian',
                                    bw = 'SJ', give.Rkern = FALSE)
     second_dist <- stats::density(snr$Second, adjust = 1, kernel = 'gaussian',
                                   bw = 'SJ', give.Rkern = FALSE)
+    
+    j <- 1
+    while(max(abs(highest_dist$y[2:length(highest_dist$y)] - highest_dist$y[1:length(highest_dist$y)-1])) > valdif) {
+      second_dist <- stats::density(snr$Second, adjust = j, kernel = 'gaussian', bw = 'SJ', give.Rkern = FALSE)
+      j <- j + 1
+    }
     
     vals <- c()
     for (i in 2:length(highest_dist$y)) {
@@ -600,6 +607,11 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     val <- min(vals)
     neg_cutoff <- highest_dist$x[[val]]
     
+    j <- 1
+    while(max(abs(second_dist$y[2:length(second_dist$y)] - second_dist$y[1:length(second_dist$y)-1])) > valdif) {
+      second_dist <- stats::density(snr$Second, adjust = j, kernel = 'gaussian', bw = 'SJ', give.Rkern = FALSE)
+      j <- j + 1
+    }
     
     vals <- c()
     for (i in 2:length(second_dist$y)) {
