@@ -7,6 +7,11 @@ utils::globalVariables(
 )
 
 SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T, doTSNE = T, assay = 'HTO') {
+	if (is.null(seuratObj)) {
+		print('No seurat object provided, cannot run SummarizeHashingCalls')
+		return()
+	}
+
 	htoClassificationField <- paste0('classification.', columnSuffix)
 	globalClassificationField <- paste0('classification.global.', columnSuffix)
 
