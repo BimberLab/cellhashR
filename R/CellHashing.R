@@ -129,11 +129,12 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @param doTSNE If true, tSNE will be run on the resulting hashing calls after each caller. This can be useful as a sanity check; however, adds time.
 #' @param doHeatmap If true, Seurat::HTOHeatmap will be run on the results of each caller. Not supported by all callers.
 #' @param perCellSaturation An optional dataframe with the columns cellbarcode and saturation. This will be merged into the final output.
+#' @param majorityConsensusThreshold This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.
 #' @param \dots Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).
 #' @description The primary methods to generating cell hashing calls from a filtered matrix of count data.
 #' @return A data frame of results.
 #' @export
-GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'multiseq', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, perCellSaturation = NULL, ...) {
+GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'multiseq', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, perCellSaturation = NULL, majorityConsensusThreshold = NULL, ...) {
   if (is.data.frame(barcodeMatrix)) {
     print('Converting input data.frame to a matrix')
     barcodeMatrix <- as.matrix(barcodeMatrix)
@@ -230,13 +231,13 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
       stop(paste0('Unknown method: ', method))
     }
   }
-  return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, methodsForConsensus = methodsForConsensus, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = perCellSaturation))
+  return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, methodsForConsensus = methodsForConsensus, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = perCellSaturation, majorityConsensusThreshold = majorityConsensusThreshold))
 }
 
 #' @import ggplot2
 #' @import patchwork
 #' @importFrom dplyr %>% group_by summarise
-.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, methodsForConsensus, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL) {
+.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, methodsForConsensus, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL, majorityConsensusThreshold = NULL) {
   print('Generating consensus calls')
 
   if (length(callList) == 0){
@@ -360,10 +361,38 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     return('Discordant')
   }
 
+  MakeMajorityConsensusCall <- function(x, majorityThreshold = NULL) {
+    consensusCall <- MakeConsensusCall(x)
+    if (is.null(majorityConsensusThreshold) || consensusCall != 'Discordant') {
+      return(consensusCall)
+    }
+
+    # Subset to algorithms with non-negative calls:
+    x <- x[!(x %in% c('Negative', 'Not Called'))]
+    nCallers <- length(x)
+    rawData <- table(x)
+
+    maxVal <- rawData[rawData == max(rawData)]
+
+    # Indicates tie:
+    if (length(maxVal) > 1) {
+      return('Discordant')
+    }
+
+    # Compare the ratio of callers with the majority call vs. any other non-negaitve call:
+    ratio <- unlist(unname(maxVal)) / nCallers
+
+    return(ifelse(ratio > majorityThreshold, yes = names(maxVal), no = 'Discordant'))
+  }
+
+  ConsensusFn <- function(x){
+    return(MakeMajorityConsensusCall(x, majorityConsensusThreshold))
+  }
+
   # Concordance across all callers:
   print(paste0('Consensus calls will be generated using: ', paste0(methodsForConsensus, collapse = ',')))
-  dataClassification$consensuscall <- apply(dataClassification[,methodsForConsensus, drop = F], 1, MakeConsensusCall)
-  dataClassificationGlobal$consensuscall <- apply(dataClassificationGlobal[,methodsForConsensus], 1, MakeConsensusCall)
+  dataClassification$consensuscall <- apply(dataClassification[,methodsForConsensus, drop = F], 1, ConsensusFn)
+  dataClassificationGlobal$consensuscall <- apply(dataClassificationGlobal[,methodsForConsensus], 1, ConsensusFn)
 
   # It's possible for the global call to be singlet, but the barcodes to differ. Dont allow this:
   discordantBarcodes <- dataClassification$cellbarcode[dataClassification$consensuscall == 'Discordant']
@@ -586,10 +615,11 @@ GetExampleMarkdown <- function(dest) {
 #' @param skipNormalizationQc If true, the normalization/QC plots will be skipped. These can be time consuming on large input data.
 #' @param keepMarkdown If true, the markdown file will be saved, in addition to the HTML file
 #' @param molInfoFile An optional path to the 10x molecule_info.h5.
+#' @param majorityConsensusThreshold This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.
 #' @param title A title for the HTML report
 #' @importFrom rmdformats html_clean
 #' @export
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, h5File = NULL, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), methodsForConsensus = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL) {
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, h5File = NULL, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), methodsForConsensus = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL, majorityConsensusThreshold = NULL) {
   rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
   if (!file.exists(rmd)) {
     stop(paste0('Unable to find file: ', rmd))
