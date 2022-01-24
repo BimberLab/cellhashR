@@ -394,6 +394,12 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
   dataClassification$consensuscall <- apply(dataClassification[,methodsForConsensus, drop = F], 1, ConsensusFn)
   dataClassificationGlobal$consensuscall <- apply(dataClassificationGlobal[,methodsForConsensus], 1, ConsensusFn)
 
+  if (!is.null(majorityConsensusThreshold)) {
+    dat <- apply(dataClassification[,methodsForConsensus, drop = F], 1, MakeConsensusCall)
+    recovered <- sum(dat != dataClassification$consensuscall)
+    print(paste0('Total cells recovered using majorityConsensusThreshold of ', majorityConsensusThreshold, ': ', recovered))
+  }
+
   # It's possible for the global call to be singlet, but the barcodes to differ. Dont allow this:
   discordantBarcodes <- dataClassification$cellbarcode[dataClassification$consensuscall == 'Discordant']
   dataClassificationGlobal$consensuscall[dataClassificationGlobal$cellbarcode %in% discordantBarcodes] <- 'Discordant'

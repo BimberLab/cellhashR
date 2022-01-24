@@ -165,3 +165,31 @@ test_that("Distinct methods and consensus work", {
 		expect_equal(sum(df$consensuscall == hto), expectedCalls[[hto]], info = hto)
 	}
 })
+
+
+test_that("Consensus call works", {
+	testName <- names(tests)[4]
+	print(paste0('Running test: ', testName))
+	test <- tests[[testName]]
+	barcodeFile <- test$input
+	barcodeData <- ProcessCountMatrix(rawCountData = barcodeFile, barcodeWhitelist = test$htos)
+	if (ncol(barcodeData) > 5000) {
+		print('Subsetting barcodeData to 5000 cells')
+		barcodeData <- barcodeData[,1:5000]
+	}
+
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'gmm_demux', 'bff_cluster'), majorityConsensusThreshold = 0.6)
+	print(table(df$consensuscall))
+
+	expectedCalls <- list(
+		'MS-11' = 1486,
+		'MS-12' = 2432,
+		'Negative' = 501,
+		'Doublet' = 581,
+		'Discordant' = 123
+	)
+
+	for (hto in unique(df$consensuscall)) {
+		expect_equal(sum(df$consensuscall == hto), expectedCalls[[hto]], info = hto)
+	}
+})
