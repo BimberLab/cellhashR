@@ -199,11 +199,11 @@ test_that("Consensus call works", {
 	print(table(df$consensuscall))
 
 	expectedCalls <- list(
-		'MS-11' = 1612,
-		'MS-12' = 2708,
+		'MS-11' = 1579,
+		'MS-12' = 2692,
 		'Negative' = 59,
-		'Doublet' = 621,
-		'Discordant' = 0
+		'Doublet' = 209,
+		'Discordant' = 461
 	)
 
 	for (hto in names(expectedCalls)) {
