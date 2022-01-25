@@ -19,7 +19,8 @@ CallAndGenerateReport(
   rawCountsExport = NULL,
   skipNormalizationQc = FALSE,
   keepMarkdown = FALSE,
-  molInfoFile = NULL
+  molInfoFile = NULL,
+  majorityConsensusThreshold = NULL
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ CallAndGenerateReport(
 \item{keepMarkdown}{If true, the markdown file will be saved, in addition to the HTML file}
 
 \item{molInfoFile}{An optional path to the 10x molecule_info.h5.}
+
+\item{majorityConsensusThreshold}{This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.}
 }
 \description{
 Runs the default processing pipeline

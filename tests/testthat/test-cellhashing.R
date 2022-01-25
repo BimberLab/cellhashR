@@ -165,3 +165,48 @@ test_that("Distinct methods and consensus work", {
 		expect_equal(sum(df$consensuscall == hto), expectedCalls[[hto]], info = hto)
 	}
 })
+
+
+test_that("Consensus call works", {
+	testName <- names(tests)[4]
+	print(paste0('Running test: ', testName))
+	test <- tests[[testName]]
+	barcodeFile <- test$input
+	barcodeData <- ProcessCountMatrix(rawCountData = barcodeFile, barcodeWhitelist = test$htos)
+	if (ncol(barcodeData) > 5000) {
+		print('Subsetting barcodeData to 5000 cells')
+		barcodeData <- barcodeData[,1:5000]
+	}
+
+	print('Run using majorityConsensusThreshold=0.6, which will will allow 2/3 to win:')
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'gmm_demux', 'bff_cluster'), majorityConsensusThreshold = 0.6)
+	print(table(df$consensuscall))
+
+	expectedCalls <- list(
+		'MS-11' = 1612,
+		'MS-12' = 2708,
+		'Negative' = 59,
+		'Doublet' = 621,
+		'Discordant' = 0
+	)
+
+	for (hto in names(expectedCalls)) {
+		expect_equal(sum(df$consensuscall == hto), expectedCalls[[hto]], info = hto)
+	}
+
+	print('Run using majorityConsensusThreshold = 0.75. With three callers, this effectively requires all of them to agree')
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'gmm_demux', 'bff_cluster'), majorityConsensusThreshold = 0.75)
+	print(table(df$consensuscall))
+
+	expectedCalls <- list(
+		'MS-11' = 1579,
+		'MS-12' = 2692,
+		'Negative' = 59,
+		'Doublet' = 209,
+		'Discordant' = 461
+	)
+
+	for (hto in names(expectedCalls)) {
+		expect_equal(sum(df$consensuscall == hto), expectedCalls[[hto]], info = hto)
+	}
+})
