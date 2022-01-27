@@ -226,13 +226,14 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
 }
 
 PerformHashingClustering <- function(barcodeMatrix, norm) {
+  barcodeMatrix <- SeuratObject::as.sparse(barcodeMatrix)
   seuratObj <- CreateSeuratObject(barcodeMatrix, assay = norm)
 
   # Calculate tSNE embeddings with a distance matrix
   tryCatch({
     perplexity <- .InferPerplexityFromSeuratObj(seuratObj, 100)
     print(paste0('Running tSNE with perplexity: ', perplexity, ' for normalization: ', norm))
-    seuratObj[['hto_tsne']] <- RunTSNE(stats::dist(Matrix::t(SeuratObject::as.sparse(barcodeMatrix))), assay = norm, perplexity = perplexity)
+    seuratObj[['hto_tsne']] <- RunTSNE(stats::dist(Matrix::t(barcodeMatrix)), assay = norm, perplexity = perplexity)
 
     .PlotClusters(barcodeMatrix, seuratObj, norm)
   }, error = function(e){

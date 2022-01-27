@@ -29,11 +29,20 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 
 	inputBarcodes <- ncol(barcodeData)
 	if (!is.null(cellbarcodeWhitelist)) {
-		if (is.character(cellbarcodeWhitelist) && length(cellbarcodeWhitelist) == 1 && file.exists(cellbarcodeWhitelist)) {
-			cellbarcodeWhitelist <- read.table(cellbarcodeWhitelist, header = FALSE)[,1]
+		if (is.character(cellbarcodeWhitelist) && length(cellbarcodeWhitelist) == 1) {
+			if (file.exists(cellbarcodeWhitelist)) {
+				cellbarcodeWhitelist <- read.table(cellbarcodeWhitelist, header = FALSE)[,1]
+				print(paste0('cells in cellbarcodeWhitelist file: ', length(cellbarcodeWhitelist)))
+			} else {
+				warning(paste0('cellbarcodeWhitelist appears to be a filename, but it doesnt exist: ', cellbarcodeWhitelist))
+			}
 		}
 
 		cellbarcodeWhitelistToUse <- intersect(cellbarcodeWhitelist, colnames(barcodeData))
+		print(paste0('intersect between cellbarcodeWhitelist and barcode matrix: ', length(cellbarcodeWhitelistToUse)))
+		if (length(cellbarcodeWhitelistToUse) < minCellsToContinue) {
+			stop(paste0('cell barcode whitelist length of ', length(cellbarcodeWhitelistToUse), ' is less than minCellsToContinue'))
+		}
 
 		# As a sanity check, find the top cells by counts and report intersect:
 		topByCounts <- sort(colSums(barcodeData), decreasing = T)
@@ -42,12 +51,11 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 		barcodeData <- barcodeData[ , cellbarcodeWhitelistToUse, drop = FALSE]
 		print(paste0('Subsetting based on whitelist. Cells in whitelist: ', length(cellbarcodeWhitelist), ', cells in matrix after subset: ', ncol(barcodeData)))
 		print(paste0('Total cells shared between whitelist and top droplets by count: ', cellsShared, ' (', round(100 * cellsShared / length(cellbarcodeWhitelist), 1),'%)'))
-
 	}
 	.LogMetric(metricsFile, 'InitialCellBarcodes', ncol(barcodeData))
 
 	if (ncol(barcodeData) < minCellsToContinue) {
-		stop(paste0('Too few cells remain after filtering by counts, aborting. Cell count: ', ncol(barcodeData), ', original cells: ', inputBarcodes))
+		stop(paste0('Too few cells remain after filtering by allowable cell barcodes, aborting. Cell count: ', ncol(barcodeData), ', original cells: ', inputBarcodes))
 	}
 
 	if (!is.null(saveOriginalCellBarcodeFile)) {

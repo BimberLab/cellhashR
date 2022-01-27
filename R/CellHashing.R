@@ -562,7 +562,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
   singletRate <- sum(dataClassificationGlobal$consensuscall == 'Singlet') / totalCells
   print(P1 + P2 + plot_annotation(title = paste0(
     'Final Calls: ', nrow(dataClassification), ' cells\n',
-    'Doublet Rate: ', round(doubletRate, digits = 3), '(theoretical rate for ', chemistry, ': ', round(theoreticalDoubletRate, digits = 3) ,')', '\n',
+    'Doublet Rate: ', round(doubletRate, digits = 3), ' (theoretical rate for ', chemistry, ': ', round(theoreticalDoubletRate, digits = 3) ,')', '\n',
     'Singlet Rate: ', round(singletRate, digits = 3)
   )))
 
@@ -651,6 +651,14 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, h5File = N
 
   if (!is.null(h5File)) {
     h5File <- normalizePath(h5File)
+  }
+
+  # Downstream, all files need to be absolute paths, since the working directory of the markdown might not be the same as the current working dir.
+  if (!is.null(cellbarcodeWhitelist) && cellbarcodeWhitelist != 'inputMatrix' && is.character(cellbarcodeWhitelist) && length(cellbarcodeWhitelist) == 1) {
+    if (file.exists(cellbarcodeWhitelist)) {
+      cellbarcodeWhitelist <- normalizePath(cellbarcodeWhitelist)
+      print(paste0('normalizing cellbarcodeWhitelist path to: ', cellbarcodeWhitelist))
+    }
   }
 
   reportFile <- normalizePath(reportFile, mustWork = F)
