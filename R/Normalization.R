@@ -123,7 +123,7 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
           ParameterScan(temp)
           toQC[['bimodalQuantile']] <- TransposeDF(data.frame(temp, check.names=FALSE))
         } else {
-          print('Error running BQN')
+          print('Error running BQN, skipping')
         }
       }, error = function(e){
         print("No valid barcodes, skipping Bimodal quantile normalization")
@@ -232,7 +232,7 @@ PerformHashingClustering <- function(barcodeMatrix, norm) {
   tryCatch({
     perplexity <- .InferPerplexityFromSeuratObj(seuratObj, 100)
     print(paste0('Running tSNE with perplexity: ', perplexity, ' for normalization: ', norm))
-    seuratObj[['hto_tsne']] <- RunTSNE(stats::dist(Matrix::t(barcodeMatrix)), assay = norm, perplexity = perplexity)
+    seuratObj[['hto_tsne']] <- RunTSNE(stats::dist(Matrix::t(SeuratObject::as.sparse(barcodeMatrix))), assay = norm, perplexity = perplexity)
 
     .PlotClusters(barcodeMatrix, seuratObj, norm)
   }, error = function(e){

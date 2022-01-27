@@ -27,6 +27,7 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 		minCellsToContinue <- 0
 	}
 
+	inputBarcodes <- ncol(barcodeData)
 	if (!is.null(cellbarcodeWhitelist)) {
 		if (is.character(cellbarcodeWhitelist) && length(cellbarcodeWhitelist) == 1 && file.exists(cellbarcodeWhitelist)) {
 			cellbarcodeWhitelist <- read.table(cellbarcodeWhitelist, header = FALSE)[,1]
@@ -46,7 +47,7 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 	.LogMetric(metricsFile, 'InitialCellBarcodes', ncol(barcodeData))
 
 	if (ncol(barcodeData) < minCellsToContinue) {
-		stop(paste0('Too few cells remain, aborting. Cell count: ', ncol(barcodeData)))
+		stop(paste0('Too few cells remain after filtering by counts, aborting. Cell count: ', ncol(barcodeData), ', original cells: ', inputBarcodes))
 	}
 
 	if (!is.null(saveOriginalCellBarcodeFile)) {
@@ -68,14 +69,14 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 		
 		barcodeData <- barcodeData[sel,]
 		if (ncol(barcodeData) < minCellsToContinue) {
-			stop(paste0('Too few cells remain, aborting. Cell count: ', ncol(barcodeData)))
+			stop(paste0('Too few cells remain after limiting to selected HTOs, aborting. Cell count: ', ncol(barcodeData)))
 		}
 	}
 
 	if (!is.null(minCountPerCell)) {
 		barcodeData <- DoCellFiltering(barcodeData, minCountPerCell = minCountPerCell)
 		if (ncol(barcodeData) < minCellsToContinue) {
-			stop(paste0('Too few cells remain, aborting. Cell count: ', ncol(barcodeData)))
+			stop(paste0('Too few cells remain after dropping low-count cells, aborting. Cell count: ', ncol(barcodeData)))
 		}
 	}
 	.LogMetric(metricsFile, 'PassingCellBarcodes', ncol(barcodeData))
