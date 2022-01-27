@@ -3,6 +3,7 @@
 export(AppendCellHashing)
 export(CalculateSaturationFor10x)
 export(CallAndGenerateReport)
+export(EstimateMultipletRate)
 export(GenerateCellHashingCalls)
 export(GetExampleMarkdown)
 export(GetSeed)
