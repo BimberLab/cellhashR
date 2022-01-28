@@ -123,7 +123,7 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
           ParameterScan(temp)
           toQC[['bimodalQuantile']] <- TransposeDF(data.frame(temp, check.names=FALSE))
         } else {
-          print('Error running BQN')
+          print('Error running BQN, skipping')
         }
       }, error = function(e){
         print("No valid barcodes, skipping Bimodal quantile normalization")
@@ -226,6 +226,7 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
 }
 
 PerformHashingClustering <- function(barcodeMatrix, norm) {
+  barcodeMatrix <- SeuratObject::as.sparse(barcodeMatrix)
   seuratObj <- CreateSeuratObject(barcodeMatrix, assay = norm)
 
   # Calculate tSNE embeddings with a distance matrix

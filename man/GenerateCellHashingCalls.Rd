@@ -14,6 +14,7 @@ GenerateCellHashingCalls(
   doHeatmap = TRUE,
   perCellSaturation = NULL,
   majorityConsensusThreshold = NULL,
+  chemistry = "10xV3",
   ...
 )
 }
@@ -35,6 +36,8 @@ GenerateCellHashingCalls(
 \item{perCellSaturation}{An optional dataframe with the columns cellbarcode and saturation. This will be merged into the final output.}
 
 \item{majorityConsensusThreshold}{This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.}
+
+\item{chemistry}{This string is passed to EstimateMultipletRate. Should be either 10xV2 or 10xV3. This is used to calculate and present the expected doublet rate and does not influence the actual calls.}
 
 \item{\dots}{Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).}
 }

@@ -8,36 +8,6 @@ utils::globalVariables(
   add = TRUE
 )
 
-#' @title Estimate Multiplet Rate
-#'
-#' @description Estimates multiplet rate by using barcode matrix dimensions and formulae from the Saijita Lab's calculator (https://satijalab.org/costpercell/)
-#' @param barcodeMatrix a barcodes-by-cells matrix of hashing counts
-#' @param num10xRuns The number of lanes the cells are loaded into (expected to be 1)
-#' @param chemistry The version of 10x chemistry reagent kit used
-
-.EstimateMultipletRate<- function(barcodeMatrix, num10xRuns = 1, chemistry = "V3"){
-  if (chemistry == "V2"){
-    # value extrapolated from inverse cell recovery rate in user guide table (page 6)
-    # https://assets.ctfassets.net/an68im79xiti/RT8DYoZzhDJRBMrJCmVxl/6a0ed8015d89bf9602128a4c9f8962c8/CG00052_SingleCell3_ReagentKitv2UserGuide_RevF.pdf
-    inverse_recovery_rate <- 1.74
-  } else if(chemistry == "V3"){
-    # value extrapolated from inverse cell recovery rate in user guide table (page 22)
-    # https://downloads.ctfassets.net/an68im79xiti/1Y7U6QKKFz7jfQbkErDUoB/fde488a22c6d0a0fcec4597bc1a0338e/CG000416_Chromium_NextGEM_SingleCell3-_HT_v3.1_GeneExp_RevB.pdf
-    inverse_recovery_rate <- 1.61
-  }
-    
-  numCellsRecovered <- ncol(barcodeMatrix)
-  numCellsLoaded <- inverse_recovery_rate * numCellsRecovered
-  m <- 4.597701e-06
-  multipletRate <- m*numCellsLoaded/num10xRuns
-  #these seem unncessary for now, but just in case
-  numBatches <- nrow(barcodeMatrix)
-  multipletRateIdent <- multipletRate*(numBatches-1)/numBatches
-  multipletRateNonIdent <- multipletRate-multipletRateIdent
-  return(multipletRate)
-}
-
-
 #' @title Perform a parameter scan with BFF parameters
 #'
 #' @param lognormedcounts Count matrix after BQN and log transformation

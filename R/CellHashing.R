@@ -130,11 +130,12 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @param doHeatmap If true, Seurat::HTOHeatmap will be run on the results of each caller. Not supported by all callers.
 #' @param perCellSaturation An optional dataframe with the columns cellbarcode and saturation. This will be merged into the final output.
 #' @param majorityConsensusThreshold This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.
+#' @param chemistry This string is passed to EstimateMultipletRate. Should be either 10xV2 or 10xV3. This is used to calculate and present the expected doublet rate and does not influence the actual calls.
 #' @param \dots Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).
 #' @description The primary methods to generating cell hashing calls from a filtered matrix of count data.
 #' @return A data frame of results.
 #' @export
-GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'multiseq', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, perCellSaturation = NULL, majorityConsensusThreshold = NULL, ...) {
+GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'multiseq', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', ...) {
   if (is.data.frame(barcodeMatrix)) {
     print('Converting input data.frame to a matrix')
     barcodeMatrix <- as.matrix(barcodeMatrix)
@@ -231,13 +232,14 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
       stop(paste0('Unknown method: ', method))
     }
   }
-  return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, methodsForConsensus = methodsForConsensus, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = perCellSaturation, majorityConsensusThreshold = majorityConsensusThreshold))
+
+  return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, methodsForConsensus = methodsForConsensus, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = perCellSaturation, majorityConsensusThreshold = majorityConsensusThreshold, chemistry = chemistry))
 }
 
 #' @import ggplot2
 #' @import patchwork
 #' @importFrom dplyr %>% group_by summarise
-.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, methodsForConsensus, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL, majorityConsensusThreshold = NULL) {
+.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, methodsForConsensus, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3') {
   print('Generating consensus calls')
 
   if (length(callList) == 0){
@@ -556,10 +558,11 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
 
   totalCells <- nrow(dataClassificationGlobal)
   doubletRate <- sum(dataClassificationGlobal$consensuscall == 'Doublet') / totalCells
+  theoreticalDoubletRate <- EstimateMultipletRate(length(dataClassificationGlobal$consensuscall), chemistry = chemistry)
   singletRate <- sum(dataClassificationGlobal$consensuscall == 'Singlet') / totalCells
   print(P1 + P2 + plot_annotation(title = paste0(
     'Final Calls: ', nrow(dataClassification), ' cells\n',
-    'Doublet Rate: ', round(doubletRate, digits = 3), '\n',
+    'Doublet Rate: ', round(doubletRate, digits = 3), ' (theoretical rate for ', chemistry, ': ', round(theoreticalDoubletRate, digits = 3) ,')', '\n',
     'Singlet Rate: ', round(singletRate, digits = 3)
   )))
 
@@ -648,6 +651,14 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, h5File = N
 
   if (!is.null(h5File)) {
     h5File <- normalizePath(h5File)
+  }
+
+  # Downstream, all files need to be absolute paths, since the working directory of the markdown might not be the same as the current working dir.
+  if (!is.null(cellbarcodeWhitelist) && cellbarcodeWhitelist != 'inputMatrix' && is.character(cellbarcodeWhitelist) && length(cellbarcodeWhitelist) == 1) {
+    if (file.exists(cellbarcodeWhitelist)) {
+      cellbarcodeWhitelist <- normalizePath(cellbarcodeWhitelist)
+      print(paste0('normalizing cellbarcodeWhitelist path to: ', cellbarcodeWhitelist))
+    }
   }
 
   reportFile <- normalizePath(reportFile, mustWork = F)
