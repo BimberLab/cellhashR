@@ -462,8 +462,6 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     .LogMetric(metricsFile, 'FractionDoublet', sum(dataClassificationGlobal$consensuscall == 'Doublet') / totalCells)
     .LogMetric(metricsFile, 'FractionNegative', sum(dataClassificationGlobal$consensuscall == 'Negative') / totalCells)
     .LogMetric(metricsFile, 'FractionDiscordant', sum(dataClassification$consensuscall == 'Discordant') / totalCells)
-
-    
   }
 
   discord <- dataClassification[dataClassification$consensuscall == 'Discordant',]

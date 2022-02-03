@@ -20,6 +20,7 @@ output:
 ```{r setup}
 
 library(cellhashR)
+library(dplyr)
 
 knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error=FALSE)
 
@@ -139,6 +140,20 @@ if (!is.null(df)) {
 
 ```
 
+# Summary of Discordant Calls
+
+```{r SummarizeDiscordant}
+
+if (!is.null(df) && sum(df$consensuscall == 'Discordant') > 0) {
+  discord <- df[df$consensuscall == 'Discordant',]
+  colNames <- if(is.null(methodsForConsensus)) methods else methodsForConsensus
+  discord <- discord %>% group_by_at(colNames) %>% summarize(Total = n()) %>% arrange(desc(Total))
+  discord$Percent <- discord$Total / sum(discord$Total)
+
+  print(knitr::kable(discord))
+}
+
+```
 # Metrics
 
 ```{r Metrics}
