@@ -16,6 +16,10 @@ RUN apt-get update -y \
 ENV RETICULATE_PYTHON=/usr/bin/python3
 ENV USE_GMMDEMUX_SEED=1
 
+# NOTE: this is required when running as non-root. Setting MPLCONFIGDIR removes a similar warning.
+ENV NUMBA_CACHE_DIR=/tmp
+ENV MPLCONFIGDIR=/tmp
+
 # Let this run for the purpose of installing/caching dependencies
 RUN Rscript -e "install.packages(c('devtools', 'BiocManager', 'remotes'), dependencies=TRUE, ask = FALSE)" \
 	&& echo "local({\noptions(repos = BiocManager::repositories())\n})\n" >> ~/.Rprofile \
