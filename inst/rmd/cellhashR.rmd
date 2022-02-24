@@ -150,7 +150,15 @@ if (!is.null(df) && sum(df$consensuscall == 'Discordant') > 0) {
   discord <- discord %>% group_by_at(colNames) %>% summarize(Total = n()) %>% arrange(desc(Total))
   discord$Percent <- discord$Total / sum(discord$Total)
 
-  print(knitr::kable(discord))
+  print(knitr::kable(discord, caption = 'Consensus Methods'))
+
+  if (length(colNames) != length(methods)) {
+    discord <- df[df$consensuscall == 'Discordant',]
+    discord <- discord %>% group_by_at(methods) %>% summarize(Total = n()) %>% arrange(desc(Total))
+    discord$Percent <- discord$Total / sum(discord$Total)
+
+    print(knitr::kable(discord, caption = 'All Methods'))
+  }
 }
 
 ```
