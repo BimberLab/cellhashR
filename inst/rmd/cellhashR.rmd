@@ -146,19 +146,22 @@ if (!is.null(df)) {
 
 if (!is.null(df) && sum(df$consensuscall == 'Discordant') > 0) {
   discord <- df[df$consensuscall == 'Discordant',]
-  colNames <- if(is.null(methodsForConsensus)) methods else methodsForConsensus
-  discord <- discord %>% group_by_at(colNames) %>% summarize(Total = n()) %>% arrange(desc(Total))
+
+  colSelect <- methods
+  if (!is.null(methodsForConsensus)) {
+    colSelect <- unique(c(methodsForConsensus, methods))
+  }
+
+  discord <- discord %>% group_by_at(colSelect) %>% summarize(Total = n()) %>% arrange(desc(Total))
+  discord$Percent <- discord$Total / sum(discord$Total)
   discord$Percent <- discord$Total / sum(discord$Total)
 
-  knitr::kable(discord, caption = 'Consensus Methods')
-
-  if (length(colNames) != length(methods)) {
-    discord <- df[df$consensuscall == 'Discordant',]
-    discord <- discord %>% group_by_at(methods) %>% summarize(Total = n()) %>% arrange(desc(Total))
-    discord$Percent <- discord$Total / sum(discord$Total)
-
-    knitr::kable(discord, caption = 'All Methods')
+  if (!is.null(methodsForConsensus)) {
+    isConsensusMethod <- names(discord) %in% methodsForConsensus
+    names(discord)[isConsensusMethod] <- paste0(names(discord)[isConsensusMethod], '*')
   }
+
+  knitr::kable(discord, caption = 'All Methods')
 }
 
 ```
