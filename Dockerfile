@@ -8,6 +8,9 @@ RUN apt-get update -y \
 		libhdf5-dev \
 		libpython3-dev \
 		python3-pip \
+        # NOTE: these were added due to errors with install_deps() for dependencies with special characters in the DESCRIPTION
+        locales \
+        locales-all \
 	&& pip3 install umap-learn demuxEM \
     && pip3 install git+https://github.com/bbimber/GMM-Demux.git@random_seed \
 	&& apt-get clean \
