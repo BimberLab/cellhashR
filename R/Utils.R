@@ -192,3 +192,9 @@ EstimateMultipletRate <- function(numCellsRecovered, num10xRuns = 1, chemistry =
 
 	return(multipletRate)
 }
+
+.LogProgress <- function(msg) {
+	if (Sys.getenv('CELLHASHR_DEBUG', unset = 0) == 1) {
+		message(msg)
+	}
+}

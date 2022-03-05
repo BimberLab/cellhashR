@@ -19,6 +19,7 @@
 #' @return The updated count matrix
 #' @export
 ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), cellbarcodeWhitelist = NULL, doPlot = TRUE, simplifyBarcodeNames = TRUE, saveOriginalCellBarcodeFile = NULL, metricsFile = NULL, minCellsToContinue = 25) {
+	.LogProgress('Processing raw matrix')
 	barcodeData <- .LoadCountMatrix(rawCountData = rawCountData, barcodeBlacklist = barcodeBlacklist, simplifyBarcodeNames = simplifyBarcodeNames)
 
 	print(paste0('Initial cell barcodes in hashing data: ', ncol(barcodeData)))
@@ -455,6 +456,7 @@ PlotLibrarySaturationByMarker <- function(citeseqCountDir) {
 #' @return A dataframe with the cellbarcode and per-cell saturation
 #' @export
 CalculateSaturationFor10x <- function(barcodeMatrix, molInfoFile, doPlot = TRUE) {
+	.LogProgress('Calculating saturation')
 	df <- DropletUtils::get10xMolInfoStats(molInfoFile)
 	df$cellbarcode <- df$cell
 
@@ -495,5 +497,6 @@ CalculateSaturationFor10x <- function(barcodeMatrix, molInfoFile, doPlot = TRUE)
 	dat <- merge(dat, data.frame(cellbarcode = df$cellbarcode, saturation = df$Saturation), by = 'cellbarcode', all.x = T)
 	dat <- dplyr::arrange(dat, sortOrder)
 
+	.LogProgress('Finished calculating saturation')
 	return(dat[c('cellbarcode', 'saturation')])
 }

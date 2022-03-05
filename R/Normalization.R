@@ -111,8 +111,10 @@ NormalizeRelative <- function(mat) {
 #' @description Generates QC plots related to normalization
 #' @export
 PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Quantile', 'log2Center', 'CLR')) {
+  .LogProgress('Plotting QC')
   toQC <- list()
   for (method in methods) {
+    .LogProgress(paste0('Plotting: ', method))
     if (method == 'bimodalQuantile') {
       bqn <- NULL
       
@@ -141,6 +143,8 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
     } else {
       stop(paste0('Unknown method: ', method))
     }
+
+    .LogProgress(paste0('Done normalizing: ', method))
   }
   uniqueRows <- c()
   uniqueCols <- c()
@@ -223,6 +227,8 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
     P3 <- suppressWarnings(ggExtra::ggMarginal(P1, size=4, groupColour = TRUE))
     print(P2 + P3)
   }
+
+  .LogProgress('Finished plotting QC')
 }
 
 PerformHashingClustering <- function(barcodeMatrix, norm) {

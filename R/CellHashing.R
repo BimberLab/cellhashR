@@ -136,6 +136,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @return A data frame of results.
 #' @export
 GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'multiseq', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', ...) {
+  .LogProgress('Generating calls')
   if (is.data.frame(barcodeMatrix)) {
     print('Converting input data.frame to a matrix')
     barcodeMatrix <- as.matrix(barcodeMatrix)
@@ -156,6 +157,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
 
   callList <- list()
   for (method in methods) {
+    .LogProgress(paste0('Starting method: ', method))
     fnArgs <- list()
     if ('methodName' %in% names(formals(cellhashR::GenerateCellHashingCalls))) {
       fnArgs$methodName <- method
@@ -231,6 +233,8 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     } else {
       stop(paste0('Unknown method: ', method))
     }
+
+    .LogProgress(paste0('Finished method: ', method))
   }
 
   return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, methodsForConsensus = methodsForConsensus, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = perCellSaturation, majorityConsensusThreshold = majorityConsensusThreshold, chemistry = chemistry))
