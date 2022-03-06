@@ -166,6 +166,8 @@ ParameterScan <- function(lognormedcounts) {
 }
 
 SNR <- function(barcodeData) {
+  .LogProgress('Running SNR')
+
   # SNR extracts the minimum data necessary from an input barcode matrix and
   # places this info in a data frame.  Extracted data are (1) the barcode with
   # the highest counts, (2) the highest count value, and (3) the 2nd highest
@@ -500,6 +502,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
   }
 
   thresholdres <- generateBFFGridPlot(barcodeMatrix, "Log(Counts + 1)", "Raw Count Distributions with BQN Thresholds")
+  .LogProgress('Generated threshold')
   
   cutofflist <- thresholdres[['cutoffslist']]
   cutoffs <- list()
@@ -527,6 +530,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     # outputs from NormalizeBimodalQuantile: discrete, tot_normed, log10(tot_normed+1), barcodeBlocklist
     normedres <- NULL
     tryCatch({
+      .LogProgress('Performing NormalizeBimodalQuantile')
       normedres <- NormalizeBimodalQuantile(barcodeMatrix)
     }, error = function(e){
       print("No valid barcodes, skipping BFF")
@@ -556,7 +560,8 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     doublethi <- c()
     doubletsecond <- c()
     valdif <- 0.1
-    
+
+    .LogProgress('Calculating density')
     highest_dist <- stats::density(snr$Highest, adjust = 1, kernel = 'gaussian',
                                    bw = 'SJ', give.Rkern = FALSE)
     second_dist <- stats::density(snr$Second, adjust = 1, kernel = 'gaussian',
@@ -567,6 +572,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
       second_dist <- stats::density(snr$Second, adjust = j, kernel = 'gaussian', bw = 'SJ', give.Rkern = FALSE)
       j <- j + 1
     }
+    .LogProgress('Done smoothing 1')
     
     vals <- c()
     for (i in 2:length(highest_dist$y)) {
@@ -586,6 +592,7 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
       second_dist <- stats::density(snr$Second, adjust = j, kernel = 'gaussian', bw = 'SJ', give.Rkern = FALSE)
       j <- j + 1
     }
+    .LogProgress('Done smoothing 2')
     
     vals <- c()
     for (i in 2:length(second_dist$y)) {

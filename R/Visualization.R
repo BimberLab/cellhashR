@@ -7,6 +7,7 @@ utils::globalVariables(
 )
 
 SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T, doTSNE = T, assay = 'HTO') {
+	.LogProgress('Summarizing Hashing Calls')
 	if (is.null(seuratObj)) {
 		print('No seurat object provided, cannot run SummarizeHashingCalls')
 		return()
@@ -62,6 +63,7 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 	}
 
 	if (doTSNE) {
+		.LogProgress('Running tSNE')
 		perplexity <- .InferPerplexityFromSeuratObj(seuratObj, 100)
 		tryCatch({
 			seuratObj[['hto_tsne']] <- RunTSNE(stats::dist(Matrix::t(GetAssayData(seuratObj, slot = "data", assay = assay))), assay = assay, perplexity = perplexity)
@@ -74,6 +76,7 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 			print(conditionMessage(e))
 			traceback()
 		})
+		.LogProgress('Done with tSNE')
 	}
 
 	if (doHeatmap) {
