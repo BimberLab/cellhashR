@@ -571,6 +571,13 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     while(max(abs(highest_dist$y[2:length(highest_dist$y)] - highest_dist$y[1:length(highest_dist$y)-1])) > valdif) {
       second_dist <- stats::density(snr$Second, adjust = j, kernel = 'gaussian', bw = 'SJ', give.Rkern = FALSE)
       j <- j + 1
+      if(j%%5 == 0){
+        print(paste0("Smoothing parameter j = ",j))
+        if(j >= 100){
+          print('Cannot find appropriate smoothing.  Exiting BFF')
+          return(NULL)
+        }
+      }
     }
     .LogProgress('Done smoothing 1')
     
@@ -591,6 +598,13 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
     while(max(abs(second_dist$y[2:length(second_dist$y)] - second_dist$y[1:length(second_dist$y)-1])) > valdif) {
       second_dist <- stats::density(snr$Second, adjust = j, kernel = 'gaussian', bw = 'SJ', give.Rkern = FALSE)
       j <- j + 1
+      if(j%%5 == 0){
+        print(paste0("Smoothing parameter j = ",j))
+        if(j >= 100){
+          print('Cannot find appropriate smoothing.  Exiting BFF')
+          return(NULL)
+        }
+      }
     }
     .LogProgress('Done smoothing 2')
     
