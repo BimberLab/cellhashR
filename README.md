@@ -1,4 +1,5 @@
 ![R Build and Checks](https://github.com/BimberLab/cellhashR/workflows/R%20Build%20and%20Checks/badge.svg)
+[![DOI](https://zenodo.org/badge/317274382.svg)](https://zenodo.org/badge/latestdoi/317274382)
 
 # cellhashR
 An R package designed to demultiplex cell hashing data. [Please see our documentation for more detail](https://bimberlab.github.io/cellhashR/).
