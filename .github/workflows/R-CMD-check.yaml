@@ -18,9 +18,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          # NOTE: re-enable this once versions match. Bioc-devel needs R 4.2, but r-devel row reports 4.3
-          #- {os: ubuntu-20.04, r: 'devel', bioc: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
-          - {os: ubuntu-20.04, r: 'release', bioc: '3.14', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest", pkgdown: "true"}
+          - {os: ubuntu-20.04, r: 'release', bioc: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
+          - {os: ubuntu-20.04, r: '4.1', bioc: '3.14', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest", pkgdown: "true"}
           - {os: ubuntu-20.04, r: '4.1', bioc: '3.13', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest", pkgdown: "true"}
 
     env:
