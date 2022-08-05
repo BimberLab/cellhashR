@@ -66,46 +66,67 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">ProcessCountMatrix</span><span class="op">(</span>
-  rawCountData <span class="op">=</span> <span class="cn">NA</span>,
-  minCountPerCell <span class="op">=</span> <span class="fl">5</span>,
-  barcodeWhitelist <span class="op">=</span> <span class="cn">NULL</span>,
-  barcodeBlacklist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"no_match"</span>, <span class="st">"total_reads"</span>, <span class="st">"unmapped"</span><span class="op">)</span>,
-  cellbarcodeWhitelist <span class="op">=</span> <span class="cn">NULL</span>,
-  doPlot <span class="op">=</span> <span class="cn">TRUE</span>,
-  simplifyBarcodeNames <span class="op">=</span> <span class="cn">TRUE</span>,
-  saveOriginalCellBarcodeFile <span class="op">=</span> <span class="cn">NULL</span>,
-  metricsFile <span class="op">=</span> <span class="cn">NULL</span>,
-  minCellsToContinue <span class="op">=</span> <span class="fl">25</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ProcessCountMatrix</span><span class="op">(</span></span>
+<span>  rawCountData <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  minCountPerCell <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  barcodeWhitelist <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  barcodeBlacklist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"no_match"</span>, <span class="st">"total_reads"</span>, <span class="st">"unmapped"</span><span class="op">)</span>,</span>
+<span>  cellbarcodeWhitelist <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  doPlot <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  simplifyBarcodeNames <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  saveOriginalCellBarcodeFile <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  metricsFile <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  minCellsToContinue <span class="op">=</span> <span class="fl">25</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>rawCountData</dt>
 <dd><p>The input barcode file or umi_count folder</p></dd>
+
+
 <dt>minCountPerCell</dt>
 <dd><p>Cells (columns) will be dropped if their total count is less than this value.</p></dd>
+
+
 <dt>barcodeWhitelist</dt>
 <dd><p>A vector of barcode names to retain.</p></dd>
+
+
 <dt>barcodeBlacklist</dt>
 <dd><p>A vector of barcodes names to discard.</p></dd>
+
+
 <dt>cellbarcodeWhitelist</dt>
 <dd><p>If provided, the raw count matrix will be subset to include only these cells. This allows one to use the cellranger unfiltered matrix as an input, but filter based on target cells, such as those with GEX data. This can either be a character vector of barcodes, or a file with one cell barcode per line.</p></dd>
+
+
 <dt>doPlot</dt>
 <dd><p>If true, QC plots will be generated</p></dd>
+
+
 <dt>simplifyBarcodeNames</dt>
 <dd><p>If true, the sequence tag portion will be removed from the barcode names (i.e. HTO-1-ATGTGTGA -&gt; HTO-1)</p></dd>
+
+
 <dt>saveOriginalCellBarcodeFile</dt>
 <dd><p>An optional file path, where the set of original cell barcodes, prior to filtering, will be written. The primary use-case is if the count matrix was generated using a cell whitelist (like cells with passing gene expression). Preserving this list allows downstream reporting.</p></dd>
+
+
 <dt>metricsFile</dt>
 <dd><p>If provided, summary metrics will be written to this file.</p></dd>
+
+
 <dt>minCellsToContinue</dt>
 <dd><p>Demultiplexing generally requires a minimal amount of cells. If the matrix contains fewer than this many cells, it will abort.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>The updated count matrix</p>
+    
+
+<p>The updated count matrix</p>
     </div>
 
   </div>
@@ -120,7 +141,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

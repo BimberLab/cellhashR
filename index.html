@@ -111,37 +111,36 @@
 </h3>
 <p>Below are the primary functions of cellhashR needed to QC and score hashing data:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># Example 1: parse CITE-seq-Count output, printing QC</span>
-<span class="va">barcodeData</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ProcessCountMatrix.html">ProcessCountMatrix</a></span><span class="op">(</span>rawCountData <span class="op">=</span> <span class="st">'myCountDir/umi_count'</span>, minCountPerCell <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>
-
-<span class="co"># Example 2: parse CITE-seq-Count output, providing a barcode whitelist. </span>
-<span class="va">barcodeData</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ProcessCountMatrix.html">ProcessCountMatrix</a></span><span class="op">(</span>rawCountData <span class="op">=</span> <span class="st">'myCountDir/umi_count'</span>, minCountPerCell <span class="op">=</span> <span class="fl">5</span>, barcodeWhitelist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'HTO-1'</span>, <span class="st">'HTO-2'</span>, <span class="st">'HTO-3'</span>, <span class="st">'HTO-4'</span>, <span class="st">'HTO-6'</span><span class="op">)</span><span class="op">)</span>
-
-<span class="co"># Create QC plots of barcode normalization</span>
-<span class="fu"><a href="reference/PlotNormalizationQC.html">PlotNormalizationQC</a></span><span class="op">(</span><span class="va">barcodeData</span><span class="op">)</span>
-
-<span class="co"># Generate the final cell hashing calls</span>
-<span class="va">calls</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'multiseq'</span>, <span class="st">'htodemux'</span><span class="op">)</span><span class="op">)</span>
-
-<span class="co"># Inspect negative cells:</span>
-<span class="fu"><a href="reference/SummarizeCellsByClassification.html">SummarizeCellsByClassification</a></span><span class="op">(</span>calls <span class="op">=</span> <span class="va">calls</span>, barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span><span class="op">)</span>
-</code></pre></div>
+<code class="sourceCode R"><span><span class="co"># Example 1: parse CITE-seq-Count output, printing QC</span></span>
+<span><span class="va">barcodeData</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ProcessCountMatrix.html">ProcessCountMatrix</a></span><span class="op">(</span>rawCountData <span class="op">=</span> <span class="st">'myCountDir/umi_count'</span>, minCountPerCell <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Example 2: parse CITE-seq-Count output, providing a barcode whitelist. </span></span>
+<span><span class="va">barcodeData</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ProcessCountMatrix.html">ProcessCountMatrix</a></span><span class="op">(</span>rawCountData <span class="op">=</span> <span class="st">'myCountDir/umi_count'</span>, minCountPerCell <span class="op">=</span> <span class="fl">5</span>, barcodeWhitelist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'HTO-1'</span>, <span class="st">'HTO-2'</span>, <span class="st">'HTO-3'</span>, <span class="st">'HTO-4'</span>, <span class="st">'HTO-6'</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create QC plots of barcode normalization</span></span>
+<span><span class="fu"><a href="reference/PlotNormalizationQC.html">PlotNormalizationQC</a></span><span class="op">(</span><span class="va">barcodeData</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Generate the final cell hashing calls</span></span>
+<span><span class="va">calls</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'multiseq'</span>, <span class="st">'htodemux'</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Inspect negative cells:</span></span>
+<span><span class="fu"><a href="reference/SummarizeCellsByClassification.html">SummarizeCellsByClassification</a></span><span class="op">(</span>calls <span class="op">=</span> <span class="va">calls</span>, barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span><span class="op">)</span></span></code></pre></div>
 <p>Or export/save a template RMarkdown file outlining the default workflow, which can be run interactively or headlessly as part of a pipeline:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="reference/GetExampleMarkdown.html">GetExampleMarkdown</a></span><span class="op">(</span>dest <span class="op">=</span> <span class="st">'cellhashR_template.rmd'</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/GetExampleMarkdown.html">GetExampleMarkdown</a></span><span class="op">(</span>dest <span class="op">=</span> <span class="st">'cellhashR_template.rmd'</span><span class="op">)</span></span></code></pre></div>
 <p>Finally, the workflow can be executed using this wrapper around the Rmarkdown, producing a TSV of calls and HTML QC report:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="reference/CallAndGenerateReport.html">CallAndGenerateReport</a></span><span class="op">(</span>rawCountData <span class="op">=</span> <span class="st">'myCountDir/umi_count'</span>, reportFile <span class="op">=</span> <span class="st">'report.html'</span>, callFile <span class="op">=</span> <span class="st">'calls.txt'</span>, barcodeWhitelist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'HTO-1'</span>, <span class="st">'HTO-2'</span>, <span class="st">'HTO-3'</span><span class="op">)</span>, title <span class="op">=</span> <span class="st">'Cell Hashing For Experiment 1'</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/CallAndGenerateReport.html">CallAndGenerateReport</a></span><span class="op">(</span>rawCountData <span class="op">=</span> <span class="st">'myCountDir/umi_count'</span>, reportFile <span class="op">=</span> <span class="st">'report.html'</span>, callFile <span class="op">=</span> <span class="st">'calls.txt'</span>, barcodeWhitelist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'HTO-1'</span>, <span class="st">'HTO-2'</span>, <span class="st">'HTO-3'</span><span class="op">)</span>, title <span class="op">=</span> <span class="st">'Cell Hashing For Experiment 1'</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="installation">
 <a name="installation">Installation</a><a class="anchor" aria-label="anchor" href="#installation"></a>
 </h3>
-<pre class="{r}"><code><span class="co"># Make sure to update your Rprofile to include Bioconductor repos, such as adding this line to ~/.Rprofile:</span>
-<span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">local</a></span><span class="op">(</span><span class="op">{</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>repos <span class="op">=</span> <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/repositories.html" class="external-link">repositories</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">}</span><span class="op">)</span>
-
-<span class="co">#Latest version:</span>
-<span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/remote-reexports.html" class="external-link">install_github</a></span><span class="op">(</span>repo <span class="op">=</span> <span class="st">'bimberlab/cellhashR'</span>, ref <span class="op">=</span> <span class="st">'master'</span>, dependencies <span class="op">=</span> <span class="cn">TRUE</span>, upgrade <span class="op">=</span> <span class="st">'always'</span><span class="op">)</span></code></pre>
+<pre class="{r}"><code><span><span class="co"># Make sure to update your Rprofile to include Bioconductor repos, such as adding this line to ~/.Rprofile:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">local</a></span><span class="op">(</span><span class="op">{</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>repos <span class="op">=</span> <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocManager/man/repositories.html" class="external-link">repositories</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#Latest version:</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span>repo <span class="op">=</span> <span class="st">'bimberlab/cellhashR'</span>, ref <span class="op">=</span> <span class="st">'master'</span>, dependencies <span class="op">=</span> <span class="cn">TRUE</span>, upgrade <span class="op">=</span> <span class="st">'always'</span><span class="op">)</span></span></code></pre>
 <p>Pre-packaged Docker images with all needed dependencies installed can be found on our <a href="https://github.com/orgs/BimberLab/packages/container/package/cellhashr" class="external-link">GitHub Packages page</a>. We recommend using a specific release, which you can do using tags:</p>
 <pre><code>docker pull ghcr.io/bimberlab/cellhashr:latest</code></pre>
 </div>
@@ -150,19 +149,19 @@
 <a name="issues">Known Issues</a><a class="anchor" aria-label="anchor" href="#known-issues"></a>
 </h3>
 <p>If you receive an error along the lines of:</p>
-<pre><code><span class="st">"ERROR; return code from pthread_create() is 22\n"</span></code></pre>
+<pre><code><span><span class="st">"ERROR; return code from pthread_create() is 22\n"</span></span></code></pre>
 <p>Please manually install preprocessCore with threading disabled:</p>
-<pre><code><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/remote-reexports.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">'bmbolstad/preprocessCore'</span>, dependencies <span class="op">=</span> <span class="cn">T</span>, upgrade <span class="op">=</span> <span class="st">'always'</span>, configure.args <span class="op">=</span> <span class="st">'--disable-threading'</span><span class="op">)</span></code></pre>
+<pre><code><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">'bmbolstad/preprocessCore'</span>, dependencies <span class="op">=</span> <span class="cn">T</span>, upgrade <span class="op">=</span> <span class="st">'always'</span>, configure.args <span class="op">=</span> <span class="st">'--disable-threading'</span><span class="op">)</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="demuxem">
 <a name="demuxEM">demuxEM</a><a class="anchor" aria-label="anchor" href="#demuxem"></a>
 </h3>
 <p>Unlike the other algorithms, which just require the HTO count matrix, demuxEM also requires the 10x h5 gene expression counts. This can be supplied as follows. This example runs BFF and demuxEM:</p>
-<pre><code><span class="va">rawData</span> <span class="op">&lt;-</span> <span class="st">'../testdata/438-21-GEX/umi_count'</span>
-  <span class="va">h5File</span> <span class="op">&lt;-</span> <span class="st">'../testdata/438-21-GEX/438-21-raw_feature_bc_matrix.h5'</span>
-  <span class="va">barcodeMatrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ProcessCountMatrix.html">ProcessCountMatrix</a></span><span class="op">(</span>rawCountData <span class="op">=</span> <span class="va">rawData</span>, barcodeWhitelist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'MS-11'</span>, <span class="st">'MS-12'</span><span class="op">)</span><span class="op">)</span>
-  <span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeMatrix</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'bff_cluster'</span>, <span class="st">'demuxem'</span><span class="op">)</span>, demuxem.rawFeatureMatrixH5 <span class="op">=</span> <span class="va">h5File</span><span class="op">)</span></code></pre>
+<pre><code><span>  <span class="va">rawData</span> <span class="op">&lt;-</span> <span class="st">'../testdata/438-21-GEX/umi_count'</span></span>
+<span>  <span class="va">h5File</span> <span class="op">&lt;-</span> <span class="st">'../testdata/438-21-GEX/438-21-raw_feature_bc_matrix.h5'</span></span>
+<span>  <span class="va">barcodeMatrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ProcessCountMatrix.html">ProcessCountMatrix</a></span><span class="op">(</span>rawCountData <span class="op">=</span> <span class="va">rawData</span>, barcodeWhitelist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'MS-11'</span>, <span class="st">'MS-12'</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeMatrix</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'bff_cluster'</span>, <span class="st">'demuxem'</span><span class="op">)</span>, demuxem.rawFeatureMatrixH5 <span class="op">=</span> <span class="va">h5File</span><span class="op">)</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="development-guidelines">
@@ -231,7 +230,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer>
