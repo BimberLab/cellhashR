@@ -22,13 +22,13 @@ jobs:
 
       - name: Docker meta
         id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v1
+        uses: docker/metadata-action@v4
         with:
           images: ghcr.io/bimberlab/cellhashr
-          tag-sha: true
-          tag-semver: |
-            {{version}}
-            {{major}}.{{minor}}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
