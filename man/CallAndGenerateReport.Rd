@@ -20,7 +20,8 @@ CallAndGenerateReport(
   skipNormalizationQc = FALSE,
   keepMarkdown = FALSE,
   molInfoFile = NULL,
-  majorityConsensusThreshold = NULL
+  majorityConsensusThreshold = NULL,
+  callerAgreementThreshold = NULL
 )
 }
 \arguments{
@@ -55,6 +56,8 @@ CallAndGenerateReport(
 \item{molInfoFile}{An optional path to the 10x molecule_info.h5.}
 
 \item{majorityConsensusThreshold}{This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.}
+
+\item{callerAgreementThreshold}{If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an accuracy rate below this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.}
 }
 \description{
 Runs the default processing pipeline
