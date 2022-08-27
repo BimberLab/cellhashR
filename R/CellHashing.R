@@ -429,9 +429,10 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
 
   P1 <- ggplot(agreementData, aes(x = Method, y = AccuracyRate, fill = Method)) +
     geom_bar(position = position_dodge2(preserve = 'single'), stat = 'identity') +
+  	geom_text(aes(label = scales::percent(AccuracyRate)), position = position_dodge(width = 1), vjust = -0.5) +
     egg::theme_presentation(base_size = 14) +
-    labs(x = '', y = 'Accuracy', fill = 'Caller') +
-  	ylim(0,1) +
+    labs(x = '', y = '% Agreement', fill = 'Caller') +
+  	scale_y_continuous(limits = c(0,1.1), breaks = c(0,0.25, 0.5, 0.75, 1), labels = scales::percent_format(accuracy = 1)) +
     theme(
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
     ) + ggtitle('Agreement With Majority')
@@ -677,10 +678,11 @@ GetExampleMarkdown <- function(dest) {
 #' @param keepMarkdown If true, the markdown file will be saved, in addition to the HTML file
 #' @param molInfoFile An optional path to the 10x molecule_info.h5.
 #' @param majorityConsensusThreshold This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.
+#' @param callerAgreementThreshold If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an accuracy rate below this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.
 #' @param title A title for the HTML report
 #' @importFrom rmdformats html_clean
 #' @export
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, h5File = NULL, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), methodsForConsensus = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL, majorityConsensusThreshold = NULL) {
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, h5File = NULL, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), methodsForConsensus = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL, majorityConsensusThreshold = NULL, callerAgreementThreshold = NULL) {
   rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
   if (!file.exists(rmd)) {
     stop(paste0('Unable to find file: ', rmd))

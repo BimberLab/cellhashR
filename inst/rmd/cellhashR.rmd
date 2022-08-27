@@ -39,7 +39,7 @@ if (!file.exists(rawCountData)) {
   stop(paste0('Could not find rawCountData: ', rawCountData))
 }
 
-optionalVars <- c('barcodeWhitelist', 'cellbarcodeWhitelist', 'minCountPerCell', 'metricsFile', 'rawCountsExport', 'molInfoFile', 'h5File', 'methodsForConsensus', 'majorityConsensusThreshold')
+optionalVars <- c('barcodeWhitelist', 'cellbarcodeWhitelist', 'minCountPerCell', 'metricsFile', 'rawCountsExport', 'molInfoFile', 'h5File', 'methodsForConsensus', 'majorityConsensusThreshold', 'callerAgreementThreshold')
 for (v in optionalVars) {
 	if (!exists(v)) {
 		if (v == 'minCountPerCell') {
@@ -106,7 +106,7 @@ if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
 	  cellbarcodeWhitelist <- cellbarcodeWhitelist$cellbarcode
   }
 
-	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, methodsForConsensus = methodsForConsensus, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = saturationData, demuxem.rawFeatureMatrixH5 = h5File, majorityConsensusThreshold = majorityConsensusThreshold)
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, methodsForConsensus = methodsForConsensus, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = saturationData, demuxem.rawFeatureMatrixH5 = h5File, majorityConsensusThreshold = majorityConsensusThreshold, callerAgreementThreshold = callerAgreementThreshold)
 	write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
 
 	if (!is.null(saveOriginalCellBarcodeFile)) {
