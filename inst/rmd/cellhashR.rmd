@@ -39,7 +39,7 @@ if (!file.exists(rawCountData)) {
   stop(paste0('Could not find rawCountData: ', rawCountData))
 }
 
-optionalVars <- c('barcodeWhitelist', 'cellbarcodeWhitelist', 'minCountPerCell', 'metricsFile', 'rawCountsExport', 'molInfoFile', 'h5File', 'methodsForConsensus', 'majorityConsensusThreshold', 'callerAgreementThreshold')
+optionalVars <- c('barcodeWhitelist', 'cellbarcodeWhitelist', 'minCountPerCell', 'metricsFile', 'rawCountsExport', 'molInfoFile', 'h5File', 'methodsForConsensus', 'majorityConsensusThreshold', 'callerDisagreementThreshold')
 for (v in optionalVars) {
 	if (!exists(v)) {
 		if (v == 'minCountPerCell') {

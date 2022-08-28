@@ -15,7 +15,7 @@ GenerateCellHashingCalls(
   perCellSaturation = NULL,
   majorityConsensusThreshold = NULL,
   chemistry = "10xV3",
-  callerAgreementThreshold = NULL,
+  callerDisagreementThreshold = NULL,
   ...
 )
 }
@@ -40,7 +40,7 @@ GenerateCellHashingCalls(
 
 \item{chemistry}{This string is passed to EstimateMultipletRate. Should be either 10xV2 or 10xV3. This is used to calculate and present the expected doublet rate and does not influence the actual calls.}
 
-\item{callerAgreementThreshold}{If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an accuracy rate below this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.}
+\item{callerDisagreementThreshold}{If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an disagreement rate above this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.}
 
 \item{\dots}{Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).}
 }
