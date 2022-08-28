@@ -131,12 +131,12 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @param perCellSaturation An optional dataframe with the columns cellbarcode and saturation. This will be merged into the final output.
 #' @param majorityConsensusThreshold This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.
 #' @param chemistry This string is passed to EstimateMultipletRate. Should be either 10xV2 or 10xV3. This is used to calculate and present the expected doublet rate and does not influence the actual calls.
-#' @param callerAgreementThreshold If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an accuracy rate below this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.
+#' @param callerDisagreementThreshold If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an disagreement rate above this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.
 #' @param \dots Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).
 #' @description The primary methods to generating cell hashing calls from a filtered matrix of count data.
 #' @return A data frame of results.
 #' @export
-GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'multiseq', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerAgreementThreshold = NULL, ...) {
+GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'multiseq', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, ...) {
   .LogProgress('Generating calls')
   if (is.data.frame(barcodeMatrix)) {
     print('Converting input data.frame to a matrix')
@@ -238,13 +238,13 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     .LogProgress(paste0('Finished method: ', method))
   }
 
-  return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, methodsForConsensus = methodsForConsensus, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = perCellSaturation, majorityConsensusThreshold = majorityConsensusThreshold, chemistry = chemistry, callerAgreementThreshold = callerAgreementThreshold))
+  return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, methodsForConsensus = methodsForConsensus, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = perCellSaturation, majorityConsensusThreshold = majorityConsensusThreshold, chemistry = chemistry, callerDisagreementThreshold = callerDisagreementThreshold))
 }
 
 #' @import ggplot2
 #' @import patchwork
 #' @importFrom dplyr %>% group_by summarise
-.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, methodsForConsensus, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerAgreementThreshold = NULL) {
+.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, methodsForConsensus, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL) {
   print('Generating consensus calls')
 
   if (length(callList) == 0){
@@ -413,13 +413,17 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
         return(NA)
       }
 
+      if (caller %in% c('Not Called', 'Negative', 'Discordant')) {
+        return(NA)
+      }
+
       return(consensus == caller)
     })
 
     dat <- dat[!is.na(dat)]
-    accuracyRate <- ifelse(length(dat) == 0, yes = 0, no = sum(dat) / length(dat))
+    disagreementRate <- ifelse(length(dat) == 0, yes = 0, no = sum(!dat) / length(dat))
     disagreeWithMajority <- ifelse(length(dat) == 0, yes = 0, no = sum(!dat))
-    dat <- data.frame(Method = method, AccuracyRate = accuracyRate, NumberCalled = length(dat), DisagreeWithMajority = disagreeWithMajority)
+    dat <- data.frame(Method = method, DisagreementRate = disagreementRate, NumberCalled = length(dat), DisagreeWithMajority = disagreeWithMajority)
     if (all(is.na(agreementData))) {
       agreementData <- dat
     } else {
@@ -427,22 +431,30 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     }
   }
 
-  P1 <- ggplot(agreementData, aes(x = Method, y = AccuracyRate, fill = Method)) +
+  agreementData$IsConsensusMethod <- ifelse(agreementData$Method %in% methodsForConsensus, yes = 'Consensus', no = 'Other')
+  agreementData$Label <- paste0(scales::percent(agreementData$DisagreementRate), '\n(', agreementData$DisagreeWithMajority, ' / ', agreementData$NumberCalled, ')')
+  P1 <- ggplot(agreementData, aes(x = Method, y = DisagreementRate, fill = Method)) +
     geom_bar(position = position_dodge2(preserve = 'single'), stat = 'identity') +
-  	geom_text(aes(label = scales::percent(AccuracyRate)), position = position_dodge(width = 1), vjust = -0.5) +
+  	geom_text(aes(label = Label), position = position_dodge(width = 1), vjust = -0.5) +
     egg::theme_presentation(base_size = 14) +
-    labs(x = '', y = '% Agreement', fill = 'Caller') +
+    labs(x = '', y = 'Disagreement Rate', fill = 'Caller') +
   	scale_y_continuous(limits = c(0,1.1), breaks = c(0,0.25, 0.5, 0.75, 1), labels = scales::percent_format(accuracy = 1)) +
     theme(
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
-    ) + ggtitle('Agreement With Majority')
+    ) +
+    ggtitle('Disagreement With Majority') +
+    facet_grid(. ~ IsConsensusMethod, space = 'free_x', scales = 'free')
+
+  if (!is.null(callerDisagreementThreshold)) {
+    P1 <- P1 + geom_hline(yintercept = callerDisagreementThreshold, size=0.25, linetype = "dotted", color = "red")
+  }
 
   print(P1)
 
   agreementData <- agreementData[agreementData$Method %in% methodsForConsensus,]
-  if (!is.null(callerAgreementThreshold) && sum(agreementData$AccuracyRate < callerAgreementThreshold) > 0) {
-  	toDrop <- agreementData$Method[agreementData$AccuracyRate < callerAgreementThreshold]
-    print(paste0('The following methods will be dropped for low accuracy rates: ', paste0(toDrop, collapse = ', ')))
+  if (!is.null(callerDisagreementThreshold) && sum(agreementData$DisagreementRate > callerDisagreementThreshold) > 0) {
+  	toDrop <- agreementData$Method[agreementData$DisagreementRate > callerDisagreementThreshold]
+    print(paste0('The following methods will be dropped for high rates of disagreement with the majority consensus: ', paste0(toDrop, collapse = ', ')))
     methodsForConsensus <- methodsForConsensus[!methodsForConsensus %in% toDrop]
 
     # Concordance across all callers:
@@ -678,11 +690,11 @@ GetExampleMarkdown <- function(dest) {
 #' @param keepMarkdown If true, the markdown file will be saved, in addition to the HTML file
 #' @param molInfoFile An optional path to the 10x molecule_info.h5.
 #' @param majorityConsensusThreshold This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.
-#' @param callerAgreementThreshold If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an accuracy rate below this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.
+#' @param callerDisagreementThreshold If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an disagreement rate above this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.
 #' @param title A title for the HTML report
 #' @importFrom rmdformats html_clean
 #' @export
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, h5File = NULL, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), methodsForConsensus = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL, majorityConsensusThreshold = NULL, callerAgreementThreshold = NULL) {
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, h5File = NULL, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), methodsForConsensus = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL, majorityConsensusThreshold = NULL, callerDisagreementThreshold = NULL) {
   rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
   if (!file.exists(rmd)) {
     stop(paste0('Unable to find file: ', rmd))
