@@ -76,9 +76,9 @@ test_that("Workflow works", {
 	expect_equal(nrow(df), 2500)
 	expect_equal(sum(df$consensuscall == 'MS-12'), 1124)
 
-	# Repeat with callerAgreementThreshold, which should drop htodemux
+	# Repeat with callerDisagreementThreshold, which should drop htodemux
 	unlink(md)
-	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile, skipNormalizationQc = TRUE, keepMarkdown = TRUE, callerAgreementThreshold = 0.95)
+	fn <- CallAndGenerateReport(rawCountData = subsetCountDir, reportFile = html, callFile = output, barcodeWhitelist = test$htos, title = 'Test 1', metricsFile = metricsFile, skipNormalizationQc = TRUE, keepMarkdown = TRUE, callerDisagreementThreshold = 0.05)
 
 	expect_true(file.exists(md))
 	
