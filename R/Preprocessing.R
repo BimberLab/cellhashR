@@ -102,7 +102,7 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 		stop("Need to provide a directory or file for rawCountData")
 	}
 
-	if (is.na(barcodeBlacklist) || is.null(barcodeBlacklist)) {
+	if (all(is.na(barcodeBlacklist)) || all(is.null(barcodeBlacklist))) {
 		barcodeBlacklist <- character()
 	}
 
