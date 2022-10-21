@@ -292,7 +292,7 @@ PrintColumnQc <- function(barcodeMatrix) {
 		max(x)
 	})
 
-	df <- data.frame(Barcode1 = topValue)
+	df <- data.frame(Barcode1 = topValue, TotalPerCell = colSums(barcodeMatrix))
 	P3 <- ggplot(df, aes(x = Barcode1)) +
 		geom_histogram(binwidth = 0.05) +
 		egg::theme_presentation() +
@@ -303,6 +303,23 @@ PrintColumnQc <- function(barcodeMatrix) {
 	P3 <- P3 + plot_annotation(caption = paste0('Total cells where top barcode is >0.75 of counts: ', sum(topValue > 0.75), ' of ', length(topValue))) & theme(plot.caption = element_text(size = 14))
 
 	print(P3)
+
+	P4 <- ggplot(df, aes(x = Barcode1, y = totalPerCell)) +
+		geom_point() +
+		egg::theme_presentation() +
+		xlab('Top Barcode Fraction') +
+		ylab('Total Counts/Cell') +
+		ggtitle('Top Barcode Fraction Per Cell')
+
+	P4L <- ggplot(df, aes(x = Barcode1, y = totalPerCell)) +
+		geom_point() +
+		egg::theme_presentation() +
+		xlab('Top Barcode Fraction') +
+		ylab('Total Counts/Cell (log1p)') +
+		scale_y_continuous(trans = scales::log1p_trans()) +
+		ggtitle('Top Barcode Fraction Per Cell')
+
+	print(P4 + P4L)
 
 	# Top/Second:
 	snr <- SNR(t(barcodeMatrix))
