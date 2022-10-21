@@ -304,14 +304,14 @@ PrintColumnQc <- function(barcodeMatrix) {
 
 	print(P3)
 
-	P4 <- ggplot(df, aes(x = Barcode1, y = totalPerCell)) +
+	P4 <- ggplot(df, aes(x = Barcode1, y = TotalPerCell)) +
 		geom_point() +
 		egg::theme_presentation() +
 		xlab('Top Barcode Fraction') +
 		ylab('Total Counts/Cell') +
 		ggtitle('Top Barcode Fraction Per Cell')
 
-	P4L <- ggplot(df, aes(x = Barcode1, y = totalPerCell)) +
+	P4L <- ggplot(df, aes(x = Barcode1, y = TotalPerCell)) +
 		geom_point() +
 		egg::theme_presentation() +
 		xlab('Top Barcode Fraction') +
