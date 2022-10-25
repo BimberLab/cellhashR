@@ -317,7 +317,7 @@ PrintColumnQc <- function(barcodeMatrix) {
 		xlab('Top Barcode Fraction') +
 		ylab('Total Counts/Cell (log1p)') +
 		scale_y_continuous(trans = scales::log1p_trans()) +
-		ggtitle('Top Barcode Fraction Per Cell')
+		ggtitle('')
 
 	print(P4 + P4L)
 
