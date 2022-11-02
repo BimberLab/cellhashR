@@ -78,10 +78,11 @@
 
       
 
-      </header><script src="V02-BFF-example_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
+      </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>Demultiplexing with Bimodal Flexible Fitting (BFF)</h1>
+      <h1 data-toc-skip>Demultiplexing with Bimodal Flexible Fitting
+(BFF)</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/BimberLab/cellhashR/blob/HEAD/vignettes/V02-BFF-example.Rmd" class="external-link"><code>vignettes/V02-BFF-example.Rmd</code></a></small>
@@ -94,7 +95,13 @@
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>This vignette demonstrates how to use cellhashR’s Bimodal Flexible Fitting (BFF) Demultiplexing Algorithm to produce the kinds of analyses reported in the BFF paper. cellhashR produces many plots and outputs that provide useful information about cell hashing data. For purposes of brevity and clarity, only output related to figures in the BFF paper is shown in this report. The data analyzed in this vignette is the same data analyzed in the BFF paper.</p>
+<p>This vignette demonstrates how to use cellhashR’s Bimodal Flexible
+Fitting (BFF) Demultiplexing Algorithm to produce the kinds of analyses
+reported in the BFF paper. cellhashR produces many plots and outputs
+that provide useful information about cell hashing data. For purposes of
+brevity and clarity, only output related to figures in the BFF paper is
+shown in this report. The data analyzed in this vignette is the same
+data analyzed in the BFF paper.</p>
 <style type="text/css">
 img {
     margin: 5px 10px 5px 10px;
@@ -106,7 +113,8 @@ img {
 <div class="section level2">
 <h2 id="load-data">Load Data<a class="anchor" aria-label="anchor" href="#load-data"></a>
 </h2>
-<p>cellhashR expects count data with cells in columns and barcode features in rows.</p>
+<p>cellhashR expects count data with cells in columns and barcode
+features in rows.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/BimberLab/cellhashR" class="external-link">cellhashR</a></span><span class="op">)</span></span>
 <span><span class="va">rawCountData</span> <span class="op">&lt;-</span> <span class="st">"../tests/testdata/MS/cell_type_counts.csv"</span></span>
@@ -115,9 +123,13 @@ img {
 <div class="section level2">
 <h2 id="normalization-qc">Normalization / QC<a class="anchor" aria-label="anchor" href="#normalization-qc"></a>
 </h2>
-<p>The plots appearing in the following figure from the BFF paper are generated using the cellhashR command PlotNormalizationQC.</p>
+<p>The plots appearing in the following figure from the BFF paper are
+generated using the cellhashR command PlotNormalizationQC.</p>
 <p><img src="BFF-example_files/figure-html/QC_fig.png" width="525"></p>
-<p>The following code produces QC plots helpful in visualizing the effects of various normalization procedures on cell hashing data, including the novel normalization Bimodal Quantile Normalization (BQN).</p>
+<p>The following code produces QC plots helpful in visualizing the
+effects of various normalization procedures on cell hashing data,
+including the novel normalization Bimodal Quantile Normalization
+(BQN).</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotNormalizationQC.html">PlotNormalizationQC</a></span><span class="op">(</span><span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Raw'</span>, <span class="st">'bimodalQuantile'</span>, <span class="st">'log2Center'</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="BFF-example_files/figure-html/NormalizationQC-1.png" width="576"><img src="BFF-example_files/figure-html/NormalizationQC-2.png" width="576"><img src="BFF-example_files/figure-html/NormalizationQC-3.png" width="576"><img src="BFF-example_files/figure-html/NormalizationQC-4.png" width="576"></p>
@@ -131,7 +143,11 @@ img {
 <div class="section level2">
 <h2 id="generate-hashing-calls">Generate Hashing Calls<a class="anchor" aria-label="anchor" href="#generate-hashing-calls"></a>
 </h2>
-<p>The cellhashR command GenerateCellHashingCalls performs demultiplexing analysis on the data using the algorithms listed in “methods” (BFF_raw and BFF_cluster in the current analysis). Below are results from four calls to GenerateCellHashingCalls, each time using a different parameter set for BFF_cluster.</p>
+<p>The cellhashR command GenerateCellHashingCalls performs
+demultiplexing analysis on the data using the algorithms listed in
+“methods” (BFF_raw and BFF_cluster in the current analysis). Below are
+results from four calls to GenerateCellHashingCalls, each time using a
+different parameter set for BFF_cluster.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">methods</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bff_raw"</span>, <span class="st">"bff_cluster"</span><span class="op">)</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="va">methods</span>, cellbarcodeWhitelist <span class="op">=</span> <span class="va">cellbarcodeWhitelist</span>, metricsFile <span class="op">=</span> <span class="va">metricsFile</span>, bff_cluster.doublet_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.neg_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.dist_frac<span class="op">=</span><span class="fl">0.1</span><span class="op">)</span></span>
@@ -141,10 +157,19 @@ img {
 </h4>
 <pre><code><span><span class="co">## [1] "Starting BFF_raw"</span></span>
 <span><span class="co">## [1] "rows dropped for low counts: 0 of 12"</span></span></code></pre>
-<p>The lines of output above are printed when BFF_raw is run (as opposed to BFF_cluster).</p>
+<p>The lines of output above are printed when BFF_raw is run (as opposed
+to BFF_cluster).</p>
 <p><img src="BFF-example_files/figure-html/unnamed-chunk-3-1.png" width="576"></p>
-<p>The figure above will be generated each time BFF is run on this data (in either the threshold mode or the cluster mode). Similarly, the list of thresholds below (not in log-space) is given each time BFF is run on the data. Both outputs are shown in this document only this once, for sake of brevity.</p>
-<p>BFF_raw classifies droplets based on comparison of raw count values to the thresholds found by fitting. Droplets are classified as singlets when they are positive for just one barcode, as doublets when positive for multiple barcodes, and as negatives when they are negative for all barcodes.</p>
+<p>The figure above will be generated each time BFF is run on this data
+(in either the threshold mode or the cluster mode). Similarly, the list
+of thresholds below (not in log-space) is given each time BFF is run on
+the data. Both outputs are shown in this document only this once, for
+sake of brevity.</p>
+<p>BFF_raw classifies droplets based on comparison of raw count values
+to the thresholds found by fitting. Droplets are classified as singlets
+when they are positive for just one barcode, as doublets when positive
+for multiple barcodes, and as negatives when they are negative for all
+barcodes.</p>
 <pre><code><span><span class="co">## [1] "Thresholds:"</span></span>
 <span><span class="co">## [1] "Bar12: 137.252466391685"</span></span>
 <span><span class="co">## [1] "Bar11: 101.320341426663"</span></span>
@@ -162,27 +187,51 @@ img {
 <div class="section level4">
 <h4 id="bff_cluster">BFF_cluster<a class="anchor" aria-label="anchor" href="#bff_cluster"></a>
 </h4>
-<p>The figure below demonstrates the theory on which BFF_cluster operates. BFF_cluster classification is tunable with three parameters that affect thresholds in the 2D space of top 2 normalized counts. Parameter values are specified for the three parameters <strong>bff_cluster.doublet_thresh</strong> (shown as beta_c in the figure), <strong>bff_cluster.neg_thresh</strong> (shown as alpha_c in the figure), and <strong>bff_cluster.dist_frac</strong> (shown as delta_c in the figure) as demonstrated in the call to GenerateCellHashingCalls above.</p>
+<p>The figure below demonstrates the theory on which BFF_cluster
+operates. BFF_cluster classification is tunable with three parameters
+that affect thresholds in the 2D space of top 2 normalized counts.
+Parameter values are specified for the three parameters
+<strong>bff_cluster.doublet_thresh</strong> (shown as beta_c in the
+figure), <strong>bff_cluster.neg_thresh</strong> (shown as alpha_c in
+the figure), and <strong>bff_cluster.dist_frac</strong> (shown as
+delta_c in the figure) as demonstrated in the call to
+GenerateCellHashingCalls above.</p>
 <p><img src="BFF-example_files/figure-html/sim_curves.png" width="525"></p>
 <div class="section level5">
 <h5 id="bff_cluster-0-05-0-05-0-1">BFF_cluster (0.05, 0.05, 0.1)<a class="anchor" aria-label="anchor" href="#bff_cluster-0-05-0-05-0-1"></a>
 </h5>
-<p>The first set of graphs below demonstrates output for default values for parameters bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.05, 0.05, and 0.1, respectively.</p>
+<p>The first set of graphs below demonstrates output for default values
+for parameters bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and
+bff_cluster.dist_frac of 0.05, 0.05, and 0.1, respectively.</p>
 <pre><code><span><span class="co">## [1] "Starting BFF_cluster"</span></span>
 <span><span class="co">## [1] "rows dropped for low counts: 0 of 12"</span></span>
 <span><span class="co">## [1] "Doublet thresh:  0.05"</span></span>
 <span><span class="co">## [1] "Neg thresh:  0.05"</span></span>
 <span><span class="co">## [1] "Min distance as fraction of distance between peaks:  0.1"</span></span></code></pre>
 <p><img src="BFF-example_files/figure-html/unnamed-chunk-2-18.png" width="576"></p>
-<p>The lines of output above are printed when BFF_cluster is run. The parameter values output here are the default values for BFF_cluster.</p>
-<p>The figure above is generated each time BFF_cluster is run (BQN threshold values are not affected by parameter values) but is shown only once here for brevity. In this figure, BQN data and BQN thresholds are shown.</p>
-<p>The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.05, 0.05, and 0.1, respectively. The figure on the right compares the BFF_cluster classifications with BFF_raw classifications (consensus output can be ignored).</p>
+<p>The lines of output above are printed when BFF_cluster is run. The
+parameter values output here are the default values for BFF_cluster.</p>
+<p>The figure above is generated each time BFF_cluster is run (BQN
+threshold values are not affected by parameter values) but is shown only
+once here for brevity. In this figure, BQN data and BQN thresholds are
+shown.</p>
+<p>The figure on the left below shows how BFF_cluster droplet
+classifications cluster in the 2D space of top 2 normalized counts for
+parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh,
+and bff_cluster.dist_frac of 0.05, 0.05, and 0.1, respectively. The
+figure on the right compares the BFF_cluster classifications with
+BFF_raw classifications (consensus output can be ignored).</p>
 <p><img src="BFF-example_files/figure-html/unnamed-chunk-2-19.png" width="576"><img src="BFF-example_files/figure-html/unnamed-chunk-2-35.png" width="576"></p>
 </div>
 <div class="section level5">
 <h5 id="bff_cluster-0-2-0-05-0-1">BFF_cluster (0.2, 0.05, 0.1)<a class="anchor" aria-label="anchor" href="#bff_cluster-0-2-0-05-0-1"></a>
 </h5>
-<p>The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.2, 0.05, and 0.1, respectively. The figure on the right compares the BFF_cluster classifications with BFF_raw classifications (consensus output can be ignored).</p>
+<p>The figure on the left below shows how BFF_cluster droplet
+classifications cluster in the 2D space of top 2 normalized counts for
+parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh,
+and bff_cluster.dist_frac of 0.2, 0.05, and 0.1, respectively. The
+figure on the right compares the BFF_cluster classifications with
+BFF_raw classifications (consensus output can be ignored).</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="va">methods</span>, cellbarcodeWhitelist <span class="op">=</span> <span class="va">cellbarcodeWhitelist</span>, metricsFile <span class="op">=</span> <span class="va">metricsFile</span>, bff_cluster.doublet_thresh<span class="op">=</span><span class="fl">0.2</span>, bff_cluster.neg_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.dist_frac<span class="op">=</span><span class="fl">0.1</span><span class="op">)</span></span>
 <span></span>
@@ -197,7 +246,12 @@ img {
 <div class="section level5">
 <h5 id="bff_cluster-0-05-0-2-0-1">BFF_cluster (0.05, 0.2, 0.1)<a class="anchor" aria-label="anchor" href="#bff_cluster-0-05-0-2-0-1"></a>
 </h5>
-<p>The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.05, 0.2, and 0.1, respectively. The figure on the right compares the BFF_cluster classifications with BFF_raw classifications (consensus output can be ignored).</p>
+<p>The figure on the left below shows how BFF_cluster droplet
+classifications cluster in the 2D space of top 2 normalized counts for
+parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh,
+and bff_cluster.dist_frac of 0.05, 0.2, and 0.1, respectively. The
+figure on the right compares the BFF_cluster classifications with
+BFF_raw classifications (consensus output can be ignored).</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="va">methods</span>, cellbarcodeWhitelist <span class="op">=</span> <span class="va">cellbarcodeWhitelist</span>, metricsFile <span class="op">=</span> <span class="va">metricsFile</span>, bff_cluster.doublet_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.neg_thresh<span class="op">=</span><span class="fl">0.2</span>, bff_cluster.dist_frac<span class="op">=</span><span class="fl">0.1</span><span class="op">)</span></span>
 <span></span>
@@ -212,7 +266,12 @@ img {
 <div class="section level5">
 <h5 id="bff_cluster-0-05-0-05-0-25">BFF_cluster (0.05, 0.05, 0.25)<a class="anchor" aria-label="anchor" href="#bff_cluster-0-05-0-05-0-25"></a>
 </h5>
-<p>The figure on the left below shows how BFF_cluster droplet classifications cluster in the 2D space of top 2 normalized counts for parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh, and bff_cluster.dist_frac of 0.05, 0.05, and 0.25, respectively. The figure on the right compares the BFF_cluster classifications with BFF_raw classifications (consensus output can be ignored).</p>
+<p>The figure on the left below shows how BFF_cluster droplet
+classifications cluster in the 2D space of top 2 normalized counts for
+parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh,
+and bff_cluster.dist_frac of 0.05, 0.05, and 0.25, respectively. The
+figure on the right compares the BFF_cluster classifications with
+BFF_raw classifications (consensus output can be ignored).</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="va">methods</span>, cellbarcodeWhitelist <span class="op">=</span> <span class="va">cellbarcodeWhitelist</span>, metricsFile <span class="op">=</span> <span class="va">metricsFile</span>, bff_cluster.doublet_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.neg_thresh<span class="op">=</span><span class="fl">0.05</span>, bff_cluster.dist_frac<span class="op">=</span><span class="fl">0.25</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">df</span>, file <span class="op">=</span> <span class="va">callFile</span>, sep <span class="op">=</span> <span class="st">'\t'</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span>, quote <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
