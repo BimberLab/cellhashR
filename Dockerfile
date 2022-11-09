@@ -2,19 +2,19 @@ FROM bioconductor/bioconductor_docker:latest
 
 # NOTE: if anything breaks the dockerhub build cache, you will probably need to build locally and push to dockerhub.
 # After the cache is in place, builds from github commits should be fast.
+# NOTE: locales / locales-all added due to errors with install_deps() and special characters in the DESCRIPTION file for niaid/dsb \
+# NOTE: libicu-dev added to avoid stringi /  libicui18n.so.66: cannot open shared object file error
+# NOTE: libssl-dev libcrypto-dev added due to 'Cannot find libcrypto error'
 RUN apt-get update -y \
 	&& apt-get upgrade -y \
 	&& apt-get install -y \
 		libhdf5-dev \
 		libpython3-dev \
 		python3-pip \
-        # NOTE: these were added due to errors with install_deps() for dependencies with special characters in the DESCRIPTION
         locales \
         locales-all \
-        #NOTE: added to avoid stringi /  libicui18n.so.66: cannot open shared object file error
         libicu-dev \
-        # Cannot find libcrypto error:
-        libssl-dev libcrypto-dev \
+        libssl-dev libcrypto++-dev \
 	&& pip3 install umap-learn demuxEM \
     && pip3 install git+https://github.com/bbimber/GMM-Demux.git@random_seed \
 	&& apt-get clean \
