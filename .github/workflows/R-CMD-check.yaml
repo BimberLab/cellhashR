@@ -19,7 +19,8 @@ jobs:
       matrix:
         config:
           - {os: ubuntu-20.04, r: 'devel', bioc: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
-          - {os: ubuntu-20.04, r: '4.2', bioc: '3.15', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest", pkgdown: "true"}
+          - {os: ubuntu-20.04, r: '4.3', bioc: '3.16', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest", pkgdown: "true"}
+          - {os: ubuntu-20.04, r: '4.2', bioc: '3.15', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
           - {os: ubuntu-20.04, r: '4.1', bioc: '3.14', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
 
     env:
