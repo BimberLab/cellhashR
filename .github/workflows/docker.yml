@@ -10,7 +10,6 @@ jobs:
   generate:
     name: Build Docker
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v2
