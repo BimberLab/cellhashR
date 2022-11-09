@@ -14,7 +14,7 @@ RUN apt-get update -y \
         #NOTE: added to avoid stringi /  libicui18n.so.66: cannot open shared object file error
         libicu-dev \
         # Cannot find libcrypto error:
-        libssl-dev libcrypto-dev libssl1.1 \
+        libssl-dev libcrypto-dev \
 	&& pip3 install umap-learn demuxEM \
     && pip3 install git+https://github.com/bbimber/GMM-Demux.git@random_seed \
 	&& apt-get clean \
