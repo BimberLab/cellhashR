@@ -1,4 +1,4 @@
-FROM bioconductor/bioconductor_docker:RELEASE_3_16
+FROM bioconductor/bioconductor_docker:latest
 
 # NOTE: if anything breaks the dockerhub build cache, you will probably need to build locally and push to dockerhub.
 # After the cache is in place, builds from github commits should be fast.
@@ -35,6 +35,7 @@ RUN Rscript -e "install.packages(c('devtools', 'stringi', 'BiocManager', 'remote
     && echo "Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS='true');" >> ~/.Rprofile \
     # To avoid pthread_create() error. See: https://github.com/bmbolstad/preprocessCore/issues/1 and https://github.com/bmbolstad/preprocessCore/issues/12
     && Rscript -e "remotes::install_github('bmbolstad/preprocessCore', dependencies = T, upgrade = 'always', configure.args = '--disable-threading')" \
+    && Rscript -e "BiocManager::install('DropletUtils', ask = FALSE, dependencies = T, upgrade = 'always');" \
     && Rscript -e "devtools::install_github(repo = 'BimberLab/cellhashR', ref = 'master', dependencies = T, upgrade = 'always')" \
 	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
