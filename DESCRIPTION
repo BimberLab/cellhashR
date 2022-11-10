@@ -50,7 +50,6 @@ RoxygenNote: 7.1.2
 URL: https://github.com/BimberLab/cellhashR
 BugReports: https://github.com/BimberLab/cellhashR/issues
 Remotes:
-    bioc::DropletUtils,
     bmbolstad/preprocessCore
 Config/reticulate:
   list(

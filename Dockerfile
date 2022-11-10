@@ -2,13 +2,13 @@ FROM bioconductor/bioconductor_docker:latest
 
 # NOTE: if anything breaks the dockerhub build cache, you will probably need to build locally and push to dockerhub.
 # After the cache is in place, builds from github commits should be fast.
+# NOTE: locales / locales-all added due to errors with install_deps() and special characters in the DESCRIPTION file for niaid/dsb \
 RUN apt-get update -y \
 	&& apt-get upgrade -y \
 	&& apt-get install -y \
 		libhdf5-dev \
 		libpython3-dev \
 		python3-pip \
-        # NOTE: these were added due to errors with install_deps() for dependencies with special characters in the DESCRIPTION
         locales \
         locales-all \
 	&& pip3 install umap-learn demuxEM \
@@ -24,8 +24,8 @@ ENV NUMBA_CACHE_DIR=/tmp
 ENV MPLCONFIGDIR=/tmp
 
 # Let this run for the purpose of installing/caching dependencies
-RUN Rscript -e "install.packages(c('devtools', 'BiocManager', 'remotes'), dependencies=TRUE, ask = FALSE)" \
-	&& echo "local({\noptions(repos = BiocManager::repositories())\n})\n" >> ~/.Rprofile \
+RUN Rscript -e "install.packages(c('devtools', 'stringi', 'BiocManager', 'remotes'), dependencies=TRUE, ask = FALSE)" \
+	&& echo "local({options(repos = BiocManager::repositories())})" >> ~/.Rprofile \
 	&& echo "Sys.setenv(R_BIOC_VERSION=as.character(BiocManager::version()));" >> ~/.Rprofile \
     # NOTE: this was added to avoid the build dying if this downloads a binary built on a later R version
     && echo "Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS='true');" >> ~/.Rprofile \
