@@ -25,13 +25,12 @@ ENV MPLCONFIGDIR=/tmp
 
 # Let this run for the purpose of installing/caching dependencies
 RUN Rscript -e "install.packages(c('devtools', 'stringi', 'BiocManager', 'remotes'), dependencies=TRUE, ask = FALSE)" \
-	&& echo "local({\noptions(repos = BiocManager::repositories())\n})\n" >> ~/.Rprofile \
+	&& echo "local({options(repos = BiocManager::repositories())})" >> ~/.Rprofile \
 	&& echo "Sys.setenv(R_BIOC_VERSION=as.character(BiocManager::version()));" >> ~/.Rprofile \
     # NOTE: this was added to avoid the build dying if this downloads a binary built on a later R version
     && echo "Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS='true');" >> ~/.Rprofile \
     # To avoid pthread_create() error. See: https://github.com/bmbolstad/preprocessCore/issues/1 and https://github.com/bmbolstad/preprocessCore/issues/12
     && Rscript -e "remotes::install_github('bmbolstad/preprocessCore', dependencies = T, upgrade = 'always', configure.args = '--disable-threading')" \
-    && Rscript -e "BiocManager::install('DropletUtils', ask = FALSE, dependencies = T, upgrade = 'always');" \
     && Rscript -e "devtools::install_github(repo = 'BimberLab/cellhashR', ref = 'master', dependencies = T, upgrade = 'always')" \
 	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
