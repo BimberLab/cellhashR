@@ -44,9 +44,9 @@ ADD . /cellhashR
 
 #NOTE: do manual install of fixed DelayedMatrixStats until new version is pushed
 RUN cd /cellhashR \
-	&& R CMD build . \
 	&& Rscript -e "BiocManager::install(ask = F, upgrade = 'always');" \
 	&& Rscript -e "devtools::install_deps(pkg = '.', dependencies = TRUE, upgrade = 'always');" \
+	&& R CMD build . \
 	&& R CMD INSTALL --build *.tar.gz \
     # NOTE: currently BioConductor reports preprocessCore version 1.56.0, while the github repo reports 1.55.2. Therefore do this manual install after installing cellhashR:
     && Rscript -e "remotes::install_github('bmbolstad/preprocessCore', dependencies = T, upgrade = 'always', force = TRUE, configure.args = '--disable-threading')" \
