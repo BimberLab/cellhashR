@@ -1,4 +1,10 @@
-FROM bioconductor/bioconductor_docker:latest
+# Note: this is the last base version supporting ubuntu focal, not jammy
+FROM rocker/rstudio:4.2.1
+
+##  Add Bioconductor system dependencies
+RUN wget -O install_bioc_sysdeps.sh https://raw.githubusercontent.com/Bioconductor/bioconductor_docker/master/bioc_scripts/install_bioc_sysdeps.sh \
+    && bash ./install_bioc_sysdeps.sh \
+    && rm ./install_bioc_sysdeps.sh
 
 # NOTE: if anything breaks the dockerhub build cache, you will probably need to build locally and push to dockerhub.
 # After the cache is in place, builds from github commits should be fast.
@@ -12,7 +18,7 @@ RUN apt-get update -y \
         locales \
         locales-all \
 	&& pip3 install umap-learn demuxEM \
-    && pip3 install git+https://github.com/bbimber/GMM-Demux.git@random_seed \
+    && pip3 install git+https://github.com/CHPGenetics/GMM-Demux \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 
@@ -31,7 +37,6 @@ RUN Rscript -e "install.packages(c('devtools', 'stringi', 'BiocManager', 'remote
     && echo "Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS='true');" >> ~/.Rprofile \
     # To avoid pthread_create() error. See: https://github.com/bmbolstad/preprocessCore/issues/1 and https://github.com/bmbolstad/preprocessCore/issues/12
     && Rscript -e "remotes::install_github('bmbolstad/preprocessCore', dependencies = T, upgrade = 'always', configure.args = '--disable-threading')" \
-    && Rscript -e "devtools::install_github(repo = 'BimberLab/cellhashR', ref = 'master', dependencies = T, upgrade = 'always')" \
 	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 # This should not be cached if the files change
