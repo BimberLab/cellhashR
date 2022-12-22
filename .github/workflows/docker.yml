@@ -49,6 +49,8 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
+          build-args: |
+            "GH_PAT=${{ secrets.PAT }}"
           pull: true
           push: true
           tags: ghcr.io/bimberlab/cellhashr:nightly,ghcr.io/bimberlab/cellhashr:latest

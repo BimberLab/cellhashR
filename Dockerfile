@@ -1,6 +1,8 @@
 # Note: this is the last base version supporting ubuntu focal, not jammy
 FROM rocker/rstudio:4.2.1
 
+ARG GH_PAT='NOT_SET'
+
 ##  Add Bioconductor system dependencies
 RUN wget -O install_bioc_sysdeps.sh https://raw.githubusercontent.com/Bioconductor/bioconductor_docker/master/bioc_scripts/install_bioc_sysdeps.sh \
     && bash ./install_bioc_sysdeps.sh \
@@ -44,6 +46,7 @@ ADD . /cellhashR
 
 #NOTE: do manual install of fixed DelayedMatrixStats until new version is pushed
 RUN cd /cellhashR \
+    && if [ "${GH_PAT}" != 'NOT_SET' ];then echo 'Setting GITHUB_PAT to: '${GH_PAT}; export GITHUB_PAT="${GH_PAT}";fi \
 	&& Rscript -e "BiocManager::install(ask = F, upgrade = 'always');" \
 	&& Rscript -e "devtools::install_deps(pkg = '.', dependencies = TRUE, upgrade = 'always');" \
 	&& R CMD build . \
