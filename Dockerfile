@@ -19,8 +19,8 @@ RUN apt-get update -y \
 		python3-pip \
         locales \
         locales-all \
-	&& pip3 install umap-learn demuxEM \
-    && pip3 install git+https://github.com/CHPGenetics/GMM-Demux \
+	&& pip3 install umap-learn demuxEM scikit-learn\
+    && pip3 install git+https://github.com/bbimber/GMM-Demux \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 
