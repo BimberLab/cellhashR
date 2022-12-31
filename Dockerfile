@@ -32,7 +32,8 @@ ENV NUMBA_CACHE_DIR=/tmp
 ENV MPLCONFIGDIR=/tmp
 
 # Let this run for the purpose of installing/caching dependencies
-RUN Rscript -e "install.packages(c('devtools', 'stringi', 'BiocManager', 'remotes'), dependencies=TRUE, ask = FALSE)" \
+RUN if [ "${GH_PAT}" != 'NOT_SET' ];then echo 'Setting GITHUB_PAT to: '${GH_PAT}; export GITHUB_PAT="${GH_PAT}";fi \
+    && Rscript -e "install.packages(c('devtools', 'stringi', 'BiocManager', 'remotes'), dependencies=TRUE, ask = FALSE)" \
 	&& echo "local({options(repos = BiocManager::repositories())})" >> ~/.Rprofile \
 	&& echo "Sys.setenv(R_BIOC_VERSION=as.character(BiocManager::version()));" >> ~/.Rprofile \
     # NOTE: this was added to avoid the build dying if this downloads a binary built on a later R version
