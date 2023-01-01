@@ -83,7 +83,8 @@
 <span>  keepMarkdown <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  molInfoFile <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  majorityConsensusThreshold <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  callerDisagreementThreshold <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  callerDisagreementThreshold <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  doTSNE <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -155,6 +156,10 @@
 
 <dt>callerDisagreementThreshold</dt>
 <dd><p>If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an disagreement rate above this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.</p></dd>
+
+
+<dt>doTSNE</dt>
+<dd><p>If true, tSNE will be run on results as part of QC. This can be memory intensive and is not strictly needed, so it can be skipped if desired.</p></dd>
 
 </dl></div>
 
