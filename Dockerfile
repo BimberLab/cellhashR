@@ -11,7 +11,8 @@ RUN wget -O install_bioc_sysdeps.sh https://raw.githubusercontent.com/Bioconduct
 # NOTE: if anything breaks the dockerhub build cache, you will probably need to build locally and push to dockerhub.
 # After the cache is in place, builds from github commits should be fast.
 # NOTE: locales / locales-all added due to errors with install_deps() and special characters in the DESCRIPTION file for niaid/dsb \
-# NOTE: switch back to main GMMdex repo when this is resolved: https://github.com/CHPGenetics/GMM-Demux/pull/8
+# NOTE: switch back to main GMMdemux repo when this is resolved: https://github.com/CHPGenetics/GMM-Demux/pull/8
+# NOTE: the specific numpy version is designed to avoid a demuxEM issue with np.object:
 RUN apt-get update -y \
 	&& apt-get upgrade -y \
 	&& apt-get install -y \
@@ -20,7 +21,7 @@ RUN apt-get update -y \
 		python3-pip \
         locales \
         locales-all \
-	&& pip3 install umap-learn demuxEM scikit-learn\
+	&& pip3 install umap-learn demuxEM scikit-learn numpy==1.23.5 \
     && pip3 install git+https://github.com/bbimber/GMM-Demux \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
