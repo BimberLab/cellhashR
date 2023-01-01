@@ -21,7 +21,8 @@ CallAndGenerateReport(
   keepMarkdown = FALSE,
   molInfoFile = NULL,
   majorityConsensusThreshold = NULL,
-  callerDisagreementThreshold = NULL
+  callerDisagreementThreshold = NULL,
+  doTSNE = TRUE
 )
 }
 \arguments{

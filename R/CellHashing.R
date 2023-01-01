@@ -695,7 +695,7 @@ GetExampleMarkdown <- function(dest) {
 #' @param title A title for the HTML report
 #' @importFrom rmdformats html_clean
 #' @export
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, h5File = NULL, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), methodsForConsensus = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL, majorityConsensusThreshold = NULL, callerDisagreementThreshold = NULL) {
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, h5File = NULL, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), methodsForConsensus = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL, majorityConsensusThreshold = NULL, callerDisagreementThreshold = NULL, doTSNE = TRUE) {
   rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
   if (!file.exists(rmd)) {
     stop(paste0('Unable to find file: ', rmd))
