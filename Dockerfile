@@ -11,6 +11,7 @@ RUN wget -O install_bioc_sysdeps.sh https://raw.githubusercontent.com/Bioconduct
 # NOTE: if anything breaks the dockerhub build cache, you will probably need to build locally and push to dockerhub.
 # After the cache is in place, builds from github commits should be fast.
 # NOTE: locales / locales-all added due to errors with install_deps() and special characters in the DESCRIPTION file for niaid/dsb \
+# NOTE: switch back to main GMMdex repo when this is resolved: https://github.com/CHPGenetics/GMM-Demux/pull/8
 RUN apt-get update -y \
 	&& apt-get upgrade -y \
 	&& apt-get install -y \

@@ -687,6 +687,7 @@ GetExampleMarkdown <- function(dest) {
 #' @param metricsFile If provided, summary metrics will be written to this file.
 #' @param rawCountsExport If provided, the raw count matrix, after processing, will be written as an RDS object to this file. This can be useful for debugging.
 #' @param skipNormalizationQc If true, the normalization/QC plots will be skipped. These can be time consuming on large input data.
+#' @param doTSNE If true, tSNE will be run on results as part of QC. This can be memory intensive and is not strictly needed, so it can be skipped if desired.
 #' @param keepMarkdown If true, the markdown file will be saved, in addition to the HTML file
 #' @param molInfoFile An optional path to the 10x molecule_info.h5.
 #' @param majorityConsensusThreshold This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.
