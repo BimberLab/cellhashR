@@ -9,14 +9,14 @@ utils::globalVariables(
 )
 
 
-GenerateCellHashCallsDropletUtils <- function(barcodeMatrix, verbose = TRUE, assay = 'HTO', methodName = 'dropletutils', label = 'DropletUtils hashedDrops', runEmptyDrops = FALSE, metricsFile = NULL, doTSNE = TRUE) {
+GenerateCellHashCallsDropletUtils <- function(barcodeMatrix, verbose = TRUE, assay = 'HTO', methodName = 'dropletutils', label = 'DropletUtils hashedDrops', runEmptyDrops = FALSE, metricsFile = NULL, doTSNE = TRUE, confident.min = 0.5) {
 	if (verbose) {
 		print(paste0('Starting ', label))
 	}
 
 	tryCatch({
 		seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
-		seuratObj <- ThresholdHashedDrops(seuratObj = seuratObj, assay = assay, columnSuffix = 'dropletutils', runEmptyDrops = runEmptyDrops, metricsFile = metricsFile)
+		seuratObj <- ThresholdHashedDrops(seuratObj = seuratObj, assay = assay, columnSuffix = 'dropletutils', runEmptyDrops = runEmptyDrops, metricsFile = metricsFile, confident.min = confident.min)
 
 		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'dropletutils', assay = assay, doTSNE = doTSNE, doHeatmap = F)
 
@@ -32,7 +32,7 @@ GenerateCellHashCallsDropletUtils <- function(barcodeMatrix, verbose = TRUE, ass
 	})
 }
 
-ThresholdHashedDrops <- function(seuratObj, assay, columnSuffix, runEmptyDrops = FALSE, seed = 1234, metricsFile = NULL) {
+ThresholdHashedDrops <- function(seuratObj, assay, columnSuffix, runEmptyDrops = FALSE, seed = GetSeed(), metricsFile = NULL) {
 	barcodeMatrix <- Seurat::GetAssayData(
 		object = seuratObj,
 		assay = assay,
@@ -64,10 +64,10 @@ ThresholdHashedDrops <- function(seuratObj, assay, columnSuffix, runEmptyDrops =
 		print(P1 | P2)
 
 		ambience <- S4Vectors::metadata(hash.calls)$ambient
-		hash.stats <- DropletUtils::hashedDrops(barcodeMatrix[,is.cell], ambient = ambience)
+		hash.stats <- DropletUtils::hashedDrops(barcodeMatrix[,is.cell], ambient = ambience, confident.min = confident.min)
 	} else {
 		ambience <- DropletUtils::inferAmbience(barcodeMatrix)
-		hash.stats <- DropletUtils::hashedDrops(barcodeMatrix, ambient = ambience)
+		hash.stats <- DropletUtils::hashedDrops(barcodeMatrix, ambient = ambience, confident.min = confident.min)
 	}
 
 	print('Inferred Ambience:')
