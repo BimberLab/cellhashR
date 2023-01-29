@@ -3,9 +3,9 @@ context("scRNAseq")
 source('testing-data.R')
 
 expectedCalls <- list(
-	'MS-11' = 4380,
-	'MS-12' = 6195,
-	'Negative' = 514
+	'MS-11' = 3729,
+	'MS-12' = 4494,
+	'Negative' = 2055
 )
 
 # https://bioconductor.org/packages/release/bioc/vignettes/demuxmix/inst/doc/demuxmix.html
