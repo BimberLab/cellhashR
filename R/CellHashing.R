@@ -11,7 +11,7 @@
 #' @include demuxmix.R
 #'
 utils::globalVariables(
-  names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall', 'consensuscall.global', 'topFraction', 'totalReadsPerCell'),
+  names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall', 'consensuscall.global', 'topFraction', 'totalReadsPerCell', 'Method', 'DisagreementRate', 'Label', 'TotalPerCell'),
   package = 'cellhashR',
   add = TRUE
 )
@@ -137,7 +137,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @description The primary methods to generating cell hashing calls from a filtered matrix of count data.
 #' @return A data frame of results.
 #' @export
-GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'multiseq', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, ...) {
+GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'gmm_demux', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, ...) {
   .LogProgress('Generating calls')
   if (is.data.frame(barcodeMatrix)) {
     print('Converting input data.frame to a matrix')
@@ -706,7 +706,7 @@ GetExampleMarkdown <- function(dest) {
 #' @param title A title for the HTML report
 #' @importFrom rmdformats html_clean
 #' @export
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, h5File = NULL, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('multiseq', 'htodemux'), methodsForConsensus = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL, majorityConsensusThreshold = NULL, callerDisagreementThreshold = NULL, doTSNE = TRUE) {
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, h5File = NULL, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('bff_cluster', 'gmm_demux', 'dropletutils'), methodsForConsensus = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL, majorityConsensusThreshold = NULL, callerDisagreementThreshold = NULL, doTSNE = TRUE) {
   rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
   if (!file.exists(rmd)) {
     stop(paste0('Unable to find file: ', rmd))

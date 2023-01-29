@@ -17,7 +17,7 @@ GenerateCellHashCallsDemuxmix <- function(barcodeMatrix, rawFeatureMatrixH5, met
 
   tryCatch({
     # Calculate nFeature using the h5 file:
-    gexCounts <- DropletUtils::read10xCounts(h5File)
+    gexCounts <- DropletUtils::read10xCounts(rawFeatureMatrixH5)
     gexData <- SingleCellExperiment::counts(gexCounts)
     colnames(gexData) <- gexCounts$Barcode
     rm(gexCounts)

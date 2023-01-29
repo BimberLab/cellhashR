@@ -6,7 +6,7 @@
 \usage{
 GenerateCellHashingCalls(
   barcodeMatrix,
-  methods = c("bff_cluster", "multiseq", "dropletutils"),
+  methods = c("bff_cluster", "gmm_demux", "dropletutils"),
   methodsForConsensus = NULL,
   cellbarcodeWhitelist = NULL,
   metricsFile = NULL,

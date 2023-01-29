@@ -11,7 +11,7 @@ CallAndGenerateReport(
   h5File = NULL,
   barcodeWhitelist = NULL,
   cellbarcodeWhitelist = "inputMatrix",
-  methods = c("multiseq", "htodemux"),
+  methods = c("bff_cluster", "gmm_demux", "dropletutils"),
   methodsForConsensus = NULL,
   minCountPerCell = 5,
   title = NULL,
