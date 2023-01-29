@@ -49,7 +49,7 @@ GenerateCellHashCallsDemuxmix <- function(barcodeMatrix, rawFeatureMatrixH5, met
 
     classLabels <- demuxmix::dmmClassify(dmm)
 
-    ind <- vapply(dmm@models, is, logical(1), "RegMixModel")
+    ind <- vapply(dmm@models, methods::is, logical(1), "RegMixModel")
     if (sum(ind) > 0) {
       demuxmix::plotDmmScatter(dmm)
     }
