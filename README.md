@@ -31,6 +31,14 @@ Each step of the workflow can either be run interactively in R (through the term
 
 [Click here to view an example QC report](https://bimberlab.github.io/cellhashR/articles/V01-QC-example.html)
 
+### <a name="example">Consensus Calling</a>
+
+In addition to allowing one to run multiple demuliplexing algorithms to compare results, cellhashR can generate a consensus call based on those scores. This can be useful,
+since some algorithms will perform better or worse under some conditions. This is automatically built into the dataframe returned by GenerateCellHashingCalls(). Some additional parameters that might be worth considering are:
+- There are separate arguments for 'methods' (i.e. which algorithms will be run), and 'methodsForConsensus', which determined the subset that will be used for the consensus call.
+- majorityConsensusThreshold: This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.
+- callerDisagreementThreshold: If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an disagreement rate above this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.
+
 ### <a name="example">Example Usage</a>
 
 Below are the primary functions of cellhashR needed to QC and score hashing data:
