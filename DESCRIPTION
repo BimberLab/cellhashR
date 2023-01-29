@@ -16,7 +16,7 @@ Imports:
     dplyr,
     tidyr,
     naturalsort,
-    Matrix,
+    Matrix (>= 1.5-3),
     ggplot2,
     forcats,
     egg,
