@@ -46,9 +46,13 @@ GenerateCellHashCallsDemuxmix <- function(barcodeMatrix, rawFeatureMatrixH5, met
 
     demuxmix::plotDmmHistogram(dmm)
     demuxmix::plotDmmPosteriorP(dmm)
-    demuxmix::plotDmmScatter(dmm)
 
     classLabels <- demuxmix::dmmClassify(dmm)
+
+    ind <- vapply(dmm@models, is, logical(1), "RegMixModel")
+    if (sum(ind) > 0) {
+      demuxmix::plotDmmScatter(dmm)
+    }
 
     df <- data.frame(cellbarcode = rownames(classLabels), classification.global = classLabels$Type, classification = classLabels$HTO)
 
