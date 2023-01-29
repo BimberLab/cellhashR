@@ -29,6 +29,10 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2.2.1
+        with:
+          # Use the previous version of buildx to force docker to save a V1 image,
+          # since Exacloud's outdated docker version cannot handle V2/OCI:
+          version: v0.9.1
 
       - name: Login to GitHub Container Registry
         if: github.event_name != 'pull_request'
