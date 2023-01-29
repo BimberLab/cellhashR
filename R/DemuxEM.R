@@ -30,11 +30,11 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 		# demuxEM seems to expect the cellbarcodes in the HTO CSV to lack the suffix, even if the h5 data has them
 		newToOldCellbarcode <- NULL
 		if (sum(grepl(names(df), pattern = '-[0-9]')) > 0) {
-			print('Adding removing cell barcode suffixes from input HTO matrix')
+			print('Removing cell barcode suffixes from input HTO matrix')
 			newToOldCellbarcode <- data.frame(origCellbarcode = names(df))
-			names(df) <- unique(sapply(names(df), function(x){
+			names(df) <- sapply(names(df), function(x){
 				return(unlist(strsplit(x, split = '-[0-9]'))[1])
-			}))
+			})
 
 			newToOldCellbarcode$updatedBarcode <- names(df)
 		}

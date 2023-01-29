@@ -32,7 +32,7 @@ CallAndGenerateReport(
 
 \item{callFile}{The file to which the table of calls will be written}
 
-\item{h5File}{demuxEM requires the 10x h5 gene expression count file. This is only required when demuxEM is used.}
+\item{h5File}{demuxEM requires the 10x h5 gene expression count file. This is only required when either demuxEM or demuxmix are used.}
 
 \item{barcodeWhitelist}{A vector of barcode names to retain.}
 

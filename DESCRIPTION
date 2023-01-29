@@ -41,7 +41,8 @@ Imports:
     ggExtra,
     magick,
     pdftools,
-    ggthemes
+    ggthemes,
+    demuxmix
 Suggests:
     devtools,
     testthat (>= 2.1.0),
@@ -63,6 +64,7 @@ Collate:
     'Visualization.R'
     'Normalization.R'
     'BFF_Demux.R'
+    'demuxmix.R'
     'DemuxEM.R'
     'GMM_Demux.R'
     'DropletUtils_Demux.R'

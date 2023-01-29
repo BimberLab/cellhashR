@@ -8,6 +8,7 @@
 #' @include DropletUtils_Demux.R
 #' @include GMM_Demux.R
 #' @include DemuxEM.R
+#' @include demuxmix.R
 #'
 utils::globalVariables(
   names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall', 'consensuscall.global', 'topFraction', 'totalReadsPerCell'),
@@ -122,7 +123,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @title Generate Cell Hashing Calls
 #'
 #' @param barcodeMatrix The filtered matrix of hashing count data
-#' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux, multiseq, dropletutils, gmm_demux, demuxem, bff_raw, and bff_cluster
+#' @param methods A vector of one or more calling methods to use. Currently supported are: htodemux, multiseq, dropletutils, gmm_demux, demuxem, demuxmix, bff_raw, and bff_cluster
 #' @param methodsForConsensus By default, a consensus call will be generated using all methods; however, if this parameter is provided, all algorithms specified by methods will be run, but only the list here will be used for the final consensus call. This allows one to see the results of a given caller without using it for the final calls.
 #' @param cellbarcodeWhitelist A vector of expected cell barcodes. This allows reporting on the total set of expected barcodes, not just those in the filtered count matrix.
 #' @param metricsFile If provided, summary metrics will be written to this file.
@@ -208,11 +209,21 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
       }
     } else if (method == 'demuxem'){
       fnArgs$barcodeMatrix <- barcodeMatrix
-      if (!'rawFeatureMatrixH5' %in% names(fnArgs)) {
+      if (!'rawFeatureMatrixH5' %in% names(fnArgs) || is.null(fnArgs[['rawFeatureMatrixH5']])) {
         stop('demuxEM requires the path to the 10x gene expression raw_feature_bc_matrix.h5 file. Please provide this as the argument demuxem.rawFeatureMatrixH5 = <filepath>')
       }
 
       calls <- do.call(GenerateCellHashCallsDemuxEM, fnArgs)
+      if (!is.null(calls)) {
+        callList[[method]] <- calls
+      }
+    } else if (method == 'demuxmix'){
+      fnArgs$barcodeMatrix <- barcodeMatrix
+      if (!'rawFeatureMatrixH5' %in% names(fnArgs) || is.null(fnArgs[['rawFeatureMatrixH5']])) {
+        stop('demuxmix requires the path to the 10x gene expression raw_feature_bc_matrix.h5 file. Please provide this as the argument demuxmix.rawFeatureMatrixH5 = <filepath>')
+      }
+
+      calls <- do.call(GenerateCellHashCallsDemuxmix, fnArgs)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
@@ -678,7 +689,7 @@ GetExampleMarkdown <- function(dest) {
 #' @param rawCountData The input barcode file or umi_count folder
 #' @param reportFile The file to which the HTML report will be written
 #' @param callFile The file to which the table of calls will be written
-#' @param h5File demuxEM requires the 10x h5 gene expression count file. This is only required when demuxEM is used.
+#' @param h5File demuxEM requires the 10x h5 gene expression count file. This is only required when either demuxEM or demuxmix are used.
 #' @param barcodeWhitelist A vector of barcode names to retain.
 #' @param cellbarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), a file with one cellbarcode per line, or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
 #' @param methods The set of methods to use for calling. See GenerateCellHashingCalls for options.
