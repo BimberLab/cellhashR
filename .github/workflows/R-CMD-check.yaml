@@ -21,11 +21,10 @@ jobs:
           - {os: 20.04, r: 'devel', bioc: 'devel'}
           - {os: 20.04, r: 'release', bioc: '3.16', pkgdown: "true"}
           # NOTE: disabled due to BiocManager / missing argument error
-          #- {os: 20.04, r: '4.2', bioc: '3.15', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
+          #- {os: 20.04, r: '4.2', bioc: '3.15'}
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
-      RSPM: ${{ matrix.config.rspm }}
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
@@ -49,7 +48,6 @@ jobs:
           python3 -m pip install --user demuxEM
           python3 -m pip install git+https://github.com/bbimber/GMM-Demux.git
 
-      # NOTE: Matrix install has been added to force 1.5.3. Can be removed after main repos updated.
       - name: Query dependencies
         run: |
           print(R.version)
@@ -59,7 +57,6 @@ jobs:
           cat(append = TRUE, file = "~/.Rprofile", "Sys.setenv(R_BIOC_VERSION=as.character(BiocManager::version()));");
           cat(append = TRUE, file = "~/.Rprofile", "Sys.setenv(USE_GMMDEMUX_SEED=1);");
           install.packages('remotes')
-          install.packages("Matrix", repos = "https://packagemanager.posit.co/cran/__linux__/focal/latest", update = TRUE, ask = FALSE)
           saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
           writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
         shell: Rscript {0}
