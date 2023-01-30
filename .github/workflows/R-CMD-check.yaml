@@ -18,14 +18,13 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: 20.04, r: 'devel', bioc: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
-          - {os: 20.04, r: 'release', bioc: '3.16', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest", pkgdown: "true"}
+          - {os: 20.04, r: 'devel', bioc: 'devel'}
+          - {os: 20.04, r: 'release', bioc: '3.16', pkgdown: "true"}
           # NOTE: disabled due to BiocManager / missing argument error
-          #- {os: 20.04, r: '4.2', bioc: '3.15', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
+          #- {os: 20.04, r: '4.2', bioc: '3.15'}
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
-      RSPM: ${{ matrix.config.rspm }}
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
@@ -35,6 +34,7 @@ jobs:
         with:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
+          use-public-rspm: true
 
       - uses: r-lib/actions/setup-pandoc@v2
 
@@ -43,20 +43,29 @@ jobs:
         # libharfbuzz-dev libfribidi-dev are added to fix textshaping install error
         # NOTE: switch back to main GMMdex repo when this is resolved: https://github.com/CHPGenetics/GMM-Demux/pull/8
         run: |
-          sudo apt-get update && sudo apt-get install -yq libharfbuzz-dev libfribidi-dev python3 python3-pip
+          sudo apt-get update && sudo apt-get install -yq libharfbuzz-dev libfribidi-dev python3 python3-pip libcurl4-openssl-dev
           python3 -m pip install --upgrade pip
           python3 -m pip install --user demuxEM
           python3 -m pip install git+https://github.com/bbimber/GMM-Demux.git
 
-      - name: Query dependencies
+      # NOTE: Matrix install has been added to force 1.5.3. Can be removed after main repos updated.
+      - name: Setup Bioconductor
         run: |
-          print(R.version)
+          install.packages(c('remotes', 'devtools'))
           if (!requireNamespace("BiocManager", quietly=TRUE))  install.packages("BiocManager");
           BiocManager::install(version = "${{ matrix.config.bioc }}", ask = FALSE);
-          cat(append = TRUE, file = "~/.Rprofile", "options(repos = BiocManager::repositories());")
+          cat(append = TRUE, file = "~/.Rprofile", "local({");
+          cat(append = TRUE, file = "~/.Rprofile", "repos <- append(getOption('repos'), BiocManager::repositories());");
+          cat(append = TRUE, file = "~/.Rprofile", "repos <- repos[!duplicated(names(repos))];");
+          cat(append = TRUE, file = "~/.Rprofile", "options(repos = repos);");
+          cat(append = TRUE, file = "~/.Rprofile", "});");
           cat(append = TRUE, file = "~/.Rprofile", "Sys.setenv(R_BIOC_VERSION=as.character(BiocManager::version()));");
           cat(append = TRUE, file = "~/.Rprofile", "Sys.setenv(USE_GMMDEMUX_SEED=1);");
-          install.packages('remotes')
+          install.packages("Matrix", repos = "https://packagemanager.posit.co/cran/__linux__/focal/latest", update = TRUE, ask = FALSE)
+        shell: Rscript {0}
+
+      - name: Query dependencies
+        run: |
           saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
           writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
         shell: Rscript {0}

@@ -360,7 +360,7 @@ PrintColumnQc <- function(barcodeMatrix) {
 
 			print(ggplot(df, aes(x=A, y=M)) +
 				geom_point() +
-				geom_line(data = newdat, aes(x=a, y = pred), size = 1, col=2) +
+				geom_line(data = newdat, aes(x=a, y = pred), linewidth = 1, col=2) +
 				ggtitle("MA-plot with Loess Fit of Bias") +
 				egg::theme_presentation()
 			)

@@ -187,7 +187,7 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
   for (i in 1:totalPages) {
     print(ggplot2::ggplot(df, aes(x = NormCount, color = Barcode)) +
       egg::theme_presentation(base_size = 14) +
-      geom_density(aes(y = sqrt(..density..)), size = 1) + 
+      geom_density(aes(y = sqrt(after_stat(density))), size = 1) +
       labs(y = 'sqrt(Density)', x = 'Value') + ggtitle('Normalized Data') +
       ggforce::facet_wrap_paginate(Barcode ~ Normalization, scales = 'free', ncol = length(unique(df$Normalization)), nrow = min(3, length(unique(df$Barcode))), strip.position = 'top', drop = FALSE, labeller = labeller(.multi_line = FALSE), page = i)
     )
@@ -215,7 +215,7 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
       guides(colour = guide_legend(override.aes = list(size=3)))
 
     P2 <- ggplot(snr, aes(x=Highest, y=Second) ) +
-      stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE) +
+      stat_density_2d(aes(fill = after_stat(density)), geom = "raster", contour = FALSE) +
       scale_fill_distiller(palette=16, direction=-1) +
       scale_x_continuous(expand = c(0, 0)) +
       scale_y_continuous(expand = c(0, 0)) +

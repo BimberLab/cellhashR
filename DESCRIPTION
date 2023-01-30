@@ -16,7 +16,7 @@ Imports:
     dplyr,
     tidyr,
     naturalsort,
-    Matrix,
+    Matrix (>= 1.5-3),
     ggplot2,
     forcats,
     egg,
@@ -41,7 +41,10 @@ Imports:
     ggExtra,
     magick,
     pdftools,
-    ggthemes
+    ggthemes,
+    demuxmix,
+    methods,
+    SingleCellExperiment
 Suggests:
     devtools,
     testthat (>= 2.1.0),
@@ -63,6 +66,7 @@ Collate:
     'Visualization.R'
     'Normalization.R'
     'BFF_Demux.R'
+    'demuxmix.R'
     'DemuxEM.R'
     'GMM_Demux.R'
     'DropletUtils_Demux.R'

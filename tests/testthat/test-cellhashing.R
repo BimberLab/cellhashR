@@ -50,11 +50,11 @@ test_that("Workflow works", {
 
 	df <- read.table(output, sep = '\t', header = TRUE)
 	expect_equal(nrow(df), 2500)
-	expect_equal(sum(df$consensuscall == 'MS-12'), 1124)
+	expect_equal(sum(df$consensuscall == 'MS-12'), 1244)
 
 	expect_true(file.exists(metricsFile))
 	metrics <- read.table(metricsFile, sep = '\t', header = FALSE)
-	expect_equal(nrow(metrics), 22)
+	expect_equal(nrow(metrics), 24)
 
 	expect_true(file.exists(rawCountsExport))
 	rawCountsMat <- readRDS(file = rawCountsExport)
@@ -74,7 +74,7 @@ test_that("Workflow works", {
 	
 	df <- read.table(output, sep = '\t', header = TRUE)
 	expect_equal(nrow(df), 2500)
-	expect_equal(sum(df$consensuscall == 'MS-12'), 1124)
+	expect_equal(sum(df$consensuscall == 'MS-12'), 1244)
 
 	# Repeat with callerDisagreementThreshold, which should drop htodemux
 	unlink(md)
@@ -84,9 +84,9 @@ test_that("Workflow works", {
 	
 	df <- read.table(output, sep = '\t', header = TRUE)
 	expect_equal(nrow(df), 2500)
-	expect_equal(sum(df$consensuscall == 'MS-12'), 1124)
-	expect_equal(sum(df$consensuscall == 'MS-11'), 866)
-	expect_equal(sum(df$consensuscall.global == 'Singlet'), 1990)
+	expect_equal(sum(df$consensuscall == 'MS-12'), 1244)
+	expect_equal(sum(df$consensuscall == 'MS-11'), 982)
+	expect_equal(sum(df$consensuscall.global == 'Singlet'), 2226)
 
 	unlink(html)
 	unlink(output)

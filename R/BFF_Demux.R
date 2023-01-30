@@ -3,7 +3,7 @@
 #' @include Visualization.R
 
 utils::globalVariables(
-  names = c('relative_counts', 'x', 'y', '..density..', 'Highest', 'Second', 'normedres', 'alpha_c', 'Negatives', 'beta_c', 'Doublets', 'delta_c', 'delta', 'Unidentifieds'),
+  names = c('relative_counts', 'x', 'y', 'density', 'Highest', 'Second', 'normedres', 'alpha_c', 'Negatives', 'beta_c', 'Doublets', 'delta_c', 'delta', 'Unidentifieds'),
   package = 'cellhashR',
   add = TRUE
 )
@@ -418,10 +418,10 @@ generateBFFGridPlot <- function(barcodeMatrix, xlab, maintitle, universal_cutoff
   totalPages <- GetTotalPlotPages(totalValues = length(unique(plotdata$Barcode)), perPage = maxPerPlot)
   for (i in 1:totalPages) {
     print(ggplot2::ggplot(plotdata, aes(x = Value)) +
-            geom_line(data = linedata, mapping = aes(x = x, y = y), color = "blue", size = 1) +
+            geom_line(data = linedata, mapping = aes(x = x, y = y), color = "blue", linewidth = 1) +
             egg::theme_presentation(base_size = 12) +
-            geom_line(data=cutoffs, aes(x=cutoff, y = y), size = 1, color = "red") +
-            geom_histogram(aes(y = sqrt(..density..)), size = 1, bins = nbins) +
+            geom_line(data=cutoffs, aes(x=cutoff, y = y), linewidth = 1, color = "red") +
+            geom_histogram(aes(y = sqrt(after_stat(density))), linewidth = 1, bins = nbins) +
             scale_x_continuous(breaks = function(x) unique(floor(pretty(seq(0, (max(x) + 1) * 1.1))))) +
             labs(y = 'sqrt(Density)', x = xlab) + ggtitle(maintitle)  +
             ggforce::facet_wrap_paginate(~Barcode, scales = 'free', strip.position = 'top', nrow = min(3, length(unique(plotdata$Barcode))), labeller = labeller(.multi_line = FALSE), page = i)
