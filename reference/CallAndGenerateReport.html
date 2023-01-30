@@ -73,7 +73,7 @@
 <span>  h5File <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  barcodeWhitelist <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cellbarcodeWhitelist <span class="op">=</span> <span class="st">"inputMatrix"</span>,</span>
-<span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"multiseq"</span>, <span class="st">"htodemux"</span><span class="op">)</span>,</span>
+<span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bff_cluster"</span>, <span class="st">"gmm_demux"</span>, <span class="st">"dropletutils"</span><span class="op">)</span>,</span>
 <span>  methodsForConsensus <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  minCountPerCell <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  title <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -103,7 +103,7 @@
 
 
 <dt>h5File</dt>
-<dd><p>demuxEM requires the 10x h5 gene expression count file. This is only required when demuxEM is used.</p></dd>
+<dd><p>demuxEM requires the 10x h5 gene expression count file. This is only required when either demuxEM or demuxmix are used.</p></dd>
 
 
 <dt>barcodeWhitelist</dt>
