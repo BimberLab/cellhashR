@@ -43,7 +43,7 @@ RUN if [ "${GH_PAT}" != 'NOT_SET' ];then echo 'Setting GITHUB_PAT to: '${GH_PAT}
     # To avoid pthread_create() error. See: https://github.com/bmbolstad/preprocessCore/issues/1 and https://github.com/bmbolstad/preprocessCore/issues/12
     && Rscript -e "remotes::install_github('bmbolstad/preprocessCore', dependencies = T, upgrade = 'always', configure.args = '--disable-threading')" \
     # NOTE: Matrix install has been added to force 1.5.3. Can be removed after main repos updated. \
-    && install.packages("Matrix", repos = "https://packagemanager.posit.co/cran/__linux__/focal/latest", update = TRUE, ask = FALSE)
+    && install.packages("Matrix", repos = "https://packagemanager.posit.co/cran/__linux__/focal/latest", update = TRUE, ask = FALSE) \
 	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 # This should not be cached if the files change
