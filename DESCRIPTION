@@ -42,7 +42,9 @@ Imports:
     magick,
     pdftools,
     ggthemes,
-    demuxmix
+    demuxmix,
+    methods,
+    SingleCellExperiment
 Suggests:
     devtools,
     testthat (>= 2.1.0),
