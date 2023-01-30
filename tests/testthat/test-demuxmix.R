@@ -5,7 +5,8 @@ source('testing-data.R')
 expectedCalls <- list(
 	'MS-11' = 3729,
 	'MS-12' = 4494,
-	'Negative' = 2055
+	'Negative' = 2055,
+	'Doublet' = 811
 )
 
 # https://bioconductor.org/packages/release/bioc/vignettes/demuxmix/inst/doc/demuxmix.html
