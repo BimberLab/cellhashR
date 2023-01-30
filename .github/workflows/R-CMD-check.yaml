@@ -62,6 +62,7 @@ jobs:
           cat(append = TRUE, file = "~/.Rprofile", "Sys.setenv(R_BIOC_VERSION=as.character(BiocManager::version()));");
           cat(append = TRUE, file = "~/.Rprofile", "Sys.setenv(USE_GMMDEMUX_SEED=1);");
           install.packages("Matrix", repos = "https://packagemanager.posit.co/cran/__linux__/focal/latest", update = TRUE, ask = FALSE)
+        shell: Rscript {0}
 
       - name: Query dependencies
         run: |
