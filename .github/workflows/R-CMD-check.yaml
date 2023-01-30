@@ -57,7 +57,7 @@ jobs:
           cat(append = TRUE, file = "~/.Rprofile", "repos <- append(getOption('repos'), BiocManager::repositories());");
           cat(append = TRUE, file = "~/.Rprofile", "repos <- repos[!duplicated(names(repos))];");
           cat(append = TRUE, file = "~/.Rprofile", "options(repos = repos);");
-          cat(append = TRUE, file = "~/.Rprofile", "})");
+          cat(append = TRUE, file = "~/.Rprofile", "});");
           cat(append = TRUE, file = "~/.Rprofile", "Sys.setenv(R_BIOC_VERSION=as.character(BiocManager::version()));");
           cat(append = TRUE, file = "~/.Rprofile", "Sys.setenv(USE_GMMDEMUX_SEED=1);");
           install.packages('remotes')
