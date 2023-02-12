@@ -76,7 +76,8 @@
 <span>  simplifyBarcodeNames <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  saveOriginalCellBarcodeFile <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  metricsFile <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  minCellsToContinue <span class="op">=</span> <span class="fl">25</span></span>
+<span>  minCellsToContinue <span class="op">=</span> <span class="fl">25</span>,</span>
+<span>  datatypeName <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -120,6 +121,10 @@
 
 <dt>minCellsToContinue</dt>
 <dd><p>Demultiplexing generally requires a minimal amount of cells. If the matrix contains fewer than this many cells, it will abort.</p></dd>
+
+
+<dt>datatypeName</dt>
+<dd><p>For output from CellRanger &gt;= 3.0 with multiple data types, the result of Seurat::Read10X is a list. You need to supply the name of the Antibody Capture</p></dd>
 
 </dl></div>
     <div id="value">
