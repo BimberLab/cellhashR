@@ -14,7 +14,8 @@ ProcessCountMatrix(
   simplifyBarcodeNames = TRUE,
   saveOriginalCellBarcodeFile = NULL,
   metricsFile = NULL,
-  minCellsToContinue = 25
+  minCellsToContinue = 25,
+  datatypeName = NULL
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ ProcessCountMatrix(
 \item{metricsFile}{If provided, summary metrics will be written to this file.}
 
 \item{minCellsToContinue}{Demultiplexing generally requires a minimal amount of cells. If the matrix contains fewer than this many cells, it will abort.}
+
+\item{datatypeName}{For output from CellRanger >= 3.0 with multiple data types, the result of Seurat::Read10X is a list. You need to supply the name of the Antibody Capture}
 }
 \value{
 The updated count matrix
