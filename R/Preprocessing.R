@@ -13,14 +13,15 @@
 #' @param saveOriginalCellBarcodeFile An optional file path, where the set of original cell barcodes, prior to filtering, will be written. The primary use-case is if the count matrix was generated using a cell whitelist (like cells with passing gene expression). Preserving this list allows downstream reporting.
 #' @param metricsFile If provided, summary metrics will be written to this file.
 #' @param minCellsToContinue Demultiplexing generally requires a minimal amount of cells. If the matrix contains fewer than this many cells, it will abort.
+#' @param datatypeName For output from CellRanger >= 3.0 with multiple data types, the result of Seurat::Read10X is a list. You need to supply the name of the Antibody Capture
 #' @import ggplot2
 #' @import patchwork
 #' @import utils
 #' @return The updated count matrix
 #' @export
-ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), cellbarcodeWhitelist = NULL, doPlot = TRUE, simplifyBarcodeNames = TRUE, saveOriginalCellBarcodeFile = NULL, metricsFile = NULL, minCellsToContinue = 25) {
+ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), cellbarcodeWhitelist = NULL, doPlot = TRUE, simplifyBarcodeNames = TRUE, saveOriginalCellBarcodeFile = NULL, metricsFile = NULL, minCellsToContinue = 25, datatypeName = NULL) {
 	.LogProgress('Processing raw matrix')
-	barcodeData <- .LoadCountMatrix(rawCountData = rawCountData, barcodeBlacklist = barcodeBlacklist, simplifyBarcodeNames = simplifyBarcodeNames)
+	barcodeData <- .LoadCountMatrix(rawCountData = rawCountData, barcodeBlacklist = barcodeBlacklist, simplifyBarcodeNames = simplifyBarcodeNames, datatypeName = datatypeName)
 
 	print(paste0('Initial cell barcodes in hashing data: ', ncol(barcodeData)))
 
@@ -97,7 +98,7 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 	return(barcodeData)
 }
 
-.LoadCountMatrix <- function(rawCountData = NA, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), simplifyBarcodeNames = TRUE) {
+.LoadCountMatrix <- function(rawCountData = NA, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), simplifyBarcodeNames = TRUE, datatypeName = NULL) {
 	if (is.na(rawCountData)){
 		stop("Need to provide a directory or file for rawCountData")
 	}
@@ -108,6 +109,17 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 
 	if (dir.exists(rawCountData)) {
 		barcodeData <- Seurat::Read10X(rawCountData, gene.column=1, strip.suffix = TRUE)
+		if (typeof(barcodeData) == 'list') {
+            print(paste0('10x data was imported as a list with the names: ', paste0(names(barcodeData), collapse = ',')))
+
+            if (!is.null(datatypeName)) {
+                print(paste0('Using: ', datatypeName))
+                barcodeData <- barcodeData[[datatypeName]]
+            } else {
+                print('The data were generated from multiple data types, which are listed above. Please use the datatypeName argument to specify which assay to use')
+            }
+        }
+
 		barcodeData <- barcodeData[which(!(rownames(barcodeData) %in% barcodeBlacklist)), , drop = F]
 		barcodeData <- as.matrix(barcodeData)
 	} else if (!file.exists(rawCountData)){
