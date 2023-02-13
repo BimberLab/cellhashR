@@ -133,11 +133,12 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @param majorityConsensusThreshold This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.
 #' @param chemistry This string is passed to EstimateMultipletRate. Should be either 10xV2 or 10xV3. This is used to calculate and present the expected doublet rate and does not influence the actual calls.
 #' @param callerDisagreementThreshold If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an disagreement rate above this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.
+#' @param rawFeatureMatrixH5 If either demuxem or demuxmix are used, you must provide the filepath to the 10x h5 gene expression counts file
 #' @param \dots Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).
 #' @description The primary methods to generating cell hashing calls from a filtered matrix of count data.
 #' @return A data frame of results.
 #' @export
-GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'gmm_demux', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, ...) {
+GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'gmm_demux', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, rawFeatureMatrixH5 = NULL, ...) {
   .LogProgress('Generating calls')
   if (is.data.frame(barcodeMatrix)) {
     print('Converting input data.frame to a matrix')
@@ -155,6 +156,10 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
 
   if (length(methodsForConsensus) == 0) {
     stop('No methodsForConsensus were provided for consensus calling! Either leave blank (NULL), or use a subset of the methods provided under the methods argument')
+  }
+
+  if (('demuxem' %in% methods || 'demuxmix' %in% methods) && is.null(rawFeatureMatrixH5)) {
+    stop('If either demuxem or demuxmix are used, you must supply rawFeatureMatrixH5')
   }
 
   callList <- list()
@@ -209,20 +214,14 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
       }
     } else if (method == 'demuxem'){
       fnArgs$barcodeMatrix <- barcodeMatrix
-      if (!'rawFeatureMatrixH5' %in% names(fnArgs) || is.null(fnArgs[['rawFeatureMatrixH5']])) {
-        stop('demuxEM requires the path to the 10x gene expression raw_feature_bc_matrix.h5 file. Please provide this as the argument demuxem.rawFeatureMatrixH5 = <filepath>')
-      }
-
+      fnArgs$rawFeatureMatrixH5 <- rawFeatureMatrixH5
       calls <- do.call(GenerateCellHashCallsDemuxEM, fnArgs)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
     } else if (method == 'demuxmix'){
       fnArgs$barcodeMatrix <- barcodeMatrix
-      if (!'rawFeatureMatrixH5' %in% names(fnArgs) || is.null(fnArgs[['rawFeatureMatrixH5']])) {
-        stop('demuxmix requires the path to the 10x gene expression raw_feature_bc_matrix.h5 file. Please provide this as the argument demuxmix.rawFeatureMatrixH5 = <filepath>')
-      }
-
+      fnArgs$rawFeatureMatrixH5 <- rawFeatureMatrixH5
       calls <- do.call(GenerateCellHashCallsDemuxmix, fnArgs)
       if (!is.null(calls)) {
         callList[[method]] <- calls
@@ -689,7 +688,7 @@ GetExampleMarkdown <- function(dest) {
 #' @param rawCountData The input barcode file or umi_count folder
 #' @param reportFile The file to which the HTML report will be written
 #' @param callFile The file to which the table of calls will be written
-#' @param h5File demuxEM requires the 10x h5 gene expression count file. This is only required when either demuxEM or demuxmix are used.
+#' @param rawFeatureMatrixH5 Both demuxEM and demuxmix require the 10x h5 gene expression count file. This is only required when either demuxEM or demuxmix are used.
 #' @param barcodeWhitelist A vector of barcode names to retain.
 #' @param cellbarcodeWhitelist Either a vector of expected barcodes (such as all cells with passing gene expression data), a file with one cellbarcode per line, or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.
 #' @param methods The set of methods to use for calling. See GenerateCellHashingCalls for options.
@@ -706,7 +705,7 @@ GetExampleMarkdown <- function(dest) {
 #' @param title A title for the HTML report
 #' @importFrom rmdformats html_clean
 #' @export
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, h5File = NULL, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('bff_cluster', 'gmm_demux', 'dropletutils'), methodsForConsensus = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL, majorityConsensusThreshold = NULL, callerDisagreementThreshold = NULL, doTSNE = TRUE) {
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, rawFeatureMatrixH5 = NULL, barcodeWhitelist = NULL, cellbarcodeWhitelist = 'inputMatrix', methods = c('bff_cluster', 'gmm_demux', 'dropletutils'), methodsForConsensus = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL, majorityConsensusThreshold = NULL, callerDisagreementThreshold = NULL, doTSNE = TRUE) {
   rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
   if (!file.exists(rmd)) {
     stop(paste0('Unable to find file: ', rmd))
@@ -727,8 +726,8 @@ CallAndGenerateReport <- function(rawCountData, reportFile, callFile, h5File = N
     molInfoFile <- normalizePath(molInfoFile)
   }
 
-  if (!is.null(h5File)) {
-    h5File <- normalizePath(h5File)
+  if (!is.null(rawFeatureMatrixH5)) {
+    rawFeatureMatrixH5 <- normalizePath(rawFeatureMatrixH5)
   }
 
   # Downstream, all files need to be absolute paths, since the working directory of the markdown might not be the same as the current working dir.

@@ -12,7 +12,7 @@ An R package designed to demultiplex cell hashing data. [Please see our document
 * [Development Guidelines](#developers)
 
 
-### <a name = "overview">Overview</a>
+### <a name="overview">Overview</a>
 
 Cell hashing is a method that allows sample multiplexing or super-loading within single-cell RNA-seq platforms, such as 10x genomics, originally developed at New York Genome Center in collaboration with the Satija lab. [See here for more detail on the technique](https://cite-seq.com/cell-hashing/). The general idea is that cells are labeled with a staining reagent (such as an antibody) tagged with a short nucleotide barcode. Other staining methods have been published, such as the lipid-based Multi-Seq ([https://www.ncbi.nlm.nih.gov/pubmed/31209384](https://www.ncbi.nlm.nih.gov/pubmed/31209384)).  In all methods, the hashtag oligo/barcode is sequenced in parallel with cellular mRNA, creating a separate cell hashing library. After sequencing, the cell barcode and hashing index are parsed using tools like Cite-seq-Count ([https://github.com/Hoohm/CITE-seq-Count](https://github.com/Hoohm/CITE-seq-Count)), creating a count matrix with the total hash tag counts per cell. 
 
@@ -20,8 +20,8 @@ Once the count matrix is created, an algorithm must be used to demultiplex cells
 - Quality control reports for the cell hashing library, covering read counts and normalization. Think [FASTQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/), except for cell hashing data.
 - A single interface to run one or more demutiplexing algorithms, including the novel demultiplexing algorithms BFF_raw and BFF_cluster.  Each algorithm has pros and cons, and will perform better or worse under certain conditions (though in our experience, of the algorithms we have tested, the BFF algorithms work most consistently and under the widest variety of conditions). If you select multiple algorithms (our default workflow), cellhashR will score cells using the consensus call from the set. Various QC summaries are produced during this process as well, if debugging is needed.  In addition to the BFF demultiplexing algorithms, other algorithms that can be run from cellhashR include:
     - [GMM-Demux](https://github.com/CHPGenetics/GMM-Demux)
-    - [demuxEM](https://github.com/klarman-cell-observatory/demuxEM) [(see extra requirements below)](#demuxEM)
-    - [demuxmix](https://github.com/huklein/demuxmix) [(see extra requirements below)](#demuxmix)
+    - [demuxEM](https://github.com/klarman-cell-observatory/demuxEM) [(see extra requirements below)](#h5file)
+    - [demuxmix](https://github.com/huklein/demuxmix) [(see extra requirements below)](#h5file)
     - [deMULTIplex](https://github.com/chris-mcginnis-ucsf/MULTI-seq)
     - [HTODemux from Seurat](https://satijalab.org/seurat/v3.1/hashing_vignette.html)
     - [hashedDrops from DropletUtils](https://github.com/MarioniLab/DropletUtils)
@@ -31,7 +31,7 @@ Each step of the workflow can either be run interactively in R (through the term
 
 [Click here to view an example QC report](https://bimberlab.github.io/cellhashR/articles/V01-QC-example.html)
 
-### <a name="example">Consensus Calling</a>
+### <a name="consensus">Consensus Calling</a>
 
 In addition to allowing one to run multiple demuliplexing algorithms to compare results, cellhashR can generate a consensus call based on those scores. This can be useful,
 since some algorithms will perform better or worse under some conditions. This is automatically built into the dataframe returned by GenerateCellHashingCalls(). Some additional parameters that might be worth considering are:
@@ -100,14 +100,14 @@ devtools::install_github('bmbolstad/preprocessCore', dependencies = T, upgrade =
 ```
 
 
-### <a name="demuxEM">demuxEM/demuxmix</a>
+### <a name="h5file">Providing h5 file to demuxEM/demuxmix</a>
 
-Unlike the other algorithms, which just require the HTO count matrix, demuxEM and demuxmix also require the 10x h5 gene expression counts. This can be supplied as follows. This example runs BFF and demuxEM:
+Unlike the other algorithms, which just require the HTO count matrix, demuxEM and demuxmix also require the path to the 10x h5 gene expression counts. This can be supplied as follows. This example runs BFF and demuxEM:
 ```
   rawData <- '../testdata/438-21-GEX/umi_count'
   h5File <- '../testdata/438-21-GEX/438-21-raw_feature_bc_matrix.h5'
   barcodeMatrix <- ProcessCountMatrix(rawCountData = rawData, barcodeWhitelist = c('MS-11', 'MS-12'))
-  df <- GenerateCellHashingCalls(barcodeMatrix = barcodeMatrix, methods = c('bff_cluster', 'demuxem'), demuxem.rawFeatureMatrixH5 = h5File)
+  df <- GenerateCellHashingCalls(barcodeMatrix = barcodeMatrix, methods = c('bff_cluster', 'demuxem'), rawFeatureMatrixH5 = h5File)
 ```
 
 ### <a name="developers">Development Guidelines</a>
