@@ -70,7 +70,7 @@
 <span>  <span class="va">rawCountData</span>,</span>
 <span>  <span class="va">reportFile</span>,</span>
 <span>  <span class="va">callFile</span>,</span>
-<span>  h5File <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  rawFeatureMatrixH5 <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  barcodeWhitelist <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cellbarcodeWhitelist <span class="op">=</span> <span class="st">"inputMatrix"</span>,</span>
 <span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bff_cluster"</span>, <span class="st">"gmm_demux"</span>, <span class="st">"dropletutils"</span><span class="op">)</span>,</span>
@@ -102,8 +102,8 @@
 <dd><p>The file to which the table of calls will be written</p></dd>
 
 
-<dt>h5File</dt>
-<dd><p>demuxEM requires the 10x h5 gene expression count file. This is only required when either demuxEM or demuxmix are used.</p></dd>
+<dt>rawFeatureMatrixH5</dt>
+<dd><p>Both demuxEM and demuxmix require the 10x h5 gene expression count file. This is only required when either demuxEM or demuxmix are used.</p></dd>
 
 
 <dt>barcodeWhitelist</dt>

@@ -78,6 +78,7 @@
 <span>  majorityConsensusThreshold <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  chemistry <span class="op">=</span> <span class="st">"10xV3"</span>,</span>
 <span>  callerDisagreementThreshold <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  rawFeatureMatrixH5 <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -126,6 +127,10 @@
 
 <dt>callerDisagreementThreshold</dt>
 <dd><p>If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an disagreement rate above this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.</p></dd>
+
+
+<dt>rawFeatureMatrixH5</dt>
+<dd><p>If either demuxem or demuxmix are used, you must provide the filepath to the 10x h5 gene expression counts file</p></dd>
 
 
 <dt>...</dt>
