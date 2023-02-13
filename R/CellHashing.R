@@ -214,12 +214,14 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
       }
     } else if (method == 'demuxem'){
       fnArgs$barcodeMatrix <- barcodeMatrix
+      fnArgs$rawFeatureMatrixH5 <- rawFeatureMatrixH5
       calls <- do.call(GenerateCellHashCallsDemuxEM, fnArgs)
       if (!is.null(calls)) {
         callList[[method]] <- calls
       }
     } else if (method == 'demuxmix'){
       fnArgs$barcodeMatrix <- barcodeMatrix
+      fnArgs$rawFeatureMatrixH5 <- rawFeatureMatrixH5
       calls <- do.call(GenerateCellHashCallsDemuxmix, fnArgs)
       if (!is.null(calls)) {
         callList[[method]] <- calls
