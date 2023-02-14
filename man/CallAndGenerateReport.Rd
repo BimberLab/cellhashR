@@ -10,6 +10,7 @@ CallAndGenerateReport(
   callFile,
   rawFeatureMatrixH5 = NULL,
   barcodeWhitelist = NULL,
+  barcodeBlacklist = c("no_match", "total_reads", "unmapped"),
   cellbarcodeWhitelist = "inputMatrix",
   methods = c("bff_cluster", "gmm_demux", "dropletutils"),
   methodsForConsensus = NULL,
@@ -35,6 +36,8 @@ CallAndGenerateReport(
 \item{rawFeatureMatrixH5}{Both demuxEM and demuxmix require the 10x h5 gene expression count file. This is only required when either demuxEM or demuxmix are used.}
 
 \item{barcodeWhitelist}{A vector of barcode names to retain.}
+
+\item{barcodeBlacklist}{A vector of barcodes names to discard. An example would be an input library generated with CITE-seq and cell hashing. In this case, it may make sense to discard the CITE-seq markers.}
 
 \item{cellbarcodeWhitelist}{Either a vector of expected barcodes (such as all cells with passing gene expression data), a file with one cellbarcode per line, or the string 'inputMatrix'. If the latter is provided, the set of cellbarcodes present in the original unfiltered count matrix will be stored and used for reporting. This allows the report to count cells that were filtered due to low counts separately from negative/non-callable cells.}
 
