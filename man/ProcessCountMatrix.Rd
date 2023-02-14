@@ -25,7 +25,7 @@ ProcessCountMatrix(
 
 \item{barcodeWhitelist}{A vector of barcode names to retain.}
 
-\item{barcodeBlacklist}{A vector of barcodes names to discard.}
+\item{barcodeBlacklist}{A vector of barcodes names to discard. An example would be an input library generated with CITE-seq and cell hashing. In this case, it may make sense to discard the CITE-seq markers.}
 
 \item{cellbarcodeWhitelist}{If provided, the raw count matrix will be subset to include only these cells. This allows one to use the cellranger unfiltered matrix as an input, but filter based on target cells, such as those with GEX data. This can either be a character vector of barcodes, or a file with one cell barcode per line.}
 
