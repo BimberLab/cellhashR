@@ -72,6 +72,7 @@
 <span>  <span class="va">callFile</span>,</span>
 <span>  rawFeatureMatrixH5 <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  barcodeWhitelist <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  barcodeBlacklist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"no_match"</span>, <span class="st">"total_reads"</span>, <span class="st">"unmapped"</span><span class="op">)</span>,</span>
 <span>  cellbarcodeWhitelist <span class="op">=</span> <span class="st">"inputMatrix"</span>,</span>
 <span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bff_cluster"</span>, <span class="st">"gmm_demux"</span>, <span class="st">"dropletutils"</span><span class="op">)</span>,</span>
 <span>  methodsForConsensus <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -108,6 +109,10 @@
 
 <dt>barcodeWhitelist</dt>
 <dd><p>A vector of barcode names to retain.</p></dd>
+
+
+<dt>barcodeBlacklist</dt>
+<dd><p>A vector of barcodes names to discard. An example would be an input library generated with CITE-seq and cell hashing. In this case, it may make sense to discard the CITE-seq markers.</p></dd>
 
 
 <dt>cellbarcodeWhitelist</dt>
