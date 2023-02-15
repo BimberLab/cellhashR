@@ -116,7 +116,7 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
                 print(paste0('Using: ', datatypeName))
                 barcodeData <- barcodeData[[datatypeName]]
             } else {
-                print('The data were generated from multiple data types, which are listed above. Please use the datatypeName argument to specify which assay to use')
+                stop('The data were generated from multiple data types, which are listed above. Please use the datatypeName argument to specify which assay to use')
             }
         }
 

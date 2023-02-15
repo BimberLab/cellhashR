@@ -23,7 +23,8 @@ CallAndGenerateReport(
   molInfoFile = NULL,
   majorityConsensusThreshold = NULL,
   callerDisagreementThreshold = NULL,
-  doTSNE = TRUE
+  doTSNE = TRUE,
+  datatypeName = NULL
 )
 }
 \arguments{
@@ -64,6 +65,8 @@ CallAndGenerateReport(
 \item{callerDisagreementThreshold}{If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an disagreement rate above this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.}
 
 \item{doTSNE}{If true, tSNE will be run on results as part of QC. This can be memory intensive and is not strictly needed, so it can be skipped if desired.}
+
+\item{datatypeName}{For output from CellRanger >= 3.0 with multiple data types, the result of Seurat::Read10X is a list. You need to supply the name of the Antibody Capture}
 }
 \description{
 Runs the default processing pipeline
