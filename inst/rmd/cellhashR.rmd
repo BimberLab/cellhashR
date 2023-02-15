@@ -39,13 +39,13 @@ if (!file.exists(rawCountData)) {
   stop(paste0('Could not find rawCountData: ', rawCountData))
 }
 
-optionalVars <- c('barcodeWhitelist', 'barcodeBlacklist', 'cellbarcodeWhitelist', 'minCountPerCell', 'metricsFile', 'rawCountsExport', 'molInfoFile', 'rawFeatureMatrixH5', 'methodsForConsensus', 'majorityConsensusThreshold', 'callerDisagreementThreshold', 'doTSNE')
+optionalVars <- c('barcodeWhitelist', 'barcodeBlacklist', 'cellbarcodeWhitelist', 'minCountPerCell', 'metricsFile', 'rawCountsExport', 'molInfoFile', 'rawFeatureMatrixH5', 'methodsForConsensus', 'majorityConsensusThreshold', 'callerDisagreementThreshold', 'doTSNE', 'datatypeName')
 for (v in optionalVars) {
 	if (!exists(v)) {
 		if (v == 'minCountPerCell') {
 			minCountPerCell <- 5
         } else if (v == 'doTSNE') {
-            doTSNE <- TRUE
+            t <- TRUE
 		} else {
 			assign(v, NULL)
 		}
@@ -72,7 +72,7 @@ if (!is.null(metricsFile)) {
 
 ```{r QC}
 
-barcodeData <- ProcessCountMatrix(rawCountData = rawCountData, minCountPerCell = minCountPerCell, barcodeWhitelist = barcodeWhitelist, barcodeBlacklist = barcodeBlacklist, cellbarcodeWhitelist = cellbarcodeWhitelist, saveOriginalCellBarcodeFile = saveOriginalCellBarcodeFile, metricsFile = metricsFile)
+barcodeData <- ProcessCountMatrix(rawCountData = rawCountData, minCountPerCell = minCountPerCell, barcodeWhitelist = barcodeWhitelist, barcodeBlacklist = barcodeBlacklist, cellbarcodeWhitelist = cellbarcodeWhitelist, saveOriginalCellBarcodeFile = saveOriginalCellBarcodeFile, metricsFile = metricsFile, datatypeName = datatypeName)
 if (nrow(barcodeData) == 0) {
   stop('No passing barcodes')
 }
