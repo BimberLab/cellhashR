@@ -85,7 +85,8 @@
 <span>  molInfoFile <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  majorityConsensusThreshold <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  callerDisagreementThreshold <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  doTSNE <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  doTSNE <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  datatypeName <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -165,6 +166,10 @@
 
 <dt>doTSNE</dt>
 <dd><p>If true, tSNE will be run on results as part of QC. This can be memory intensive and is not strictly needed, so it can be skipped if desired.</p></dd>
+
+
+<dt>datatypeName</dt>
+<dd><p>For output from CellRanger &gt;= 3.0 with multiple data types, the result of Seurat::Read10X is a list. You need to supply the name of the Antibody Capture</p></dd>
 
 </dl></div>
 
