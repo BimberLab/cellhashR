@@ -18,8 +18,9 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: 20.04, r: 'devel', bioc: 'devel'}
-          - {os: 20.04, r: 'release', bioc: '3.16', pkgdown: "true"}
+          - {os: 20.04, r: 'next', bioc: 'devel'}
+          - {os: 20.04, r: 'next', bioc: '3.17', pkgdown: "true"}
+          - {os: 20.04, r: '4.2', bioc: '3.16'}
           # NOTE: disabled due to BiocManager / missing argument error
           #- {os: 20.04, r: '4.2', bioc: '3.15'}
 
