@@ -4,8 +4,8 @@ FROM rocker/rstudio:4.2.1
 ARG GH_PAT='NOT_SET'
 
 ##  Add Bioconductor system dependencies
-RUN wget -O install_bioc_sysdeps.sh https://raw.githubusercontent.com/Bioconductor/bioconductor_docker/master/bioc_scripts/install_bioc_sysdeps.sh 3.16 \
-    && bash ./install_bioc_sysdeps.sh \
+RUN wget -O install_bioc_sysdeps.sh https://raw.githubusercontent.com/Bioconductor/bioconductor_docker/master/bioc_scripts/install_bioc_sysdeps.sh \
+    && bash ./install_bioc_sysdeps.sh 3.16 \
     && rm ./install_bioc_sysdeps.sh
 
 # NOTE: if anything breaks the dockerhub build cache, you will probably need to build locally and push to dockerhub.
