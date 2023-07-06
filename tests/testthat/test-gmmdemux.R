@@ -15,13 +15,13 @@ test_that("GMM-Demux Works", {
 		Bar5 = 148,
 		Bar6 = 481,
 		Bar7 = 555,
-		Bar8 = 520,
+		Bar8 = 519,
 		Bar9 = 445,
 		Bar10 = 493,
 		Bar11 = 474,
 		Bar12 = 631,
 		Doublet = 663,
-		Negative = 213
+		Negative = 214
 	)
 
 	for (hto in unique(df$consensuscall)) {

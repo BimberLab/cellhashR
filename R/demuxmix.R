@@ -51,7 +51,14 @@ GenerateCellHashCallsDemuxmix <- function(barcodeMatrix, rawFeatureMatrixH5, met
 
     ind <- vapply(dmm@models, methods::is, logical(1), "RegMixModel")
     if (sum(ind) > 0) {
-      demuxmix::plotDmmScatter(dmm)
+        tryCatch({
+            print(demuxmix::plotDmmScatter(dmm))
+        }, error = function(e){
+            print('Error generating plotDmmScatter, skipping')
+            print(paste0('RegMixModel: ', paste0(ind, collapse = ', ')))
+            print(conditionMessage(e))
+            traceback()
+        })
     }
 
     df <- data.frame(cellbarcode = rownames(classLabels), classification.global = classLabels$Type, classification = classLabels$HTO)

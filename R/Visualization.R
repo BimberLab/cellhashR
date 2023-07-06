@@ -54,7 +54,7 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 		panel.grid  = element_blank()
 		)
 
-	print(P1 + P2 + plot_annotation(title = label))
+	suppressWarnings(print(P1 + P2 + plot_annotation(title = label)))
 
 	# Group cells based on the max HTO signal
 	htos <- rownames(GetAssayData(seuratObj, assay = assay))
