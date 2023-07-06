@@ -55,6 +55,7 @@ GenerateCellHashCallsDemuxmix <- function(barcodeMatrix, rawFeatureMatrixH5, met
             print(demuxmix::plotDmmScatter(dmm))
         }, error = function(e){
             print('Error generating plotDmmScatter, skipping')
+            print(paste0('RegMixModel: ', paste0(ind, collapse = ', ')))
             print(conditionMessage(e))
             traceback()
         })
