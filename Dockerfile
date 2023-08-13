@@ -10,12 +10,6 @@ ENV CRAN=https://packagemanager.posit.co/cran/__linux__/focal/latest
 RUN /bin/sh -c /rocker_scripts/install_R_source.sh
 RUN /bin/sh -c /rocker_scripts/setup_R.sh
 
-
-##  Add Bioconductor system dependencies
-RUN wget -O install_bioc_sysdeps.sh https://raw.githubusercontent.com/Bioconductor/bioconductor_docker/master/bioc_scripts/install_bioc_sysdeps.sh \
-    && bash ./install_bioc_sysdeps.sh 3.17 \
-    && rm ./install_bioc_sysdeps.sh
-
 # NOTE: if anything breaks the dockerhub build cache, you will probably need to build locally and push to dockerhub.
 # After the cache is in place, builds from github commits should be fast.
 # NOTE: locales / locales-all added due to errors with install_deps() and special characters in the DESCRIPTION file for niaid/dsb \
@@ -28,10 +22,17 @@ RUN apt-get update -y \
 		python3-pip \
         locales \
         locales-all \
+        wget \
+        git \
 	&& pip3 install umap-learn demuxEM scikit-learn \
     && pip3 install git+https://github.com/bbimber/GMM-Demux \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
+
+##  Add Bioconductor system dependencies
+RUN wget -O install_bioc_sysdeps.sh https://raw.githubusercontent.com/Bioconductor/bioconductor_docker/master/bioc_scripts/install_bioc_sysdeps.sh \
+    && bash ./install_bioc_sysdeps.sh 3.17 \
+    && rm ./install_bioc_sysdeps.sh
 
 ENV RETICULATE_PYTHON=/usr/bin/python3
 ENV USE_GMMDEMUX_SEED=1
