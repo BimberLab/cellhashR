@@ -1,7 +1,14 @@
 # Note: this is the last base version supporting ubuntu focal, not jammy
-FROM rocker/rstudio:4.3.1
+FROM rocker/rstudio:4.2.1
 
 ARG GH_PAT='NOT_SET'
+
+## Redo the R installation, since we need a base image using focal, but updated R version:
+ENV R_VERSION=4.3.1
+ENV CRAN=https://packagemanager.posit.co/cran/__linux__/focal/latest
+RUN /bin/sh -c /rocker_scripts/install_R_source.sh
+RUN /bin/sh -c /rocker_scripts/setup_R.sh
+
 
 ##  Add Bioconductor system dependencies
 RUN wget -O install_bioc_sysdeps.sh https://raw.githubusercontent.com/Bioconductor/bioconductor_docker/master/bioc_scripts/install_bioc_sysdeps.sh \
