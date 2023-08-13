@@ -50,7 +50,6 @@ jobs:
           python3 -m pip install --user demuxEM
           python3 -m pip install git+https://github.com/bbimber/GMM-Demux.git
 
-      # NOTE: Matrix install has been added to force 1.5.3. Can be removed after main repos updated.
       - name: Setup Bioconductor
         run: |
           install.packages(c('remotes', 'devtools'))
@@ -63,7 +62,8 @@ jobs:
           cat(append = TRUE, file = "~/.Rprofile", "});");
           cat(append = TRUE, file = "~/.Rprofile", "Sys.setenv(R_BIOC_VERSION=as.character(BiocManager::version()));");
           cat(append = TRUE, file = "~/.Rprofile", "Sys.setenv(USE_GMMDEMUX_SEED=1);");
-          install.packages("Matrix", repos = "https://packagemanager.posit.co/cran/__linux__/focal/latest", update = TRUE, ask = FALSE)
+          # To avoid pthread_create() error. See: https://github.com/bmbolstad/preprocessCore/issues/1 and https://github.com/bmbolstad/preprocessCore/issues/12
+          remotes::install_github("bmbolstad/preprocessCore", dependencies = T, upgrade = "always", force = TRUE, configure.args = "--disable-threading")
         shell: Rscript {0}
 
       - name: Query dependencies
@@ -105,7 +105,6 @@ jobs:
       - name: Check
         env:
           _R_CHECK_CRAN_INCOMING_: false
-        # TODO: consider adding: "--as-cran",
         run: rcmdcheck::rcmdcheck(args = c("--no-manual", "--no-build-vignettes"), error_on = "warning", check_dir = "check")
         shell: Rscript {0}
 
