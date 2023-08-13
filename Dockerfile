@@ -1,5 +1,5 @@
 # Note: this is the last base version supporting ubuntu focal, not jammy
-FROM rocker/rstudio:4.2.1
+FROM rocker/rstudio:4.3.1
 
 ARG GH_PAT='NOT_SET'
 
