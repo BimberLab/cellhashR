@@ -42,7 +42,7 @@ jobs:
       - name: Install packages
         if: runner.os != 'Windows'
         # libharfbuzz-dev libfribidi-dev are added to fix textshaping install error
-        # NOTE: switch back to main GMMdemux repo when this is resolved: https://github.com/CHPGenetics/GMM-Demux/pull/8
+        # NOTE: switch back to main GMM_demux repo when this is resolved: https://github.com/CHPGenetics/GMM-Demux/pull/8
         # NOTE: switch back to main demuxEM repo when this is resolved: https://github.com/lilab-bcb/demuxEM/pull/16
         # NOTE: libglpk-dev was added due to iGraph install issues
         run: |

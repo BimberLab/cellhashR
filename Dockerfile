@@ -13,7 +13,8 @@ RUN /bin/sh -c /rocker_scripts/setup_R.sh
 # NOTE: if anything breaks the dockerhub build cache, you will probably need to build locally and push to dockerhub.
 # After the cache is in place, builds from github commits should be fast.
 # NOTE: locales / locales-all added due to errors with install_deps() and special characters in the DESCRIPTION file for niaid/dsb \
-# NOTE: switch back to main GMMdemux repo when this is resolved: https://github.com/CHPGenetics/GMM-Demux/pull/8
+# NOTE: switch back to main GMM_demux repo when this is resolved: https://github.com/CHPGenetics/GMM-Demux/pull/8
+# NOTE: switch back to main demuxEM repo when this is resolved: https://github.com/lilab-bcb/demuxEM/pull/16
 RUN apt-get update -y \
 	&& apt-get upgrade -y \
 	&& apt-get install -y \
@@ -24,7 +25,8 @@ RUN apt-get update -y \
         locales-all \
         wget \
         git \
-	&& pip3 install umap-learn demuxEM scikit-learn \
+	&& pip3 install umap-learn scikit-learn \
+    && pip3 install git+https://github.com/bbimber/demuxEM.git \
     && pip3 install git+https://github.com/bbimber/GMM-Demux \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
