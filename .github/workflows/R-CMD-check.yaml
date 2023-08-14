@@ -45,7 +45,7 @@ jobs:
         # NOTE: switch back to main GMMdex repo when this is resolved: https://github.com/CHPGenetics/GMM-Demux/pull/8
         # NOTE: libglpk-dev was added due to iGraph install issues
         run: |
-          sudo apt-get update && sudo apt-get install -yq libharfbuzz-dev libfribidi-dev python3 python3-pip libcurl4-openssl-dev libglpk-dev
+          sudo apt-get update && sudo apt-get install -yq libharfbuzz-dev libfribidi-dev python3 python3-pip libcurl4-openssl-dev libglpk-dev libmagick++-dev
           python3 -m pip install --upgrade pip
           python3 -m pip install --user demuxEM
           python3 -m pip install git+https://github.com/bbimber/GMM-Demux.git
