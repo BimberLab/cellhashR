@@ -41,20 +41,19 @@ jobs:
 
       - name: Install packages
         if: runner.os != 'Windows'
-        # libharfbuzz-dev libfribidi-dev are added to fix textshaping install error
         # NOTE: switch back to main GMM_demux repo when this is resolved: https://github.com/CHPGenetics/GMM-Demux/pull/8
         # NOTE: switch back to main demuxEM repo when this is resolved: https://github.com/lilab-bcb/demuxEM/pull/16
-        # libglpk-dev was added due to iGraph install issues
-        # libpoppler-cpp-dev added due to pdftools error
         run: |
-          sudo apt-get update && sudo apt-get install -yq libharfbuzz-dev libfribidi-dev python3 python3-pip libcurl4-openssl-dev libglpk-dev libmagick++-dev libpoppler-cpp-dev
+          sudo apt-get update && sudo apt-get install -yq python3 python3-pip
           python3 -m pip install --upgrade pip          
           python3 -m pip install git+https://github.com/bbimber/demuxEM.git
           python3 -m pip install git+https://github.com/bbimber/GMM-Demux.git
 
+      # The install_github() on remotes is to ensure system_requirements() supports 22.04
       - name: Setup Bioconductor
         run: |
           install.packages(c('remotes', 'devtools'))
+          remotes::install_github("r-lib/remotes")
           if (!requireNamespace("BiocManager", quietly=TRUE))  install.packages("BiocManager");
           BiocManager::install(version = "${{ matrix.config.bioc }}", ask = FALSE);
           cat(append = TRUE, file = "~/.Rprofile", "local({");
