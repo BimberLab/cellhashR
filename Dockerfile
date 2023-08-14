@@ -24,6 +24,7 @@ RUN apt-get update -y \
         locales-all \
         wget \
         git \
+        libmagick++-dev \
 	&& pip3 install umap-learn demuxEM scikit-learn \
     && pip3 install git+https://github.com/bbimber/GMM-Demux \
 	&& apt-get clean \
