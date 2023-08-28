@@ -144,6 +144,9 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     print('Converting input data.frame to a matrix')
     barcodeMatrix <- as.matrix(barcodeMatrix)
   }
+  else if (!is.matrix(barcodeMatrix)) {
+    stop('barcodeMatrix must be a matrix')
+  }
 
   if (all(is.null(methodsForConsensus))) {
     methodsForConsensus <- methods
