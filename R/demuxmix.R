@@ -22,7 +22,7 @@ GenerateCellHashCallsDemuxmix <- function(barcodeMatrix, rawFeatureMatrixH5, met
     colnames(gexData) <- gexCounts$Barcode
     rm(gexCounts)
 
-    if (length(intersect(colnames(colnames(gexData)), colnames(barcodeMatrix))) == 0) {
+    if (length(intersect(colnames(gexData), colnames(barcodeMatrix))) == 0) {
       print('Removing cell barcode suffixes from input GEX matrix')
       colnames(gexData) <- sapply(colnames(gexData), function(x){
         return(unlist(strsplit(x, split = '-[0-9]'))[1])
