@@ -5,7 +5,7 @@ ARG GH_PAT='NOT_SET'
 
 ## Redo the R installation, since we need a base image using focal, but updated R version:
 # This should be removed in favor of choosing a better base image once Exacloud supports jammy
-ENV R_VERSION=4.4.0
+ENV R_VERSION=4.3.1
 ENV CRAN=https://packagemanager.posit.co/cran/__linux__/focal/latest
 RUN /bin/sh -c /rocker_scripts/install_R_source.sh
 RUN /bin/sh -c /rocker_scripts/setup_R.sh
