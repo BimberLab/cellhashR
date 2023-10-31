@@ -44,7 +44,8 @@ Imports:
     ggthemes,
     demuxmix,
     methods,
-    SingleCellExperiment
+    SingleCellExperiment,
+    magrittr
 Suggests:
     devtools,
     testthat (>= 2.1.0),

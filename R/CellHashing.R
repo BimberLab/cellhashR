@@ -27,6 +27,7 @@ utils::globalVariables(
 #' @param seuratObj The seurat object
 #' @param barcodeCallFile The tsv containing cell hashing calls
 #' @param barcodePrefix A prefix to be applied before the cell barcodes
+#' @importFrom magrittr %>%
 #' @description Appends cell hashing calls to a seurat object
 #' @return A modified Seurat object.
 #' @export
