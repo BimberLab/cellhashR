@@ -12,7 +12,7 @@ Depends:
     R (>= 4.2.0)
 Imports:
     Seurat (<= 4.4.0),
-    SeuratObject,
+    SeuratObject (<= 4.1.4),
     dplyr,
     tidyr,
     naturalsort,
@@ -44,7 +44,8 @@ Imports:
     ggthemes,
     demuxmix,
     methods,
-    SingleCellExperiment
+    SingleCellExperiment,
+    magrittr
 Suggests:
     devtools,
     testthat (>= 2.1.0),
