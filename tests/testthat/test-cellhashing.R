@@ -222,3 +222,19 @@ test_that("Consensus call works", {
 		expect_equal(sum(df$consensuscall == hto), expectedCalls[[hto]], info = hto)
 	}
 })
+
+test_that("HTO Reporting works", {
+	testName <- names(tests)[4]
+
+	print(paste0('Running test: ', testName))
+	test <- tests[[testName]]
+
+	barcodeFile <- test$input
+	mf <- 'metrics.txt'
+	barcodeData <- ProcessCountMatrix(rawCountData = barcodeFile, barcodeWhitelist = c('MS-11', 'MS-9'), metricsFile = mf)
+
+	dat <- read.table(mf, header = FALSE, sep = '\t')
+	expect_equal(dat$V3[dat$V2 == 'HTOsDroppedAboveMinRetained'], 'MS-6;MS-10;MS-11;MS-12')
+	unlink(mf)
+})
+
