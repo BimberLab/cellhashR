@@ -76,8 +76,18 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 		if (sum(sel) == 0) {
 			sel <- SimplifyHtoNames(rownames(barcodeData)) %in% barcodeWhitelist
 		}
-		
-		barcodeData <- barcodeData[sel,]
+
+		droppedDataCounts <- Matrix::rowSums(barcodeData[!sel,,drop=FALSE])
+		barcodeData <- barcodeData[sel,,drop=FALSE]
+
+		barcodeDataCounts <- Matrix::rowSums(barcodeData)
+		minRetained <- min(barcodeDataCounts)
+		droppedAboveMinRetained <- droppedDataCounts[droppedDataCounts > minRetained]
+		if (length(droppedAboveMinRetained) > 0) {
+			print(paste0('The following HTOs were detected with counts above those in barcodeWhitelist: ', paste0(names(droppedAboveMinRetained), collapse = ';')))
+			.LogMetric(metricsFile, 'HTOsDroppedAboveMinRetained', paste0(names(droppedAboveMinRetained), collapse = ';'))
+		}
+
 		if (ncol(barcodeData) < minCellsToContinue) {
 			stop(paste0('Too few cells remain after limiting to selected HTOs, aborting. Cell count: ', ncol(barcodeData)))
 		}
@@ -359,15 +369,15 @@ PrintColumnQc <- function(barcodeMatrix) {
 			df$M <- M
 			df$A <- A
 			df <- df[is.finite(df$M) & is.finite(df$A),]
-			o <- order(A)
-			a <- A[o]
-			m <- M[o]
+			o <- order(df$A)
+			a <- df$A[o]
+			m <- df$M[o]
 			ind <- round(seq(1, length(a), len = 5000))
 			a <- a[ind]
 			m <- m[ind]
 			fit <- stats::loess(m ~ a)
-			bias <- stats::predict(fit, newdata = data.frame(a = A))
-			df$nM <- M - bias
+			bias <- stats::predict(fit, newdata = data.frame(a = df$A))
+			df$nM <- df$M - bias
 			newdat <- data.frame(a, pred = fit$fitted)
 
 			print(ggplot(df, aes(x=A, y=M)) +

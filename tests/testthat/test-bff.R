@@ -33,11 +33,6 @@ test_that("563-3 Works", {
 	barcodeData <- readRDS('../testdata/563-3-TCR.hashing.rawCounts.rds')
 	
 	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('bff_cluster'))
-})
-
-test_that("568-1 Works", {
-	barcodeData <- readRDS('../testdata/568-1-TCR.hashing.rawCounts.rds')
-
-	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('bff_cluster'))
+	expect_equal(sum(df$consensuscall == 'MS-4'), 5065)
 })
 

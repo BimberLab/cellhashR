@@ -60,12 +60,10 @@ RUN cd /cellhashR \
     && if [ "${GH_PAT}" != 'NOT_SET' ];then echo 'Setting GITHUB_PAT to: '${GH_PAT}; export GITHUB_PAT="${GH_PAT}";fi \
 	&& Rscript -e "BiocManager::install(ask = F, upgrade = 'always');" \
 	&& Rscript -e "devtools::install_deps(pkg = '.', dependencies = TRUE, upgrade = 'always');" \
-    # Force 4.x for both Seurat and SeuratObject
+    # Force 4.x for both Seurat
     && Rscript -e "devtools::install_version('Seurat', version = '4.4.0', ask = FALSE, upgrade = 'never')" \
-    && Rscript -e "devtools::install_version('SeuratObject', version = '4.1.4', ask = FALSE, upgrade = 'never')" \
 	&& R CMD build . \
 	&& R CMD INSTALL --build *.tar.gz \
     # To avoid pthread_create() error. See: https://github.com/bmbolstad/preprocessCore/issues/1 and https://github.com/bmbolstad/preprocessCore/issues/12
-    # NOTE: currently BioConductor reports preprocessCore version 1.56.0, while the github repo reports 1.55.2. Therefore do this manual install after installing cellhashR:
     && Rscript -e "remotes::install_github('bmbolstad/preprocessCore', dependencies = T, upgrade = 'always', force = TRUE, configure.args = '--disable-threading')" \
 	&& rm -Rf /tmp/downloaded_packages/ /tmp/*.rds
