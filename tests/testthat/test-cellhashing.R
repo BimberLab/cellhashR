@@ -234,7 +234,7 @@ test_that("HTO Reporting works", {
 	barcodeData <- ProcessCountMatrix(rawCountData = barcodeFile, barcodeWhitelist = c('MS-11', 'MS-9'), metricsFile = mf)
 
 	dat <- read.table(mf, header = FALSE, sep = '\t')
-	expect_equal(dat$V3[dat$V2 == 'HTOsDroppedAboveMinRetained'], 'MS-6;MS-10;MS-11;MS-12')
+	expect_equal(dat$V3[dat$V2 == 'HTOsDroppedAboveMinRetained'], 'MS-6;MS-10;MS-12')
 	unlink(mf)
 })
 
