@@ -59,7 +59,7 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 	# Group cells based on the max HTO signal
 	htos <- rownames(GetAssayData(seuratObj, assay = assay))
 	for (hto in naturalsort::naturalsort(htos)){
-		print(VlnPlot(seuratObj, group.by = htoClassificationField, features = c(hto), assay = assay, ncol = 1, log = F) + ggtitle(paste0(label, ": ", hto)))
+		suppressWarnings(print(VlnPlot(seuratObj, group.by = htoClassificationField, features = c(hto), assay = assay, ncol = 1, log = F) + ggtitle(paste0(label, ": ", hto))))
 	}
 
 	if (doTSNE) {
