@@ -77,11 +77,10 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 			sel <- SimplifyHtoNames(rownames(barcodeData)) %in% barcodeWhitelist
 		}
 
-		droppedDataCounts <- rowSums(barcodeData[!(rownames(barcodeData) %in% sel),])
-		
-		barcodeData <- barcodeData[sel,]
+		droppedDataCounts <- Matrix::rowSums(barcodeData[!sel,,drop=FALSE])
+		barcodeData <- barcodeData[sel,,drop=FALSE]
 
-		barcodeDataCounts <- rowSums(barcodeData)
+		barcodeDataCounts <- Matrix::rowSums(barcodeData)
 		minRetained <- min(barcodeDataCounts)
 		droppedAboveMinRetained <- droppedDataCounts[droppedDataCounts > minRetained]
 		if (length(droppedAboveMinRetained) > 0) {
