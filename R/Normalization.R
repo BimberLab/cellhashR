@@ -94,10 +94,10 @@ NormalizeLog2 <- function(mat, mean.center = TRUE) {
 }
 
 NormalizeCLR <- function(mat) {
-  seuratObj <- Seurat::CreateSeuratObject(mat, assay = 'Hashing')
+  seuratObj <- Seurat::CreateSeuratObject(SeuratObject::as.sparse(mat), assay = 'Hashing')
   seuratObj <- Seurat::NormalizeData(seuratObj, assay = 'Hashing', normalization.method = "CLR", verbose = FALSE)
 
-  return(seuratObj@assays$Hashing@data)
+  return(Seurat::GetAssayData(seuratObj, assay = 'Hashing', slot = 'data'))
 }
 
 NormalizeRelative <- function(mat) {
