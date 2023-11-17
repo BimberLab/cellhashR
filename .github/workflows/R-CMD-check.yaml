@@ -93,6 +93,8 @@ jobs:
           remotes::install_deps(dependencies = TRUE, upgrade = "always")
           install.packages("pkgdown")
           remotes::install_cran("rcmdcheck")
+          # Due to Matrix/SeuratObject: https://github.com/mojaveazure/seurat-object/issues/166
+          install.packages(c('irlba', 'SeuratObject'), ask = FALSE, force = TRUE, type = 'source', repos = 'https://cloud.r-project.org')
         shell: Rscript {0}
 
       - name: Session info
