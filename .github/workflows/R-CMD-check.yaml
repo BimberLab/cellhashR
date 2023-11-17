@@ -91,9 +91,6 @@ jobs:
       - name: Install dependencies
         run: |
           remotes::install_deps(dependencies = TRUE, upgrade = "always")
-          # Force 4.x for both Seurat and SeuratObject 
-          devtools::install_version('Seurat', version = '4.4.0', ask = FALSE, upgrade = 'never')
-          devtools::install_version('SeuratObject', version = '4.1.4', ask = FALSE, upgrade = 'never')
           install.packages("pkgdown")
           remotes::install_cran("rcmdcheck")
         shell: Rscript {0}
