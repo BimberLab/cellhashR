@@ -10,7 +10,7 @@ NormalizeQuantile <- function(mat) {
   dat <- preprocessCore::normalize.quantiles(as.matrix(mat), copy=TRUE)
   row.names(dat) <- row.names(mat)
   colnames(dat) <- colnames(mat)
-  return(as.data.frame(dat))
+  return(Seurat::as.sparse(as.matrix((dat))))
 }
 
 NormalizeBimodalQuantile <- function(barcodeMatrix) {
@@ -90,7 +90,7 @@ NormalizeLog2 <- function(mat, mean.center = TRUE) {
     }
   }
 
-  return(as.matrix(log2Scaled))
+  return(Seurat::as.sparse(as.matrix(log2Scaled)))
 }
 
 NormalizeCLR <- function(mat) {
@@ -101,7 +101,7 @@ NormalizeCLR <- function(mat) {
 }
 
 NormalizeRelative <- function(mat) {
-  return(prop.table(mat, 2))
+  return(Seurat::as.sparse(prop.table(mat, 2)))
 }
 
 #' @title Plot Normalization QC

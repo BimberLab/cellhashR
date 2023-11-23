@@ -69,7 +69,7 @@ GenerateCellHashCallsSeqND <- function(barcodeMatrix, assay = "HTO", min_quantil
 		}
 
 		seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
-		seuratObj[[assay]]@data <- NormalizeRelative(barcodeMatrix)
+        seuratObj <- SetAssayData4Or5(seuratObj, assay = assay, theLayer = 'data', new.data = NormalizeRelative(barcodeMatrix))
 
 		seuratObj <- SeqNDDemux(seuratObj = seuratObj, min_quantile = min_quantile, assay = assay)
 

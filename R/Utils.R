@@ -198,3 +198,19 @@ EstimateMultipletRate <- function(numCellsRecovered, num10xRuns = 1, chemistry =
 		message(msg)
 	}
 }
+
+SetAssayData4Or5 <- function(seuratObj, theLayer, ...) {
+	if (!seuratObj@version < '5.0.0') {
+		return(Seurat::SetAssayData(seuratObj, slot = theLayer, ...))
+	} else {
+		return(Seurat::SetAssayData(seuratObj, layer = theLayer, ...))
+	}
+}
+
+GetAssayData4Or5 <- function(seuratObj, theLayer, ...) {
+	if (!seuratObj@version < '5.0.0') {
+		return(Seurat::GetAssayData(seuratObj, slot = theLayer, ...))
+	} else {
+		return(Seurat::GetAssayData(seuratObj, layer = theLayer, ...))
+	}
+}
