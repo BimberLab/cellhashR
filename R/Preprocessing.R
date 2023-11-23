@@ -200,6 +200,34 @@ PrintRowQc <- function(barcodeMatrix) {
 		)
 
 	print(P3 | P4)
+
+	# Also VlnPlots:
+	df <- data.frame(barcodeMatrix, check.names=FALSE)
+	df$Barcode <- rownames(df)
+	df <- df %>% tidyr::pivot_longer(colnames(df)[1:length(colnames(df)) - 1], names_to = "CellBarcode", values_to = "count")
+	df$Barcode <- naturalsort::naturalfactor(df$Barcode)
+
+	P5 <- ggplot(df, aes(x = Barcode, y = count, fill = Barcode, color = Barcode)) +
+		geom_violin(position="dodge", alpha=0.5) +
+		ggtitle('Raw Counts/Cell') +
+		labs(y = 'Count/Cell', x = 'Barcode') +
+		egg::theme_presentation(base_size = 14) +
+		theme(
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+			legend.position = 'none'
+		)
+
+	P6 <- ggplot(df[df$count > 0,], aes(x = Barcode, y = count, fill = Barcode, color = Barcode)) +
+		geom_violin(position="dodge", alpha=0.5) +
+		egg::theme_presentation(base_size = 14) +
+		labs(y = 'Count/Cell (log10)', x = 'Barcode') +
+		scale_y_continuous(trans = scales::log10_trans()) +
+		theme(
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+			legend.position = 'none'
+		)
+
+	print(P5 | P6)
 }
 
 GenerateByRowSummary <- function(barcodeMatrix) {
