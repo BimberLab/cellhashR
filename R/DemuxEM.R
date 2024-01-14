@@ -18,6 +18,15 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 	}
 
 	if (!reticulate::py_module_available('demuxEM')) {
+		print('Error loading demuxEM')
+		tryCatch({
+			print(reticulate::import('demuxEM'))
+		}, error = function(e){
+			print("Error with reticulate::import('demuxEM')")
+			print(conditionMessage(e))
+			traceback()
+		})
+
 		stop('The demuxEM python package has not been installed!')
 	}
 
