@@ -164,7 +164,12 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
 
   df <- NULL
   for (norm in names(toQC)) {
-    toAdd <- reshape2::melt(t(toQC[[norm]]))
+    toAdd <- toQC[[norm]]
+    if (!is.data.frame(toAdd)) {
+      toAdd <- as.data.frame(toAdd)
+    }
+
+    toAdd <- reshape2::melt(t(toAdd))
     names(toAdd) <- c('CellBarcode', 'Barcode', 'NormCount')
     toAdd$Normalization <- norm
 
