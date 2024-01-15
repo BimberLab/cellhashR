@@ -204,7 +204,7 @@ SetAssayData4Or5 <- function(seuratObj, theLayer, new.data, ...) {
 	if (!is.matrix(new.data)) {
 		warning('Assay data is not a matrix, converting to a sparse matrix!')
 		print(str(new.data))
-		new.data <- Serat::as.sparse(as.matrix(new.data))
+		new.data <- Seurat::as.sparse(as.matrix(new.data))
 	}
 
 	if (!seuratObj@version < '5.0.0') {
