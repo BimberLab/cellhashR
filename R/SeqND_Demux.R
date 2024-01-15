@@ -68,7 +68,7 @@ GenerateCellHashCallsSeqND <- function(barcodeMatrix, assay = "HTO", min_quantil
 			print(paste0('rows dropped for low counts: ', sum(!sel), ' of ', length(sel)))
 		}
 
-		seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
+		seuratObj <- Seurat::CreateSeuratObject(Seurat::as.sparse(barcodeMatrix), assay = assay)
         seuratObj <- SetAssayData4Or5(seuratObj, assay = assay, theLayer = 'data', new.data = NormalizeRelative(barcodeMatrix))
 
 		seuratObj <- SeqNDDemux(seuratObj = seuratObj, min_quantile = min_quantile, assay = assay)

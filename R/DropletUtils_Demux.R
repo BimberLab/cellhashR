@@ -15,7 +15,7 @@ GenerateCellHashCallsDropletUtils <- function(barcodeMatrix, verbose = TRUE, ass
 	}
 
 	tryCatch({
-		seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
+		seuratObj <- Seurat::CreateSeuratObject(Seurat::as.sparse(barcodeMatrix), assay = assay)
 		seuratObj <- ThresholdHashedDrops(seuratObj = seuratObj, assay = assay, columnSuffix = 'dropletutils', runEmptyDrops = runEmptyDrops, metricsFile = metricsFile)
 
 		SummarizeHashingCalls(seuratObj, label = label, columnSuffix = 'dropletutils', assay = assay, doTSNE = doTSNE, doHeatmap = F)

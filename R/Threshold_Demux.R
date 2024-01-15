@@ -10,7 +10,7 @@ GenerateCellHashCallsThreshold <- function(barcodeMatrix, verbose = TRUE, assay 
 	}
 
 	tryCatch({
-		seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
+		seuratObj <- Seurat::CreateSeuratObject(Seurat::as.sparse(barcodeMatrix), assay = assay)
 		seuratObj <- SetAssayData4Or5(seuratObj, assay = assay, theLayer = 'data', new.data = NormalizeRelative(barcodeMatrix))
 
 		seuratObj <- ThresholdDemux(seuratObj = seuratObj, positivity_threshold = 0.75, assay = assay)

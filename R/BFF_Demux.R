@@ -460,7 +460,7 @@ GenerateCellHashCallsBFF <- function(barcodeMatrix, assay = "HTO", min_average_r
   }
 
   tryCatch({
-    seuratObj <- Seurat::CreateSeuratObject(barcodeMatrix, assay = assay)
+    seuratObj <- Seurat::CreateSeuratObject(Seurat::as.sparse(barcodeMatrix), assay = assay)
     seuratObj <- BFFDemux(seuratObj = seuratObj, assay = assay, simple_threshold = simple_threshold, doublet_thresh = doublet_thresh, neg_thresh = neg_thresh, dist_frac=dist_frac, metricsFile = metricsFile)
     if (is.null(seuratObj)) {
       print('Error running BFF')
