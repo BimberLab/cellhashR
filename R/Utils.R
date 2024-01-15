@@ -142,6 +142,7 @@ GetSeed <- function() {
 	return(pkg.env$RANDOM_SEED)
 }
 
+#' @importFrom magrittr %>%
 .RestoreUnderscoreToHtoNames <- function(df, originalBarcodeNames) {
 	# Note: Seurat seems to replace underscores with hyphen, so check/replace these:
 	for (hto in originalBarcodeNames) {
