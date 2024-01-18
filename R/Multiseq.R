@@ -14,15 +14,17 @@ GenerateCellHashCallsMultiSeq <- function(barcodeMatrix, assay = 'HTO', autoThre
 	}
 
 	tryCatch({
-		seuratObj <- CreateSeuratObject(barcodeMatrix, assay = assay)
+		seuratObj <- CreateSeuratObject(Seurat::as.sparse(barcodeMatrix), assay = assay)
 		if (doRelNorm) {
 			print('Performing relative normalization instead of log2')
-			seuratObj[[assay]]@data <- NormalizeRelative(barcodeMatrix)
+			ad <- NormalizeRelative(barcodeMatrix)
 			# NOTE: perform this rename to match the rename Seurat will perform anyway:
-			rownames(seuratObj[[assay]]@data) <- gsub(rownames(seuratObj[[assay]]@data), pattern = '_', replacement = '-')
+			rownames(ad) <- gsub(rownames(ad), pattern = '_', replacement = '-')
+			seuratObj <- SetAssayData4Or5(seuratObj, assay = assay, theLayer = 'data', new.data = ad)
 		} else {
-			seuratObj[[assay]]@data <- NormalizeLog2(barcodeMatrix)
-			rownames(seuratObj[[assay]]@data) <- gsub(rownames(seuratObj[[assay]]@data), pattern = '_', replacement = '-')
+			ad <- NormalizeLog2(barcodeMatrix)
+			rownames(ad) <- gsub(rownames(ad), pattern = '_', replacement = '-')
+			seuratObj <- SetAssayData4Or5(seuratObj, assay = assay, theLayer = 'data', new.data = ad)
 		}
 
 		seuratObj <- MULTIseqDemux(seuratObj, assay = assay, quantile = quantile, verbose = verbose, autoThresh = autoThresh, maxiter = maxiter, qrange = qrange, metricsFile = metricsFile)

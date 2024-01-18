@@ -12,7 +12,7 @@ GenerateCellHashCallsSeurat <- function(barcodeMatrix, positive.quantile = 0.95,
 		print('Starting HTODemux')
 	}
 
-	seuratObj <- CreateSeuratObject(barcodeMatrix, assay = 'HTO')
+	seuratObj <- CreateSeuratObject(Seurat::as.sparse(barcodeMatrix), assay = 'HTO')
 
 	tryCatch({
 		seuratObj <- DoHtoDemux(seuratObj, positive.quantile = positive.quantile, verbose = verbose, metricsFile = metricsFile, doTSNE = doTSNE, doHeatmap = doHeatmap)

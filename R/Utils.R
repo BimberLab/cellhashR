@@ -142,6 +142,7 @@ GetSeed <- function() {
 	return(pkg.env$RANDOM_SEED)
 }
 
+#' @importFrom magrittr %>%
 .RestoreUnderscoreToHtoNames <- function(df, originalBarcodeNames) {
 	# Note: Seurat seems to replace underscores with hyphen, so check/replace these:
 	for (hto in originalBarcodeNames) {
@@ -196,5 +197,27 @@ EstimateMultipletRate <- function(numCellsRecovered, num10xRuns = 1, chemistry =
 .LogProgress <- function(msg) {
 	if (Sys.getenv('CELLHASHR_DEBUG', unset = 0) == 1) {
 		message(msg)
+	}
+}
+
+SetAssayData4Or5 <- function(seuratObj, theLayer, new.data, ...) {
+	if (!is.matrix(new.data)) {
+		warning('Assay data is not a matrix, converting to a sparse matrix!')
+		print(str(new.data))
+		new.data <- Seurat::as.sparse(as.matrix(new.data))
+	}
+
+	if (!seuratObj@version < '5.0.0') {
+		return(Seurat::SetAssayData(seuratObj, slot = theLayer, new.data = new.data, ...))
+	} else {
+		return(Seurat::SetAssayData(seuratObj, layer = theLayer, new.data = new.data, ...))
+	}
+}
+
+GetAssayData4Or5 <- function(seuratObj, theLayer, ...) {
+	if (!seuratObj@version < '5.0.0') {
+		return(Seurat::GetAssayData(seuratObj, slot = theLayer, ...))
+	} else {
+		return(Seurat::GetAssayData(seuratObj, layer = theLayer, ...))
 	}
 }

@@ -227,7 +227,7 @@ PrintRowQc <- function(barcodeMatrix) {
 			legend.position = 'none'
 		)
 
-	print(P5 | P6)
+	suppressWarnings(print(P5 | P6))
 }
 
 GenerateByRowSummary <- function(barcodeMatrix) {

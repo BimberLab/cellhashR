@@ -1,7 +1,7 @@
 Package: cellhashR
 Type: Package
 Title: A Package for Demultiplexing Cell Hashing Data
-Version: 1.0.3
+Version: 1.1.0
 Author: Bimber Lab
 Maintainer: The package maintainer <bimber@ohsu.edu>
 Description: The goal of this package is to provide tools for QC and demultiplexing of cell hashing data.
@@ -11,7 +11,7 @@ LazyData: true
 Depends:
     R (>= 4.2.0)
 Imports:
-    Seurat (<= 4.4.0),
+    Seurat,
     SeuratObject,
     dplyr,
     tidyr,

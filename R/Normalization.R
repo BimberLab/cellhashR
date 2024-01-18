@@ -10,7 +10,7 @@ NormalizeQuantile <- function(mat) {
   dat <- preprocessCore::normalize.quantiles(as.matrix(mat), copy=TRUE)
   row.names(dat) <- row.names(mat)
   colnames(dat) <- colnames(mat)
-  return(as.data.frame(dat))
+  return(Seurat::as.sparse(as.matrix((dat))))
 }
 
 NormalizeBimodalQuantile <- function(barcodeMatrix) {
@@ -90,18 +90,18 @@ NormalizeLog2 <- function(mat, mean.center = TRUE) {
     }
   }
 
-  return(as.matrix(log2Scaled))
+  return(Seurat::as.sparse(as.matrix(log2Scaled)))
 }
 
 NormalizeCLR <- function(mat) {
-  seuratObj <- Seurat::CreateSeuratObject(mat, assay = 'Hashing')
+  seuratObj <- Seurat::CreateSeuratObject(SeuratObject::as.sparse(mat), assay = 'Hashing')
   seuratObj <- Seurat::NormalizeData(seuratObj, assay = 'Hashing', normalization.method = "CLR", verbose = FALSE)
 
-  return(seuratObj@assays$Hashing@data)
+  return(Seurat::GetAssayData(seuratObj, assay = 'Hashing', slot = 'data'))
 }
 
 NormalizeRelative <- function(mat) {
-  return(prop.table(mat, 2))
+  return(Seurat::as.sparse(prop.table(mat, 2)))
 }
 
 #' @title Plot Normalization QC
@@ -164,7 +164,12 @@ PlotNormalizationQC <- function(barcodeData, methods = c('bimodalQuantile', 'Qua
 
   df <- NULL
   for (norm in names(toQC)) {
-    toAdd <- reshape2::melt(t(toQC[[norm]]))
+    toAdd <- toQC[[norm]]
+    if (!is.data.frame(toAdd)) {
+      toAdd <- as.data.frame(toAdd)
+    }
+
+    toAdd <- reshape2::melt(t(toAdd))
     names(toAdd) <- c('CellBarcode', 'Barcode', 'NormCount')
     toAdd$Normalization <- norm
 
