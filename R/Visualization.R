@@ -66,7 +66,7 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 		.LogProgress('Running tSNE')
 		perplexity <- .InferPerplexityFromSeuratObj(seuratObj, 100)
 		tryCatch({
-			seuratObj[['hto_tsne']] <- RunTSNE(stats::dist(Matrix::t(GetAssayData(seuratObj, slot = "data", assay = assay))), assay = assay, perplexity = perplexity)
+			seuratObj[['hto_tsne']] <- suppressWarnings(RunTSNE(stats::dist(Matrix::t(GetAssayData(seuratObj, slot = "data", assay = assay))), assay = assay, perplexity = perplexity))
 			P1 <- DimPlot(seuratObj, reduction = 'hto_tsne', group.by = htoClassificationField, label = FALSE)
 			P2 <- DimPlot(seuratObj, reduction = 'hto_tsne', group.by = globalClassificationField, label = FALSE)
 

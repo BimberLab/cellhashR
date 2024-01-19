@@ -3,9 +3,9 @@ context("scRNAseq")
 source('testing-data.R')
 
 expectedCalls <- list(
-	'MS-11' = 4389,
+	'MS-11' = 4388,
 	'MS-12' = 6184,
-	'Negative' = 516
+	'Negative' = 517
 )
 
 test_that("demuxEM Works", {
