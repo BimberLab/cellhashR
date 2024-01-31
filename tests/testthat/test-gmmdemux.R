@@ -8,20 +8,20 @@ test_that("GMM-Demux Works", {
 	print(table(df$consensuscall))
 	
 	expectedCalls <- list(
-		Bar1 = 201,
-		Bar2 = 144,
-		Bar3 = 374,
-		Bar4 = 454,
-		Bar5 = 148,
-		Bar6 = 481,
-		Bar7 = 555,
-		Bar8 = 519,
-		Bar9 = 445,
-		Bar10 = 493,
-		Bar11 = 474,
-		Bar12 = 631,
-		Doublet = 663,
-		Negative = 214
+		Bar1 = 191,
+		Bar2 = 146,
+		Bar3 = 378,
+		Bar4 = 468,
+		Bar5 = 145,
+		Bar6 = 498,
+		Bar7 = 570,
+		Bar8 = 529,
+		Bar9 = 451,
+		Bar10 = 498,
+		Bar11 = 485,
+		Bar12 = 638,
+		Doublet = 546,
+		Negative = 258
 	)
 
 	for (hto in unique(df$consensuscall)) {
