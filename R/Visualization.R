@@ -66,7 +66,19 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 		.LogProgress('Running tSNE')
 		perplexity <- .InferPerplexityFromSeuratObj(seuratObj, 100)
 		tryCatch({
-			seuratObj[['hto_tsne']] <- suppressWarnings(RunTSNE(stats::dist(Matrix::t(GetAssayData(seuratObj, slot = "data", assay = assay))), assay = assay, perplexity = perplexity))
+			assayObj <- GetAssay(seuratObj, assay = assay)
+			slotName <- NULL
+			if (class(assayObj)[1] == 'Assay') {
+				slotName <- 'data'
+			} else if (class(assayObj)[1] == 'Assay5') {
+				slotName <- ifelse('data' %in% names(assayObj@layers), yes = 'data', no = 'counts')
+			} else {
+				stop(paste0('Unknown class: ', class(assayObj)[1]))
+			}
+
+			print(paste0('Using slot: ', slotName))
+			mat <- GetAssayData(assayObj, slot = slotName)
+			seuratObj[['hto_tsne']] <- suppressWarnings(RunTSNE(stats::dist(Matrix::t(mat)), perplexity = perplexity))
 			P1 <- DimPlot(seuratObj, reduction = 'hto_tsne', group.by = htoClassificationField, label = FALSE)
 			P2 <- DimPlot(seuratObj, reduction = 'hto_tsne', group.by = globalClassificationField, label = FALSE)
 
