@@ -16,14 +16,9 @@ GenerateCellHashCallsGMMDemux <- function(barcodeMatrix, methodName = 'gmm_demux
 	}
 
 	tryCatch({
-		print('GMM_Demux matrix')
-		print(class(barcodeMatrix)[1])
-		print(head(rownames(barcodeMatrix)))
-		print(head(colnames(barcodeMatrix)))
-
 		#Save to disk:
 		inputFile <- tempfile(fileext = '.csv')
-		write.table(t(barcodeMatrix), file = inputFile, sep = ',')
+		write.table(Matrix::t(as.matrix(barcodeMatrix)), file = inputFile, sep = ',')
 
 		reportPath <- tempfile()
 		outPath <- tempfile()
