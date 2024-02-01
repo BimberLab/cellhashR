@@ -57,7 +57,7 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 	suppressWarnings(print(P1 + P2 + plot_annotation(title = label)))
 
 	# Group cells based on the max HTO signal
-	htos <- rownames(GetAssayData(seuratObj, assay = assay))
+	htos <- suppressWarnings(rownames(GetAssayData(seuratObj, assay = assay)))
 	for (hto in naturalsort::naturalsort(htos)){
 		suppressWarnings(print(VlnPlot(seuratObj, group.by = htoClassificationField, features = c(hto), assay = assay, ncol = 1, log = F) + ggtitle(paste0(label, ": ", hto))))
 	}
@@ -76,9 +76,8 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 				stop(paste0('Unknown class: ', class(assayObj)[1]))
 			}
 
-			print(paste0('Using slot: ', slotName))
 			mat <- GetAssayData(assayObj, slot = slotName)
-			seuratObj[['hto_tsne']] <- suppressWarnings(RunTSNE(stats::dist(Matrix::t(mat)), perplexity = perplexity))
+			suppressWarnings(seuratObj[['hto_tsne']] <- RunTSNE(stats::dist(Matrix::t(mat)), perplexity = perplexity))
 			P1 <- DimPlot(seuratObj, reduction = 'hto_tsne', group.by = htoClassificationField, label = FALSE)
 			P2 <- DimPlot(seuratObj, reduction = 'hto_tsne', group.by = globalClassificationField, label = FALSE)
 
