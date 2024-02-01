@@ -57,7 +57,7 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 	suppressWarnings(print(P1 + P2 + plot_annotation(title = label)))
 
 	# Group cells based on the max HTO signal
-	htos <- rownames(GetAssayData(seuratObj, assay = assay))
+	htos <- suppressWarnings(rownames(GetAssayData(seuratObj, assay = assay)))
 	for (hto in naturalsort::naturalsort(htos)){
 		suppressWarnings(print(VlnPlot(seuratObj, group.by = htoClassificationField, features = c(hto), assay = assay, ncol = 1, log = F) + ggtitle(paste0(label, ": ", hto))))
 	}
@@ -66,7 +66,18 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 		.LogProgress('Running tSNE')
 		perplexity <- .InferPerplexityFromSeuratObj(seuratObj, 100)
 		tryCatch({
-			seuratObj[['hto_tsne']] <- suppressWarnings(RunTSNE(stats::dist(Matrix::t(GetAssayData(seuratObj, slot = "data", assay = assay))), assay = assay, perplexity = perplexity))
+			assayObj <- GetAssay(seuratObj, assay = assay)
+			slotName <- NULL
+			if (class(assayObj)[1] == 'Assay') {
+				slotName <- 'data'
+			} else if (class(assayObj)[1] == 'Assay5') {
+				slotName <- ifelse('data' %in% names(assayObj@layers), yes = 'data', no = 'counts')
+			} else {
+				stop(paste0('Unknown class: ', class(assayObj)[1]))
+			}
+
+			mat <- GetAssayData(assayObj, slot = slotName)
+			suppressWarnings(seuratObj[['hto_tsne']] <- RunTSNE(stats::dist(Matrix::t(mat)), perplexity = perplexity))
 			P1 <- DimPlot(seuratObj, reduction = 'hto_tsne', group.by = htoClassificationField, label = FALSE)
 			P2 <- DimPlot(seuratObj, reduction = 'hto_tsne', group.by = globalClassificationField, label = FALSE)
 

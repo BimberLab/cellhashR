@@ -163,7 +163,7 @@ test_that("Distinct methods and consensus work", {
 		barcodeData <- barcodeData[,1:5000]
 	}
 	
-	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'gmm_demux'), methodsForConsensus = c('gmm_demux'))
+	df <- GenerateCellHashingCalls(barcodeMatrix = Seurat::as.sparse(barcodeData), methods = c('multiseq', 'gmm_demux'), methodsForConsensus = c('gmm_demux'))
 	print(table(df$consensuscall))
 	
 	expectedCalls <- list(
@@ -191,7 +191,7 @@ test_that("Consensus call works", {
 	}
 
 	print('Run using majorityConsensusThreshold=0.6, which will will allow 2/3 to win:')
-	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'gmm_demux', 'bff_cluster'), majorityConsensusThreshold = 0.6)
+	df <- GenerateCellHashingCalls(barcodeMatrix = Seurat::as.sparse(barcodeData), methods = c('multiseq', 'gmm_demux', 'bff_cluster'), majorityConsensusThreshold = 0.6)
 	print(table(df$consensuscall))
 
 	expectedCalls <- list(
@@ -207,7 +207,7 @@ test_that("Consensus call works", {
 	}
 
 	print('Run using majorityConsensusThreshold = 0.75. With three callers, this effectively requires all of them to agree')
-	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'gmm_demux', 'bff_cluster'), majorityConsensusThreshold = 0.75)
+	df <- GenerateCellHashingCalls(barcodeMatrix = Seurat::as.sparse(barcodeData), methods = c('multiseq', 'gmm_demux', 'bff_cluster'), majorityConsensusThreshold = 0.75)
 	print(table(df$consensuscall))
 
 	expectedCalls <- list(

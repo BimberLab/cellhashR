@@ -201,9 +201,8 @@ EstimateMultipletRate <- function(numCellsRecovered, num10xRuns = 1, chemistry =
 }
 
 SetAssayData4Or5 <- function(seuratObj, theLayer, new.data, ...) {
-	if (!is.matrix(new.data)) {
-		warning('Assay data is not a matrix, converting to a sparse matrix!')
-		print(str(new.data))
+	if (!inherits(x = new.data, what = 'dgCMatrix')) {
+		print('Assay data is not a sparse matrix, converting')
 		new.data <- Seurat::as.sparse(as.matrix(new.data))
 	}
 
