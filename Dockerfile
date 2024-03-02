@@ -34,7 +34,7 @@ RUN apt-get update -y \
 
 ##  Add Bioconductor system dependencies
 RUN export BC_BRANCH=`echo $R_BIOC_VERSION | sed 's/\./_/'` \
-    && wget -O install_bioc_sysdeps.sh https://raw.githubusercontent.com/Bioconductor/bioconductor_docker/${BC_BRANCH}/bioc_scripts/install_bioc_sysdeps.sh \
+    && wget -O install_bioc_sysdeps.sh https://raw.githubusercontent.com/Bioconductor/bioconductor_docker/RELEASE_${BC_BRANCH}/bioc_scripts/install_bioc_sysdeps.sh \
     && bash ./install_bioc_sysdeps.sh $R_BIOC_VERSION \
     && rm ./install_bioc_sysdeps.sh
 
