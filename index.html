@@ -142,32 +142,25 @@
 <h3 id="installation">
 <a name="installation">Installation</a><a class="anchor" aria-label="anchor" href="#installation"></a>
 </h3>
-<pre class="{r}"><code><span><span class="co"># Make sure to update your Rprofile to include Bioconductor repos, such as adding this line to ~/.Rprofile:</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">local</a></span><span class="op">(</span><span class="op">{</span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>repos <span class="op">=</span> <span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/repositories.html" class="external-link">repositories</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">}</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co">#Latest version:</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span>repo <span class="op">=</span> <span class="st">'bimberlab/cellhashR'</span>, ref <span class="op">=</span> <span class="st">'master'</span>, dependencies <span class="op">=</span> <span class="cn">TRUE</span>, upgrade <span class="op">=</span> <span class="st">'always'</span><span class="op">)</span></span></code></pre>
-<p>Pre-packaged Docker images with all needed dependencies installed can be found on our <a href="https://github.com/orgs/BimberLab/packages/container/package/cellhashr" class="external-link">GitHub Packages page</a>. We recommend using a specific release, which you can do using tags:</p>
-<pre><code>docker pull ghcr.io/bimberlab/cellhashr:latest</code></pre>
-</div>
-<div class="section level3">
-<h3 id="known-issues">
-<a name="issues">Known Issues</a><a class="anchor" aria-label="anchor" href="#known-issues"></a>
-</h3>
-<p>If you receive an error along the lines of:</p>
-<pre><code><span><span class="st">"ERROR; return code from pthread_create() is 22\n"</span></span></code></pre>
-<p>Please manually install preprocessCore with threading disabled:</p>
-<pre><code><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">'bmbolstad/preprocessCore'</span>, dependencies <span class="op">=</span> <span class="cn">T</span>, upgrade <span class="op">=</span> <span class="st">'always'</span>, configure.args <span class="op">=</span> <span class="st">'--disable-threading'</span><span class="op">)</span></span></code></pre>
-</div>
-<div class="section level3">
-<h3 id="providing-h5-file-to-demuxemdemuxmix">
-<a name="h5file">Providing h5 file to demuxEM/demuxmix</a><a class="anchor" aria-label="anchor" href="#providing-h5-file-to-demuxemdemuxmix"></a>
-</h3>
-<p>Unlike the other algorithms, which just require the HTO count matrix, demuxEM and demuxmix also require the path to the 10x h5 gene expression counts. This can be supplied as follows. This example runs BFF and demuxEM:</p>
-<pre><code><span>  <span class="va">rawData</span> <span class="op">&lt;-</span> <span class="st">'../testdata/438-21-GEX/umi_count'</span></span>
-<span>  <span class="va">h5File</span> <span class="op">&lt;-</span> <span class="st">'../testdata/438-21-GEX/438-21-raw_feature_bc_matrix.h5'</span></span>
-<span>  <span class="va">barcodeMatrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ProcessCountMatrix.html">ProcessCountMatrix</a></span><span class="op">(</span>rawCountData <span class="op">=</span> <span class="va">rawData</span>, barcodeWhitelist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'MS-11'</span>, <span class="st">'MS-12'</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/GenerateCellHashingCalls.html">GenerateCellHashingCalls</a></span><span class="op">(</span>barcodeMatrix <span class="op">=</span> <span class="va">barcodeMatrix</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'bff_cluster'</span>, <span class="st">'demuxem'</span><span class="op">)</span>, rawFeatureMatrixH5 <span class="op">=</span> <span class="va">h5File</span><span class="op">)</span></span></code></pre>
+<p>```{r} # Make sure to update your Rprofile to include Bioconductor repos, such as adding this line to ~/.Rprofile: local({options(repos = BiocManager::repositories())})</p>
+<p>#Latest version: devtools::install_github(repo = ‘bimberlab/cellhashR’, ref = ‘master’, dependencies = TRUE, upgrade = ‘always’)</p>
+<pre><code>    
+Pre-packaged Docker images with all needed dependencies installed can be found on our [GitHub Packages page](https://github.com/orgs/BimberLab/packages/container/package/cellhashr). We recommend using a specific release, which you can do using tags:    
+</code></pre>
+<p>docker pull ghcr.io/bimberlab/cellhashr:latest</p>
+<pre><code>
+### &lt;a name="issues"&gt;Known Issues&lt;/a&gt;
+
+If you receive an error along the lines of:</code></pre>
+<p>“ERROR; return code from pthread_create() is 22”</p>
+<pre><code>Please manually install preprocessCore with threading disabled:</code></pre>
+<p>devtools::install_github(‘bmbolstad/preprocessCore’, dependencies = T, upgrade = ‘always’, configure.args = ‘–disable-threading’)</p>
+<pre><code>
+
+### &lt;a name="h5file"&gt;Providing h5 file to demuxEM/demuxmix&lt;/a&gt;
+
+Unlike the other algorithms, which just require the HTO count matrix, demuxEM and demuxmix also require the path to the 10x h5 gene expression counts. This can be supplied as follows. This example runs BFF and demuxEM:</code></pre>
+<p>rawData &lt;- ‘../testdata/438-21-GEX/umi_count’ h5File &lt;- ‘../testdata/438-21-GEX/438-21-raw_feature_bc_matrix.h5’ barcodeMatrix &lt;- ProcessCountMatrix(rawCountData = rawData, barcodeWhitelist = c(‘MS-11’, ‘MS-12’)) df &lt;- GenerateCellHashingCalls(barcodeMatrix = barcodeMatrix, methods = c(‘bff_cluster’, ‘demuxem’), rawFeatureMatrixH5 = h5File) ```</p>
 </div>
 <div class="section level3">
 <h3 id="development-guidelines">
