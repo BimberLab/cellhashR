@@ -6,6 +6,7 @@ ARG GH_PAT='NOT_SET'
 ## Redo the R installation, since we need a base image using focal, but updated R version:
 # This should be removed in favor of choosing a better base image once Exacloud supports jammy
 ENV R_VERSION=4.3.1
+ENV R_BIOC_VERSION=3.18
 ENV CRAN=https://packagemanager.posit.co/cran/__linux__/focal/latest
 RUN /bin/sh -c /rocker_scripts/install_R_source.sh
 RUN /bin/sh -c /rocker_scripts/setup_R.sh
@@ -32,8 +33,9 @@ RUN apt-get update -y \
 	&& rm -rf /var/lib/apt/lists/*
 
 ##  Add Bioconductor system dependencies
-RUN wget -O install_bioc_sysdeps.sh https://raw.githubusercontent.com/Bioconductor/bioconductor_docker/master/bioc_scripts/install_bioc_sysdeps.sh \
-    && bash ./install_bioc_sysdeps.sh 3.17 \
+RUN export BC_BRANCH=`echo $R_BIOC_VERSION | sed 's/\./_/'` \
+    && wget -O install_bioc_sysdeps.sh https://raw.githubusercontent.com/Bioconductor/bioconductor_docker/${BC_BRANCH}/bioc_scripts/install_bioc_sysdeps.sh \
+    && bash ./install_bioc_sysdeps.sh $R_BIOC_VERSION \
     && rm ./install_bioc_sysdeps.sh
 
 ENV RETICULATE_PYTHON=/usr/bin/python3
