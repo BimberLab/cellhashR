@@ -17,6 +17,7 @@ GenerateCellHashingCalls(
   chemistry = "10xV3",
   callerDisagreementThreshold = NULL,
   rawFeatureMatrixH5 = NULL,
+  maxAllowableDoubletRate = "auto",
   ...
 )
 }
@@ -44,6 +45,8 @@ GenerateCellHashingCalls(
 \item{callerDisagreementThreshold}{If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an disagreement rate above this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.}
 
 \item{rawFeatureMatrixH5}{If either demuxem or demuxmix are used, you must provide the filepath to the 10x h5 gene expression counts file}
+
+\item{maxAllowableDoubletRate}{Per caller, the doublet rate will be computed as the total doublets / total droplets (including negatives). Any individual caller with a doublet rate above this value will be converted to NoCall. Note: if 'auto' is chosen, the value will be selected as twice the theoretical doublet rate.}
 
 \item{\dots}{Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).}
 }

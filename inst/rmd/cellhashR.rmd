@@ -39,14 +39,16 @@ if (!file.exists(rawCountData)) {
   stop(paste0('Could not find rawCountData: ', rawCountData))
 }
 
-optionalVars <- c('barcodeWhitelist', 'barcodeBlacklist', 'cellbarcodeWhitelist', 'minCountPerCell', 'metricsFile', 'rawCountsExport', 'molInfoFile', 'rawFeatureMatrixH5', 'methodsForConsensus', 'majorityConsensusThreshold', 'callerDisagreementThreshold', 'doTSNE', 'datatypeName')
+optionalVars <- c('barcodeWhitelist', 'barcodeBlacklist', 'cellbarcodeWhitelist', 'minCountPerCell', 'metricsFile', 'rawCountsExport', 'molInfoFile', 'rawFeatureMatrixH5', 'methodsForConsensus', 'majorityConsensusThreshold', 'callerDisagreementThreshold', 'doTSNE', 'datatypeName', 'maxAllowableDoubletRate')
 for (v in optionalVars) {
 	if (!exists(v)) {
 		if (v == 'minCountPerCell') {
 			minCountPerCell <- 5
         } else if (v == 'doTSNE') {
             t <- TRUE
-		} else {
+		} else if (v == 'maxAllowableDoubletRate') {
+          maxAllowableDoubletRate <- 'auto'
+        } else {
 			assign(v, NULL)
 		}
 	}
@@ -108,7 +110,7 @@ if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
 	  cellbarcodeWhitelist <- cellbarcodeWhitelist$cellbarcode
   }
 
-	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, methodsForConsensus = methodsForConsensus, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = saturationData, rawFeatureMatrixH5 = rawFeatureMatrixH5, majorityConsensusThreshold = majorityConsensusThreshold, callerDisagreementThreshold = callerDisagreementThreshold, doTSNE = doTSNE)
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, methodsForConsensus = methodsForConsensus, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = saturationData, rawFeatureMatrixH5 = rawFeatureMatrixH5, majorityConsensusThreshold = majorityConsensusThreshold, callerDisagreementThreshold = callerDisagreementThreshold, doTSNE = doTSNE, maxAllowableDoubletRate = maxAllowableDoubletRate)
 	write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
 
 	if (!is.null(saveOriginalCellBarcodeFile)) {

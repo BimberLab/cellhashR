@@ -135,11 +135,12 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @param chemistry This string is passed to EstimateMultipletRate. Should be either 10xV2 or 10xV3. This is used to calculate and present the expected doublet rate and does not influence the actual calls.
 #' @param callerDisagreementThreshold If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an disagreement rate above this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.
 #' @param rawFeatureMatrixH5 If either demuxem or demuxmix are used, you must provide the filepath to the 10x h5 gene expression counts file
+#' @param maxAllowableDoubletRate Per caller, the doublet rate will be computed as the total doublets / total droplets (including negatives). Any individual caller with a doublet rate above this value will be converted to NoCall. Note: if 'auto' is chosen, the value will be selected as twice the theoretical doublet rate.
 #' @param \dots Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).
 #' @description The primary methods to generating cell hashing calls from a filtered matrix of count data.
 #' @return A data frame of results.
 #' @export
-GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'gmm_demux', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, rawFeatureMatrixH5 = NULL, ...) {
+GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'gmm_demux', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = TRUE, doHeatmap = TRUE, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, rawFeatureMatrixH5 = NULL, maxAllowableDoubletRate = 'auto', ...) {
   .LogProgress('Generating calls')
   if (is.data.frame(barcodeMatrix)) {
     print('Converting input data.frame to a matrix')
@@ -252,13 +253,13 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     .LogProgress(paste0('Finished method: ', method))
   }
 
-  return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, methodsForConsensus = methodsForConsensus, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = perCellSaturation, majorityConsensusThreshold = majorityConsensusThreshold, chemistry = chemistry, callerDisagreementThreshold = callerDisagreementThreshold))
+  return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, methodsForConsensus = methodsForConsensus, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = perCellSaturation, majorityConsensusThreshold = majorityConsensusThreshold, chemistry = chemistry, callerDisagreementThreshold = callerDisagreementThreshold, maxAllowableDoubletRate = maxAllowableDoubletRate))
 }
 
 #' @import ggplot2
 #' @import patchwork
 #' @importFrom dplyr %>% group_by summarise
-.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, methodsForConsensus, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL) {
+.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, methodsForConsensus, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, maxAllowableDoubletRate = 'auto') {
   print('Generating consensus calls')
 
   if (length(callList) == 0){
@@ -312,6 +313,48 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
   if (!('Negative') %in% levels(allCalls$classification.global)) {
     levels(allCalls$classification.global) <- c(levels(allCalls$classification.global), 'Negative')
   }
+
+  theoreticalDoubletRate <- EstimateMultipletRate(dplyr::n_distinct(allCalls$cellbarcode), chemistry = chemistry)
+  if (is.null(maxAllowableDoubletRate)) {
+    maxAllowableDoubletRate <- theoreticalDoubletRate * 2
+    print(paste0('Selecting maxAllowableDoubletRate of ', maxAllowableDoubletRate, ' which is twice the theoretical rate'))
+  }
+
+  doubleRateByCaller <- allCalls %>%
+    filter(classification.global %in% c('Doublet', 'Singlet')) %>%
+    group_by(method, classification.global) %>%
+    mutate(TotalCells = n())
+
+  doubleRateByCaller <- doubleRateByCaller %>% tidyr::pivot_wider(id_cols = method, names_from = classification.global, values_from = TotalCells, values_fill = 0)
+  doubleRateByCaller$FractionDoublet <- doubleRateByCaller$Doublet / dplyr::n_distinct(allCalls$cellbarcode)
+  doubleRateByCaller$SingleDoubletRatio <- doubleRateByCaller$Singlet / doubleRateByCaller$Doublet
+  doubleRateByCaller$SingleDoubletRatio[is.na(doubleRateByCaller$SingleDoubletRatio)] <- 0
+
+  P1 <- ggplot(doubleRateByCaller, aes(x = Method, y = FractionDoublet, fill = Method)) +
+    geom_bar(position = position_dodge2(preserve = 'single'), stat = 'identity') +
+    egg::theme_presentation(base_size = 14) +
+    labs(x = '', y = 'Fraction Doublet', fill = 'Caller') +
+    theme(
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+    ) +
+    ggtitle('Doublet Rate') +
+    geom_hline(intercept = theoreticalDoubletRate, size=0.25, linetype = "dotted", color = "blue")
+
+  if (!is.null(maxAllowableDoubletRate)) {
+    P1 <- P1 + geom_hline(yintercept = maxAllowableDoubletRate, size=0.25, linetype = "dotted", color = "red")
+  }
+
+  print(P1)
+
+  print(ggplot(doubleRateByCaller, aes(x = Method, y = SingleDoubletRatio, fill = Method)) +
+    geom_bar(position = position_dodge2(preserve = 'single'), stat = 'identity') +
+    egg::theme_presentation(base_size = 14) +
+    labs(x = '', y = 'Single/Doublet Ratio', fill = 'Caller') +
+    theme(
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+    ) +
+    ggtitle('Single/Doublet Ratio')
+  )
 
   tryCatch({
     dataClassification <- allCalls[c('cellbarcode', 'method', 'classification')] %>% tidyr::pivot_wider(id_cols = cellbarcode, names_from = method, values_from = classification, values_fill = 'Negative')
@@ -408,6 +451,21 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
 
   ConsensusFn <- function(x){
     return(MakeMajorityConsensusCall(x, majorityConsensusThreshold))
+  }
+
+  # Doublet check:
+  if (!is.null(maxAllowableDoubletRate)) {
+    for (method in methodsForConsensus) {
+      doubletRate <- doubleRateByCaller$FractionDoublet[doubleRateByCaller$method == method]
+      if (doubletRate < maxAllowableDoubletRate) {
+        print(paste0('Dropping caller due to high doublet rate: ', method))
+        methodsForConsensus <- methodsForConsensus[methodsForConsensus != method]
+      }
+    }
+
+    if (length(methodsForConsensus) == 0) {
+      stop('No consensus methods remained after doublet filter!')
+    }
   }
 
   # Concordance across all callers:
@@ -708,10 +766,11 @@ GetExampleMarkdown <- function(dest) {
 #' @param majorityConsensusThreshold This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.
 #' @param callerDisagreementThreshold If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an disagreement rate above this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.
 #' @param datatypeName For output from CellRanger >= 3.0 with multiple data types, the result of Seurat::Read10X is a list. You need to supply the name of the Antibody Capture
+#' @param maxAllowableDoubletRate Per caller, the doublet rate will be computed as the total doublets / total droplets (including negatives). Any individual caller with a doublet rate above this value will be converted to NoCall. Note: if 'auto' is chosen, the value will be selected as twice the theoretical doublet rate.
 #' @param title A title for the HTML report
 #' @importFrom rmdformats html_clean
 #' @export
-CallAndGenerateReport <- function(rawCountData, reportFile, callFile, rawFeatureMatrixH5 = NULL, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), cellbarcodeWhitelist = 'inputMatrix', methods = c('bff_cluster', 'gmm_demux', 'dropletutils'), methodsForConsensus = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL, majorityConsensusThreshold = NULL, callerDisagreementThreshold = NULL, doTSNE = TRUE, datatypeName = NULL) {
+CallAndGenerateReport <- function(rawCountData, reportFile, callFile, rawFeatureMatrixH5 = NULL, barcodeWhitelist = NULL, barcodeBlacklist = c('no_match', 'total_reads', 'unmapped'), cellbarcodeWhitelist = 'inputMatrix', methods = c('bff_cluster', 'gmm_demux', 'dropletutils'), methodsForConsensus = NULL, minCountPerCell = 5, title = NULL, metricsFile = NULL, rawCountsExport = NULL, skipNormalizationQc = FALSE, keepMarkdown = FALSE, molInfoFile = NULL, majorityConsensusThreshold = NULL, callerDisagreementThreshold = NULL, doTSNE = TRUE, datatypeName = NULL, maxAllowableDoubletRate = 'auto') {
   rmd <- system.file("rmd/cellhashR.rmd", package = "cellhashR")
   if (!file.exists(rmd)) {
     stop(paste0('Unable to find file: ', rmd))
