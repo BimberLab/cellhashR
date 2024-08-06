@@ -315,7 +315,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
   }
 
   theoreticalDoubletRate <- EstimateMultipletRate(dplyr::n_distinct(allCalls$cellbarcode), chemistry = chemistry)
-  if (is.null(maxAllowableDoubletRate)) {
+  if (maxAllowableDoubletRate == 'auto') {
     maxAllowableDoubletRate <- theoreticalDoubletRate * 2
     print(paste0('Selecting maxAllowableDoubletRate of ', maxAllowableDoubletRate, ' which is twice the theoretical rate'))
   }

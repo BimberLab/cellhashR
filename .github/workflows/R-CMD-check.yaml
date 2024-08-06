@@ -23,7 +23,6 @@ jobs:
           - {os: 22.04, r: 'devel', bioc: 'devel'}
           - {os: 22.04, r: '4.3', bioc: '3.18', pkgdown: "true"}
           - {os: 22.04, r: '4.3', bioc: '3.17'}
-          - {os: 22.04, r: '4.2', bioc: '3.16'}
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
