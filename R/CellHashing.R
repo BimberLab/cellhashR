@@ -11,7 +11,7 @@
 #' @include demuxmix.R
 #'
 utils::globalVariables(
-  names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall', 'consensuscall.global', 'topFraction', 'totalReadsPerCell', 'Method', 'DisagreementRate', 'Label', 'TotalPerCell'),
+  names = c('classification', 'classification.global', 'HTO', 'Count', 'cellbarcode', 'Classification', 'consensuscall', 'consensuscall.global', 'topFraction', 'totalReadsPerCell', 'Method', 'DisagreementRate', 'Label', 'TotalPerCell', 'FractionDoublet', 'SingleDoubletRatio', 'TotalCells'),
   package = 'cellhashR',
   add = TRUE
 )
@@ -258,7 +258,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
 
 #' @import ggplot2
 #' @import patchwork
-#' @importFrom dplyr %>% group_by summarise
+#' @importFrom dplyr %>% group_by summarise n filter
 .ProcessEnsemblHtoCalls <- function(callList, expectedMethods, methodsForConsensus, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, maxAllowableDoubletRate = 'auto') {
   print('Generating consensus calls')
 
@@ -314,16 +314,17 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     levels(allCalls$classification.global) <- c(levels(allCalls$classification.global), 'Negative')
   }
 
+  minAllowableDoubletRateFilter <- 0.15
   theoreticalDoubletRate <- EstimateMultipletRate(dplyr::n_distinct(allCalls$cellbarcode), chemistry = chemistry)
   if (maxAllowableDoubletRate == 'auto') {
-    maxAllowableDoubletRate <- theoreticalDoubletRate * 2
-    print(paste0('Selecting maxAllowableDoubletRate of ', maxAllowableDoubletRate, ' which is twice the theoretical rate'))
+    maxAllowableDoubletRate <- max(minAllowableDoubletRateFilter, theoreticalDoubletRate * 2)
+    print(paste0('Selecting maxAllowableDoubletRate of ', maxAllowableDoubletRate, ' which is twice the theoretical rate (limited by minAllowableDoubletRateFilter)'))
   }
 
   doubleRateByCaller <- allCalls %>%
     filter(classification.global %in% c('Doublet', 'Singlet')) %>%
     group_by(method, classification.global) %>%
-    summarize(TotalCells = n())
+    summarise(TotalCells = n())
 
   doubleRateByCaller <- doubleRateByCaller %>% tidyr::pivot_wider(id_cols = method, names_from = classification.global, values_from = TotalCells, values_fill = 0)
   doubleRateByCaller$FractionDoublet <- doubleRateByCaller$Doublet / dplyr::n_distinct(allCalls$cellbarcode)
