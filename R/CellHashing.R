@@ -338,7 +338,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
     ) +
     ggtitle('Doublet Rate') +
-    geom_hline(intercept = theoreticalDoubletRate, size=0.25, linetype = "dotted", color = "blue")
+    geom_hline(yintercept = theoreticalDoubletRate, size=0.25, linetype = "dotted", color = "blue")
 
   if (!is.null(maxAllowableDoubletRate)) {
     P1 <- P1 + geom_hline(yintercept = maxAllowableDoubletRate, size=0.25, linetype = "dotted", color = "red")
