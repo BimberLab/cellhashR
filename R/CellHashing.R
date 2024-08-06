@@ -323,7 +323,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
   doubleRateByCaller <- allCalls %>%
     filter(classification.global %in% c('Doublet', 'Singlet')) %>%
     group_by(method, classification.global) %>%
-    mutate(TotalCells = n())
+    summarize(TotalCells = n())
 
   doubleRateByCaller <- doubleRateByCaller %>% tidyr::pivot_wider(id_cols = method, names_from = classification.global, values_from = TotalCells, values_fill = 0)
   doubleRateByCaller$FractionDoublet <- doubleRateByCaller$Doublet / dplyr::n_distinct(allCalls$cellbarcode)
