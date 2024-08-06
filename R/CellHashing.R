@@ -457,7 +457,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
   # Doublet check:
   if (!is.null(maxAllowableDoubletRate)) {
     for (method in methodsForConsensus) {
-      doubletRate <- doubleRateByCaller$FractionDoublet[doubleRateByCaller$method == method]
+      doubletRate <- ifelse(sum(doubleRateByCaller$method == method) == 0, yes = 0, no = doubleRateByCaller$FractionDoublet[doubleRateByCaller$method == method])
       if (doubletRate > maxAllowableDoubletRate) {
         print(paste0('Dropping caller due to high doublet rate of ', doubletRate, ': ', method))
         methodsForConsensus <- methodsForConsensus[methodsForConsensus != method]
