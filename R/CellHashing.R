@@ -327,6 +327,14 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     summarise(TotalCells = n())
 
   doubleRateByCaller <- doubleRateByCaller %>% tidyr::pivot_wider(id_cols = method, names_from = classification.global, values_from = TotalCells, values_fill = 0)
+  if (!'Doublet' %in% names(doubleRateByCaller)) {
+    doubleRateByCaller$Doublet <- 0
+  }
+
+  if (!'Singlet' %in% names(doubleRateByCaller)) {
+    doubleRateByCaller$Singlet <- 0
+  }
+
   doubleRateByCaller$FractionDoublet <- doubleRateByCaller$Doublet / dplyr::n_distinct(allCalls$cellbarcode)
   doubleRateByCaller$SingleDoubletRatio <- doubleRateByCaller$Singlet / doubleRateByCaller$Doublet
   doubleRateByCaller$SingleDoubletRatio[is.na(doubleRateByCaller$SingleDoubletRatio)] <- 0
