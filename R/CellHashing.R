@@ -330,7 +330,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
   doubleRateByCaller$SingleDoubletRatio <- doubleRateByCaller$Singlet / doubleRateByCaller$Doublet
   doubleRateByCaller$SingleDoubletRatio[is.na(doubleRateByCaller$SingleDoubletRatio)] <- 0
 
-  P1 <- ggplot(doubleRateByCaller, aes(x = Method, y = FractionDoublet, fill = Method)) +
+  P1 <- ggplot(doubleRateByCaller, aes(x = method, y = FractionDoublet, fill = method)) +
     geom_bar(position = position_dodge2(preserve = 'single'), stat = 'identity') +
     egg::theme_presentation(base_size = 14) +
     labs(x = '', y = 'Fraction Doublet', fill = 'Caller') +
@@ -346,7 +346,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
 
   print(P1)
 
-  print(ggplot(doubleRateByCaller, aes(x = Method, y = SingleDoubletRatio, fill = Method)) +
+  print(ggplot(doubleRateByCaller, aes(x = method, y = SingleDoubletRatio, fill = method)) +
     geom_bar(position = position_dodge2(preserve = 'single'), stat = 'identity') +
     egg::theme_presentation(base_size = 14) +
     labs(x = '', y = 'Single/Doublet Ratio', fill = 'Caller') +
