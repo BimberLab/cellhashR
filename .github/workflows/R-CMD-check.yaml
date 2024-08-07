@@ -5,6 +5,8 @@ on:
   push:
     branches: [ master, dev ]
   pull_request:
+  schedule:
+    - cron:  "0 6 * * 3"
 
 name: R Build and Checks
 
@@ -19,9 +21,8 @@ jobs:
       matrix:
         config:
           - {os: 22.04, r: 'devel', bioc: 'devel'}
-          - {os: 22.04, r: '4.3', bioc: '3.18'}
-          - {os: 22.04, r: '4.3', bioc: '3.17', pkgdown: "true"}
-          - {os: 22.04, r: '4.2', bioc: '3.16'}
+          - {os: 22.04, r: '4.3', bioc: '3.18', pkgdown: "true"}
+          - {os: 22.04, r: '4.3', bioc: '3.17'}
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
