@@ -8,7 +8,8 @@ tests <- list(
 		Doublet = 947,
 		MultiSeqCalled = 4010,
 		Discordant = 1524,
-		SeuratCalled = 3179
+		SeuratCalled = 3179,
+		minAllowableDoubletRateFilter = 0.3
 	),
 	'283' = list(
 		input = '../testdata/cellHashing/283-cellbarcodeToHTO.calls.citeSeqCounts.txt',
@@ -123,8 +124,13 @@ DoTest <- function(test, methods = c('multiseq', 'htodemux'), skipNormalizationQ
 		unlink(metricsFile)
 	}
 
+	minAllowableDoubletRateFilter <- 0.15
+	if ('minAllowableDoubletRateFilter' %in% names(test)) {
+		minAllowableDoubletRateFilter <- test[['minAllowableDoubletRateFilter']]
+	}
+
 	# NOTE: extraneous argument added, since at one point this broke caller-specific argument parsing
-	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, metricsFile = metricsFile, extraArgument = 'foo')
+	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, metricsFile = metricsFile, extraArgument = 'foo', minAllowableDoubletRateFilter = minAllowableDoubletRateFilter)
 
 	return(list(barcodeData = barcodeData, df = df, metricsFile = metricsFile))
 }
