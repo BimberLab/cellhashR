@@ -23,7 +23,7 @@ CallAndGenerateReport(
   molInfoFile = NULL,
   majorityConsensusThreshold = NULL,
   callerDisagreementThreshold = NULL,
-  doTSNE = TRUE,
+  doTSNE = FALSE,
   datatypeName = NULL,
   maxAllowableDoubletRate = "auto",
   minAllowableDoubletRateFilter = 0.15

@@ -10,7 +10,7 @@ GenerateCellHashingCalls(
   methodsForConsensus = NULL,
   cellbarcodeWhitelist = NULL,
   metricsFile = NULL,
-  doTSNE = TRUE,
+  doTSNE = FALSE,
   doHeatmap = TRUE,
   perCellSaturation = NULL,
   majorityConsensusThreshold = NULL,
