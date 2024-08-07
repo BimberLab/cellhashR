@@ -9,7 +9,7 @@ tests <- list(
 		MultiSeqCalled = 4010,
 		Discordant = 1524,
 		SeuratCalled = 3179,
-		minAllowableDoubletRateFilter = 0.3
+		minAllowableDoubletRateFilter = 0.4
 	),
 	'283' = list(
 		input = '../testdata/cellHashing/283-cellbarcodeToHTO.calls.citeSeqCounts.txt',
