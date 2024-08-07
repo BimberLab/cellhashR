@@ -1,69 +1,25 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>/404.html</loc>
-  </url>
-  <url>
-    <loc>/articles/V01-QC-example.html</loc>
-  </url>
-  <url>
-    <loc>/articles/V02-BFF-example.html</loc>
-  </url>
-  <url>
-    <loc>/articles/V03-Benchmark-example.html</loc>
-  </url>
-  <url>
-    <loc>/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>/authors.html</loc>
-  </url>
-  <url>
-    <loc>/index.html</loc>
-  </url>
-  <url>
-    <loc>/reference/AppendCellHashing.html</loc>
-  </url>
-  <url>
-    <loc>/reference/CalculateSaturationFor10x.html</loc>
-  </url>
-  <url>
-    <loc>/reference/CallAndGenerateReport.html</loc>
-  </url>
-  <url>
-    <loc>/reference/EstimateMultipletRate.html</loc>
-  </url>
-  <url>
-    <loc>/reference/GenerateCellHashingCalls.html</loc>
-  </url>
-  <url>
-    <loc>/reference/GetExampleMarkdown.html</loc>
-  </url>
-  <url>
-    <loc>/reference/GetSeed.html</loc>
-  </url>
-  <url>
-    <loc>/reference/ParameterScan.html</loc>
-  </url>
-  <url>
-    <loc>/reference/PlotLibrarySaturation.html</loc>
-  </url>
-  <url>
-    <loc>/reference/PlotLibrarySaturationByMarker.html</loc>
-  </url>
-  <url>
-    <loc>/reference/PlotNormalizationQC.html</loc>
-  </url>
-  <url>
-    <loc>/reference/ProcessCountMatrix.html</loc>
-  </url>
-  <url>
-    <loc>/reference/SetSeed.html</loc>
-  </url>
-  <url>
-    <loc>/reference/SummarizeCellsByClassification.html</loc>
-  </url>
-  <url>
-    <loc>/reference/index.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>/404.html</loc></url>
+<url><loc>/articles/V01-QC-example.html</loc></url>
+<url><loc>/articles/V02-BFF-example.html</loc></url>
+<url><loc>/articles/V03-Benchmark-example.html</loc></url>
+<url><loc>/articles/index.html</loc></url>
+<url><loc>/authors.html</loc></url>
+<url><loc>/index.html</loc></url>
+<url><loc>/reference/AppendCellHashing.html</loc></url>
+<url><loc>/reference/CalculateSaturationFor10x.html</loc></url>
+<url><loc>/reference/CallAndGenerateReport.html</loc></url>
+<url><loc>/reference/EstimateMultipletRate.html</loc></url>
+<url><loc>/reference/GenerateCellHashingCalls.html</loc></url>
+<url><loc>/reference/GetExampleMarkdown.html</loc></url>
+<url><loc>/reference/GetSeed.html</loc></url>
+<url><loc>/reference/ParameterScan.html</loc></url>
+<url><loc>/reference/PlotLibrarySaturation.html</loc></url>
+<url><loc>/reference/PlotLibrarySaturationByMarker.html</loc></url>
+<url><loc>/reference/PlotNormalizationQC.html</loc></url>
+<url><loc>/reference/ProcessCountMatrix.html</loc></url>
+<url><loc>/reference/SetSeed.html</loc></url>
+<url><loc>/reference/SummarizeCellsByClassification.html</loc></url>
+<url><loc>/reference/index.html</loc></url>
 </urlset>
+
