@@ -20,7 +20,8 @@ tests <- list(
 		Doublet = 723,
 		MultiSeqCalled = 3223,
 		Discordant = 1400,
-		SeuratCalled = 4116
+		SeuratCalled = 4116,
+		minAllowableDoubletRateFilter = 0.3
 	),
 	'438-21' = list(
 		input = '../testdata/438-21-GEX/umi_count',
@@ -47,21 +48,21 @@ tests <- list(
 	'449-1' = list(
 		input = '../testdata/449-1-GEX/umi_count',
 		htos = paste0('MS-', c(2:16)),
-		CalledCells = 400,
-		Singlet = 295,
-		Doublet = 102,
+		CalledCells = 1106,
+		Singlet = 986,
+		Doublet = 95,
 		MultiSeqCalled = 1081,
-		Discordant = 706,
+		Discordant = 0,
 		SeuratCalled = 1103
 	),
 	'457-1' = list(
 		input = '../testdata/457-1-GEX/umi_count/',
 		htos = paste0('MS-', c(1:3, 5:8)),
-		CalledCells = 1816,
-		Singlet = 1481,
-		Doublet = 330,
+		CalledCells = 2437,
+		Singlet = 2060,
+		Doublet = 323,
 		MultiSeqCalled = 2383,
-		Discordant = 621,
+		Discordant = 0,
 		SeuratCalled = 2432
 	),
 	'471-1' = list(
@@ -87,11 +88,11 @@ tests <- list(
 	'483-3' = list(
 		input = '../testdata/483-3-GEX/umi_count',
 		htos = paste0('MS-', c(2:4, 6:8, 10:13)),
-		CalledCells = 56,
-		Singlet = 45,
-		Doublet = 10,
+		CalledCells = 166,
+		Singlet = 148,
+		Doublet = 8,
 		MultiSeqCalled = 156,
-		Discordant = 110,
+		Discordant = 0,
 		SeuratCalled = 165
 	)
 )
