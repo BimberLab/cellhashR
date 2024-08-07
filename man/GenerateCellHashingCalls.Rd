@@ -49,6 +49,8 @@ GenerateCellHashingCalls(
 \item{maxAllowableDoubletRate}{Per caller, the doublet rate will be computed as the total doublets / total droplets (including negatives). Any individual caller with a doublet rate above this value will be converted to NoCall. Note: if 'auto' is chosen, the value will be selected as twice the theoretical doublet rate.}
 
 \item{\dots}{Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).}
+
+\item{minAllowableDoubletRateFilter}{This is the lower bound allowed for maxAllowableDoubletRate. This is primarily used to avoid excessively low values when selecting 'auto' for maxAllowableDoubletRate.}
 }
 \value{
 A data frame of results.

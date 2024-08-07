@@ -25,7 +25,8 @@ CallAndGenerateReport(
   callerDisagreementThreshold = NULL,
   doTSNE = TRUE,
   datatypeName = NULL,
-  maxAllowableDoubletRate = "auto"
+  maxAllowableDoubletRate = "auto",
+  minAllowableDoubletRateFilter = 0.15
 )
 }
 \arguments{
@@ -70,6 +71,8 @@ CallAndGenerateReport(
 \item{datatypeName}{For output from CellRanger >= 3.0 with multiple data types, the result of Seurat::Read10X is a list. You need to supply the name of the Antibody Capture}
 
 \item{maxAllowableDoubletRate}{Per caller, the doublet rate will be computed as the total doublets / total droplets (including negatives). Any individual caller with a doublet rate above this value will be converted to NoCall. Note: if 'auto' is chosen, the value will be selected as twice the theoretical doublet rate.}
+
+\item{minAllowableDoubletRateFilter}{This is the lower bound allowed for maxAllowableDoubletRate. This is primarily used to avoid excessively low values when selecting 'auto' for maxAllowableDoubletRate.}
 }
 \description{
 Runs the default processing pipeline
