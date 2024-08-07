@@ -21,7 +21,7 @@ tests <- list(
 		MultiSeqCalled = 3223,
 		Discordant = 1400,
 		SeuratCalled = 4116,
-		minAllowableDoubletRateFilter = 0.3
+		minAllowableDoubletRateFilter = 0.4
 	),
 	'438-21' = list(
 		input = '../testdata/438-21-GEX/umi_count',
