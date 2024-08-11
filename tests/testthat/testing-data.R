@@ -133,5 +133,9 @@ DoTest <- function(test, methods = c('multiseq', 'htodemux'), skipNormalizationQ
 	# NOTE: extraneous argument added, since at one point this broke caller-specific argument parsing
 	df <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = methods, metricsFile = metricsFile, extraArgument = 'foo', minAllowableDoubletRateFilter = minAllowableDoubletRateFilter)
 
+	# Ensure actual consensus callers reported correctly:
+	expect_true('MethodForConsensus' %in% names(df))
+	expect_equal(1, length(unique(df$MethodForConsensus)))
+
 	return(list(barcodeData = barcodeData, df = df, metricsFile = metricsFile))
 }

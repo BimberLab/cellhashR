@@ -164,19 +164,23 @@ if (!is.null(df)) {
 if (!is.null(df) && sum(df$consensuscall == 'Discordant') > 0) {
   discord <- df[df$consensuscall == 'Discordant',]
 
-  colSelect <- methods
+  actualConsensusMethods <- unlist(strsplit(unique(df$MethodForConsensus), split = ','))
+  colSelect <- actualConsensusMethods
+  droppedMethods <- character()
   if (!is.null(methodsForConsensus)) {
-    colSelect <- unique(c(methodsForConsensus, methods))
+    droppedMethods <- setdiff(methodsForConsensus, actualConsensusMethods)
+    colSelect <- c(actualConsensusMethods, droppedMethods)
   }
 
   discord <- discord %>% group_by_at(colSelect) %>% summarize(Total = n()) %>% arrange(desc(Total))
   discord$Percent <- discord$Total / sum(discord$Total)
   discord$Percent <- discord$Total / sum(discord$Total)
 
-  if (!is.null(methodsForConsensus)) {
-    isConsensusMethod <- names(discord) %in% methodsForConsensus
-    names(discord)[isConsensusMethod] <- paste0(names(discord)[isConsensusMethod], '*')
-  }
+  isConsensusMethod <- names(discord) %in% actualConsensusMethods
+  names(discord)[isConsensusMethod] <- paste0(names(discord)[isConsensusMethod], '*')
+
+  isDroppedMethod <- names(discord) %in% droppedMethods
+  names(discord)[isDroppedMethod] <- paste0(names(discord)[isDroppedMethod], '+')
 
   knitr::kable(discord, caption = 'All Methods')
 }

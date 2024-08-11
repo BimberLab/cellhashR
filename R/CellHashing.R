@@ -712,6 +712,8 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     'Singlet Rate: ', round(singletRate, digits = 3)
   )))
 
+  dataClassification$MethodForConsensus <- paste0(sort(methodsForConsensus), collapse = ',')
+
   return(dataClassification)
 }
 
