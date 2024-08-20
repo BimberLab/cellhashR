@@ -47,7 +47,7 @@ GenerateCellHashingCalls(
 
 \item{rawFeatureMatrixH5}{If either demuxem or demuxmix are used, you must provide the filepath to the 10x h5 gene expression counts file}
 
-\item{maxAllowableDoubletRate}{Per caller, the doublet rate will be computed as the total doublets / total droplets (including negatives). Any individual caller with a doublet rate above this value will be converted to NoCall. Note: if 'auto' is chosen, the value will be selected as twice the theoretical doublet rate.}
+\item{maxAllowableDoubletRate}{Per caller, the doublet rate will be computed as the total doublets / total droplets (including negatives). Any individual caller with a doublet rate above this value will be converted to NoCall. Note: if 'auto' is chosen, the value will be selected as 3x the theoretical doublet rate.}
 
 \item{minAllowableDoubletRateFilter}{This is the lower bound allowed for maxAllowableDoubletRate. This is primarily used to avoid excessively low values when selecting 'auto' for maxAllowableDoubletRate.}
 
