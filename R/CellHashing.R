@@ -395,12 +395,12 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     dataClassification <- merge(dataClassification, perCellSaturation, by = 'cellbarcode', all.x = T)
   }
 
-  methodsAdded <- c()
+  methodsMissingData <- c()
   for (method in methods) {
     if (!(method %in% names(dataClassification))) {
       print(paste0('adding missing method: ', method))
       dataClassification[method] <- 'Not Called'
-      methodsAdded <- c(methodsAdded, method)
+      methodsMissingData <- c(methodsMissingData, method)
     }
 
     if (!(method %in% names(dataClassificationGlobal))) {
@@ -474,7 +474,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
       }
     }
 
-    methodsWithCalls <- methodsForConsensus[! methodsForConsensus %in% methodsAdded]
+    methodsWithCalls <- methodsForConsensus[! methodsForConsensus %in% methodsMissingData]
     if (length(methodsWithCalls) == 0) {
       stop('No consensus methods remained after doublet filter!')
     }
