@@ -165,7 +165,7 @@ if (!is.null(df) && sum(df$consensuscall == 'Discordant') > 0) {
   discord <- df[df$consensuscall == 'Discordant',]
 
   actualConsensusMethods <- unlist(strsplit(unique(df$MethodForConsensus), split = ','))
-  colSelect <- actualConsensusMethods
+  colSelect <- methods
   droppedMethods <- character()
   if (!is.null(methodsForConsensus)) {
     droppedMethods <- setdiff(methodsForConsensus, actualConsensusMethods)
