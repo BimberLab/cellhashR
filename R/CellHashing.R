@@ -260,7 +260,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
 #' @import ggplot2
 #' @import patchwork
 #' @importFrom dplyr %>% group_by summarise n filter
-.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, methodsForConsensus, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, maxAllowableDoubletRate = 'auto', minAllowableDoubletRateFilter = 0.25) {
+.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, methodsForConsensus, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, maxAllowableDoubletRate = 'auto', minAllowableDoubletRateFilter = 0.25, throwIfNoSingletsFound = TRUE) {
   print('Generating consensus calls')
 
   if (length(callList) == 0){
@@ -395,10 +395,12 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     dataClassification <- merge(dataClassification, perCellSaturation, by = 'cellbarcode', all.x = T)
   }
 
+  methodsMissingData <- c()
   for (method in methods) {
     if (!(method %in% names(dataClassification))) {
       print(paste0('adding missing method: ', method))
       dataClassification[method] <- 'Not Called'
+      methodsMissingData <- c(methodsMissingData, method)
     }
 
     if (!(method %in% names(dataClassificationGlobal))) {
@@ -472,7 +474,8 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
       }
     }
 
-    if (length(methodsForConsensus) == 0) {
+    methodsWithCalls <- methodsForConsensus[! methodsForConsensus %in% methodsMissingData]
+    if (length(methodsWithCalls) == 0) {
       stop('No consensus methods remained after doublet filter!')
     }
   }
@@ -713,6 +716,10 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
   )))
 
   dataClassification$MethodForConsensus <- paste0(sort(methodsForConsensus), collapse = ',')
+
+  if (throwIfNoSingletsFound & sum(dataClassification$consensuscall.global == 'Singlet') == 0) {
+    stop('There were zero singlets in the output calls')
+  }
 
   return(dataClassification)
 }
