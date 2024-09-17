@@ -169,7 +169,7 @@ if (!is.null(df) && sum(df$consensuscall == 'Discordant') > 0) {
   droppedMethods <- character()
   if (!is.null(methodsForConsensus)) {
     droppedMethods <- setdiff(methodsForConsensus, actualConsensusMethods)
-    colSelect <- c(actualConsensusMethods, droppedMethods)
+    colSelect <- unique(c(actualConsensusMethods, droppedMethods, colSelect))
   }
 
   discord <- discord %>% group_by_at(colSelect) %>% summarize(Total = n()) %>% arrange(desc(Total))
