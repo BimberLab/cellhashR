@@ -124,20 +124,20 @@ features in rows.</p>
 </h2>
 <p>The plots appearing in the following figure from the BFF paper are
 generated using the cellhashR command PlotNormalizationQC.</p>
-<p><img src="BFF-example_files/figure-html/QC_fig.png" width="525"></p>
+<p><img src="BFF-example_files%2Ffigure-html%2FQC_fig.png" width="525"></p>
 <p>The following code produces QC plots helpful in visualizing the
 effects of various normalization procedures on cell hashing data,
 including the novel normalization Bimodal Quantile Normalization
 (BQN).</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/PlotNormalizationQC.html">PlotNormalizationQC</a></span><span class="op">(</span><span class="va">barcodeData</span>, methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'Raw'</span>, <span class="st">'bimodalQuantile'</span>, <span class="st">'log2Center'</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="BFF-example_files/figure-html/NormalizationQC-1.png" width="576"><img src="BFF-example_files/figure-html/NormalizationQC-2.png" width="576"><img src="BFF-example_files/figure-html/NormalizationQC-3.png" width="576"><img src="BFF-example_files/figure-html/NormalizationQC-4.png" width="576"></p>
+<p><img src="BFF-example_files%2Ffigure-html%2FNormalizationQC-1.png" width="576"><img src="BFF-example_files%2Ffigure-html%2FNormalizationQC-2.png" width="576"><img src="BFF-example_files%2Ffigure-html%2FNormalizationQC-3.png" width="576"><img src="BFF-example_files%2Ffigure-html%2FNormalizationQC-4.png" width="576"></p>
 <pre><code><span><span class="co">## [1] "Printing Raw Count QC Plots"</span></span></code></pre>
-<p><img src="BFF-example_files/figure-html/NormalizationQC-5.png" width="576"><img src="BFF-example_files/figure-html/NormalizationQC-8.png" width="576"></p>
+<p><img src="BFF-example_files%2Ffigure-html%2FNormalizationQC-5.png" width="576"><img src="BFF-example_files%2Ffigure-html%2FNormalizationQC-8.png" width="576"></p>
 <pre><code><span><span class="co">## [1] "Printing bimodalQuantile Normalization QC Plots"</span></span></code></pre>
-<p><img src="BFF-example_files/figure-html/NormalizationQC-9.png" width="576"><img src="BFF-example_files/figure-html/NormalizationQC-12.png" width="576"></p>
+<p><img src="BFF-example_files%2Ffigure-html%2FNormalizationQC-9.png" width="576"><img src="BFF-example_files%2Ffigure-html%2FNormalizationQC-12.png" width="576"></p>
 <pre><code><span><span class="co">## [1] "Printing log2Center Normalization QC Plots"</span></span></code></pre>
-<p><img src="BFF-example_files/figure-html/NormalizationQC-13.png" width="576"><img src="BFF-example_files/figure-html/NormalizationQC-16.png" width="576"></p>
+<p><img src="BFF-example_files%2Ffigure-html%2FNormalizationQC-13.png" width="576"><img src="BFF-example_files%2Ffigure-html%2FNormalizationQC-16.png" width="576"></p>
 </div>
 <div class="section level2">
 <h2 id="generate-hashing-calls">Generate Hashing Calls<a class="anchor" aria-label="anchor" href="#generate-hashing-calls"></a>
@@ -158,7 +158,7 @@ different parameter set for BFF_cluster.</p>
 <span><span class="co">## [1] "rows dropped for low counts: 0 of 12"</span></span></code></pre>
 <p>The lines of output above are printed when BFF_raw is run (as opposed
 to BFF_cluster).</p>
-<p><img src="BFF-example_files/figure-html/unnamed-chunk-3-1.png" width="576"></p>
+<p><img src="BFF-example_files%2Ffigure-html%2Funnamed-chunk-3-1.png" width="576"></p>
 <p>The figure above will be generated each time BFF is run on this data
 (in either the threshold mode or the cluster mode). Similarly, the list
 of thresholds below (not in log-space) is given each time BFF is run on
@@ -195,7 +195,7 @@ figure), <strong>bff_cluster.neg_thresh</strong> (shown as alpha_c in
 the figure), and <strong>bff_cluster.dist_frac</strong> (shown as
 delta_c in the figure) as demonstrated in the call to
 GenerateCellHashingCalls above.</p>
-<p><img src="BFF-example_files/figure-html/sim_curves.png" width="525"></p>
+<p><img src="BFF-example_files%2Ffigure-html%2Fsim_curves.png" width="525"></p>
 <div class="section level5">
 <h5 id="bff_cluster-0-05-0-05-0-1">BFF_cluster (0.05, 0.05, 0.1)<a class="anchor" aria-label="anchor" href="#bff_cluster-0-05-0-05-0-1"></a>
 </h5>
@@ -207,7 +207,7 @@ bff_cluster.dist_frac of 0.05, 0.05, and 0.1, respectively.</p>
 <span><span class="co">## [1] "Doublet thresh:  0.05"</span></span>
 <span><span class="co">## [1] "Neg thresh:  0.05"</span></span>
 <span><span class="co">## [1] "Min distance as fraction of distance between peaks:  0.1"</span></span></code></pre>
-<p><img src="BFF-example_files/figure-html/unnamed-chunk-2-18.png" width="576"></p>
+<p><img src="BFF-example_files%2Ffigure-html%2Funnamed-chunk-2-18.png" width="576"></p>
 <p>The lines of output above are printed when BFF_cluster is run. The
 parameter values output here are the default values for BFF_cluster.</p>
 <p>The figure above is generated each time BFF_cluster is run (BQN
@@ -220,7 +220,7 @@ parameter values for bff_cluster.doublet_thresh, bff_cluster.neg_thresh,
 and bff_cluster.dist_frac of 0.05, 0.05, and 0.1, respectively. The
 figure on the right compares the BFF_cluster classifications with
 BFF_raw classifications (consensus output can be ignored).</p>
-<p><img src="BFF-example_files/figure-html/unnamed-chunk-2-19.png" width="576"><img src="BFF-example_files/figure-html/unnamed-chunk-2-35.png" width="576"></p>
+<p><img src="BFF-example_files%2Ffigure-html%2Funnamed-chunk-2-19.png" width="576"><img src="BFF-example_files%2Ffigure-html%2Funnamed-chunk-2-35.png" width="576"></p>
 </div>
 <div class="section level5">
 <h5 id="bff_cluster-0-2-0-05-0-1">BFF_cluster (0.2, 0.05, 0.1)<a class="anchor" aria-label="anchor" href="#bff_cluster-0-2-0-05-0-1"></a>
@@ -240,7 +240,7 @@ BFF_raw classifications (consensus output can be ignored).</p>
 <span><span class="co">## [1] "Doublet thresh:  0.2"</span></span>
 <span><span class="co">## [1] "Neg thresh:  0.05"</span></span>
 <span><span class="co">## [1] "Min distance as fraction of distance between peaks:  0.1"</span></span></code></pre>
-<p><img src="BFF-example_files/figure-html/unnamed-chunk-3-19.png" width="576"><img src="BFF-example_files/figure-html/unnamed-chunk-3-35.png" width="576"></p>
+<p><img src="BFF-example_files%2Ffigure-html%2Funnamed-chunk-3-19.png" width="576"><img src="BFF-example_files%2Ffigure-html%2Funnamed-chunk-3-35.png" width="576"></p>
 </div>
 <div class="section level5">
 <h5 id="bff_cluster-0-05-0-2-0-1">BFF_cluster (0.05, 0.2, 0.1)<a class="anchor" aria-label="anchor" href="#bff_cluster-0-05-0-2-0-1"></a>
@@ -260,7 +260,7 @@ BFF_raw classifications (consensus output can be ignored).</p>
 <span><span class="co">## [1] "Doublet thresh:  0.05"</span></span>
 <span><span class="co">## [1] "Neg thresh:  0.2"</span></span>
 <span><span class="co">## [1] "Min distance as fraction of distance between peaks:  0.1"</span></span></code></pre>
-<p><img src="BFF-example_files/figure-html/unnamed-chunk-4-19.png" width="576"><img src="BFF-example_files/figure-html/unnamed-chunk-4-35.png" width="576"></p>
+<p><img src="BFF-example_files%2Ffigure-html%2Funnamed-chunk-4-19.png" width="576"><img src="BFF-example_files%2Ffigure-html%2Funnamed-chunk-4-35.png" width="576"></p>
 </div>
 <div class="section level5">
 <h5 id="bff_cluster-0-05-0-05-0-25">BFF_cluster (0.05, 0.05, 0.25)<a class="anchor" aria-label="anchor" href="#bff_cluster-0-05-0-05-0-25"></a>
@@ -279,7 +279,7 @@ BFF_raw classifications (consensus output can be ignored).</p>
 <span><span class="co">## [1] "Doublet thresh:  0.05"</span></span>
 <span><span class="co">## [1] "Neg thresh:  0.05"</span></span>
 <span><span class="co">## [1] "Min distance as fraction of distance between peaks:  0.25"</span></span></code></pre>
-<p><img src="BFF-example_files/figure-html/unnamed-chunk-5-19.png" width="576"><img src="BFF-example_files/figure-html/unnamed-chunk-5-35.png" width="576"></p>
+<p><img src="BFF-example_files%2Ffigure-html%2Funnamed-chunk-5-19.png" width="576"><img src="BFF-example_files%2Ffigure-html%2Funnamed-chunk-5-35.png" width="576"></p>
 </div>
 </div>
 </div>
@@ -300,7 +300,7 @@ BFF_raw classifications (consensus output can be ignored).</p>
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer>
