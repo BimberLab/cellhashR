@@ -44,8 +44,9 @@ jobs:
         if: runner.os != 'Windows'
         # NOTE: switch back to main GMM_demux repo when this is resolved: https://github.com/CHPGenetics/GMM-Demux/pull/8
         # NOTE: switch back to main demuxEM repo when this is resolved: https://github.com/lilab-bcb/demuxEM/pull/16
+        # libglpk-dev added due to igraph
         run: |
-          sudo apt-get update && sudo apt-get install -yq python3 python3-pip
+          sudo apt-get update && sudo apt-get install -yq python3 python3-pip libglpk-dev
           python3 -m pip install --upgrade pip          
           python3 -m pip install git+https://github.com/bbimber/demuxEM.git
           python3 -m pip install git+https://github.com/bbimber/GMM-Demux.git
