@@ -126,7 +126,7 @@
 
 
 <dt id="arg-chemistry">chemistry<a class="anchor" aria-label="anchor" href="#arg-chemistry"></a></dt>
-<dd><p>This string is passed to EstimateMultipletRate. Should be either 10xV2 or 10xV3. This is used to calculate and present the expected doublet rate and does not influence the actual calls.</p></dd>
+<dd><p>This parameter is optional and only used to calculate the theoretical doublet rate (see EstimateMultipletRate). Should be either 10xV2,  10xV3, or NULL. This does not influence calls directly.</p></dd>
 
 
 <dt id="arg-callerdisagreementthreshold">callerDisagreementThreshold<a class="anchor" aria-label="anchor" href="#arg-callerdisagreementthreshold"></a></dt>
@@ -138,7 +138,7 @@
 
 
 <dt id="arg-maxallowabledoubletrate">maxAllowableDoubletRate<a class="anchor" aria-label="anchor" href="#arg-maxallowabledoubletrate"></a></dt>
-<dd><p>Per caller, the doublet rate will be computed as the total doublets / total droplets (including negatives). Any individual caller with a doublet rate above this value will be converted to NoCall. Note: if 'auto' is chosen, the value will be selected as 3x the theoretical doublet rate.</p></dd>
+<dd><p>Per caller, the doublet rate will be computed as the total doublets / total droplets (including negatives). Any individual caller with a doublet rate above this value will be converted to NoCall. Note: if 'auto' is chosen, the value will be selected as 3x the theoretical doublet rate (see EstimateMultipletRate).</p></dd>
 
 
 <dt id="arg-minallowabledoubletratefilter">minAllowableDoubletRateFilter<a class="anchor" aria-label="anchor" href="#arg-minallowabledoubletratefilter"></a></dt>
