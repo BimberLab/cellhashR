@@ -132,10 +132,10 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @param doHeatmap If true, Seurat::HTOHeatmap will be run on the results of each caller. Not supported by all callers.
 #' @param perCellSaturation An optional dataframe with the columns cellbarcode and saturation. This will be merged into the final output.
 #' @param majorityConsensusThreshold This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.
-#' @param chemistry This string is passed to EstimateMultipletRate. Should be either 10xV2 or 10xV3. This is used to calculate and present the expected doublet rate and does not influence the actual calls.
+#' @param chemistry This parameter is optional and only used to calculate the theoretical doublet rate (see EstimateMultipletRate). Should be either 10xV2,  10xV3, or NULL. This does not influence calls directly.
 #' @param callerDisagreementThreshold If provided, the agreement rate will be calculated between each caller and the simple majority call, ignoring discordant and no-call cells. If any caller has an disagreement rate above this threshold, it will be dropped and the consensus call re-calculated. The general idea is to drop a caller that is systematically discordant.
 #' @param rawFeatureMatrixH5 If either demuxem or demuxmix are used, you must provide the filepath to the 10x h5 gene expression counts file
-#' @param maxAllowableDoubletRate Per caller, the doublet rate will be computed as the total doublets / total droplets (including negatives). Any individual caller with a doublet rate above this value will be converted to NoCall. Note: if 'auto' is chosen, the value will be selected as 3x the theoretical doublet rate.
+#' @param maxAllowableDoubletRate Per caller, the doublet rate will be computed as the total doublets / total droplets (including negatives). Any individual caller with a doublet rate above this value will be converted to NoCall. Note: if 'auto' is chosen, the value will be selected as 3x the theoretical doublet rate (see EstimateMultipletRate).
 #' @param minAllowableDoubletRateFilter This is the lower bound allowed for maxAllowableDoubletRate. This is primarily used to avoid excessively low values when selecting 'auto' for maxAllowableDoubletRate.
 #' @param \dots Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).
 #' @description The primary methods to generating cell hashing calls from a filtered matrix of count data.
@@ -317,6 +317,10 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
 
   theoreticalDoubletRate <- EstimateMultipletRate(dplyr::n_distinct(allCalls$cellbarcode), chemistry = chemistry)
   if (maxAllowableDoubletRate == 'auto') {
+    if (is.null(theoreticalDoubletRate)) {
+        stop('If setting theoreticalDoubletRate to auto, chemistry cannot be null')
+    }
+
     maxAllowableDoubletRate <- max(minAllowableDoubletRateFilter, theoreticalDoubletRate * 3)
     print(paste0('Selecting maxAllowableDoubletRate of ', maxAllowableDoubletRate, ' which is 3x the theoretical rate of ', theoreticalDoubletRate, ', limited by minAllowableDoubletRateFilter'))
   }
@@ -346,8 +350,11 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     theme(
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
     ) +
-    ggtitle('Doublet Rate') +
-    geom_hline(yintercept = theoreticalDoubletRate, size=0.25, linetype = "dotted", color = "blue")
+    ggtitle('Doublet Rate')
+
+  if (!is.null(theoreticalDoubletRate)) {
+    P1 <- P1 + geom_hline(yintercept = theoreticalDoubletRate, size=0.25, linetype = "dotted", color = "blue")
+  }
 
   if (!is.null(maxAllowableDoubletRate)) {
     P1 <- P1 + geom_hline(yintercept = maxAllowableDoubletRate, size=0.25, linetype = "dotted", color = "red")
