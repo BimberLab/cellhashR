@@ -476,7 +476,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
 
     methodsWithCalls <- methodsForConsensus[! methodsForConsensus %in% methodsMissingData]
     if (length(methodsWithCalls) == 0) {
-      stop('No consensus methods remained after doublet filter!')
+      stop(paste0('No consensus methods remained after doublet filter! Filter threshold was: ', maxAllowableDoubletRate))
     }
   }
 

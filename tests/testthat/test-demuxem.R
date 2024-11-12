@@ -27,7 +27,7 @@ test_that("demuxEM Works as a report", {
 	rawData <- '../testdata/438-21-GEX/umi_count'
 	h5File <- '../testdata/438-21-GEX/438-21-raw_feature_bc_matrix.h5'
 
-	cellhashR::CallAndGenerateReport(rawCountData = rawData, barcodeWhitelist = c('MS-11', 'MS-12'), reportFile = html, callFile = output, skipNormalizationQc = T, methods = c('demuxem', 'gmm_demux'), methodsForConsensus = c('demuxem'), rawFeatureMatrixH5 = h5File)
+	cellhashR::CallAndGenerateReport(rawCountData = rawData, barcodeWhitelist = c('MS-11', 'MS-12'), reportFile = html, callFile = output, skipNormalizationQc = T, methods = c('demuxem', 'gmm_demux'), methodsForConsensus = c('demuxem'), rawFeatureMatrixH5 = h5File, minAllowableDoubletRateFilter = 0.2)
 	
 	df <- read.table(output, sep = '\t', header = T)
 	print(table(df$consensuscall))
