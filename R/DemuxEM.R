@@ -23,6 +23,7 @@ GenerateCellHashCallsDemuxEM <- function(barcodeMatrix, rawFeatureMatrixH5, meth
 			print(reticulate::import('demuxEM'))
 		}, error = function(e){
 			print("Error with reticulate::import('demuxEM')")
+			print(reticulate::py_last_error())
 			print(conditionMessage(e))
 			traceback()
 		})
