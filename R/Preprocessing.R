@@ -201,6 +201,27 @@ PrintRowQc <- function(barcodeMatrix) {
 
 	print(P3 | P4)
 
+	# Mean Counts
+	P3A <- ggplot(df, aes(x = Barcode, y = mean_nonzero)) +
+		geom_bar(stat = 'identity') +
+		ggtitle('Mean Counts/Cell (Among non-zero cells)') +
+		ylab('Mean Counts/Cell') +
+		egg::theme_presentation(base_size = 14) +
+		theme(
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+		)
+
+	P4A <- ggplot(df, aes(x = Barcode, y = mean_nonzero)) +
+		geom_bar(stat = 'identity') +
+		egg::theme_presentation(base_size = 14) +
+		ylab('Mean Counts/Cell (log1p)') +
+		scale_y_continuous(trans = scales::log1p_trans()) +
+		theme(
+			axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+		)
+
+	print(P3A | P4A)
+
 	# Also VlnPlots:
 	df <- data.frame(barcodeMatrix, check.names=FALSE)
 	df$Barcode <- rownames(df)

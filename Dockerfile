@@ -5,7 +5,6 @@ ARG GH_PAT='NOT_SET'
 # This should not be cached if the files change
 ADD . /cellhashR
 
-#NOTE: do manual install of fixed DelayedMatrixStats until new version is pushed
 RUN cd /cellhashR \
     && if [ "${GH_PAT}" != 'NOT_SET' ];then echo 'Setting GITHUB_PAT to: '${GH_PAT}; export GITHUB_PAT="${GH_PAT}";fi \
 	&& Rscript -e "BiocManager::install(ask = F, upgrade = 'always');" \
