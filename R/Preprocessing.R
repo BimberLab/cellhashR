@@ -71,7 +71,7 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 	}
 
 	if (!is.null(barcodeWhitelist)) {
-		print(paste0('Limiting to barcodes: ', paste0(barcodeWhitelist, collapse = ',')))
+		print(paste0('Limiting to barcodes: ', paste0(naturalsort::naturalsort(barcodeWhitelist), collapse = ',')))
 		sel <- rownames(barcodeData) %in% barcodeWhitelist
 		if (sum(sel) == 0) {
 			sel <- SimplifyHtoNames(rownames(barcodeData)) %in% barcodeWhitelist
@@ -84,8 +84,8 @@ ProcessCountMatrix <- function(rawCountData=NA, minCountPerCell = 5, barcodeWhit
 		minRetained <- min(barcodeDataCounts)
 		droppedAboveMinRetained <- droppedDataCounts[droppedDataCounts > minRetained]
 		if (length(droppedAboveMinRetained) > 0) {
-			print(paste0('The following HTOs were detected with counts above those in barcodeWhitelist: ', paste0(names(droppedAboveMinRetained), collapse = ';')))
-			.LogMetric(metricsFile, 'HTOsDroppedAboveMinRetained', paste0(names(droppedAboveMinRetained), collapse = ';'))
+			print(paste0('The following HTOs were detected with counts above those in barcodeWhitelist: ', paste0(naturalsort::naturalsort(names(droppedAboveMinRetained)), collapse = ';')))
+			.LogMetric(metricsFile, 'HTOsDroppedAboveMinRetained', paste0(naturalsort::naturalsort(names(droppedAboveMinRetained)), collapse = ';'))
 		}
 
 		if (ncol(barcodeData) < minCellsToContinue) {
