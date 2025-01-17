@@ -26,7 +26,7 @@ GenerateCellHashCallsDropletUtils <- function(barcodeMatrix, verbose = TRUE, ass
 	}, error = function(e){
 		print('Error generating hashedDrops calls, aborting')
 		print(conditionMessage(e))
-		traceback()
+		print(traceback())
 
 		return(NULL)
 	})

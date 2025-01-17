@@ -151,6 +151,22 @@ test_that("BFF calling works", {
 	expect_equal(expected = test[['BffQuantile']], object = sum(df$bff_cluster != 'Negative' & df$bff_cluster != 'ND'), info = testName)
 })
 
+test_that("dropletutils calling works", {
+	testName <- names(tests)[4]
+
+	print(paste0('Running test: ', testName))
+	test <- tests[[testName]]
+
+	l <- DoTest(test, methods = c('dropletutils'), skipNormalizationQc = TRUE)
+	barcodeData <- l$barcodeData
+	df <- l$df
+	metricsFile <- l$metricsFile
+	unlink(metricsFile)
+
+	print(unique(df$dropletutils))
+	print(table(df$dropletutils))
+	expect_equal(object = sum(test[['dropletutils']] == 'HTO-1'), expected = 12, info = testName)
+})
 
 test_that("Distinct methods and consensus work", {
 	testName <- names(tests)[4]
