@@ -71,7 +71,7 @@ SummarizeHashingCalls <- function(seuratObj, label, columnSuffix, doHeatmap = T,
 			if (class(assayObj)[1] == 'Assay') {
 				layerName <- 'data'
 			} else if (class(assayObj)[1] == 'Assay5') {
-				layerName <- ifelse('data' %in% names(assayObj@layers), yes = 'data', no = 'counts')
+				layerName <- ifelse('data' %in% SeuratObject::Layers(assayObj), yes = 'data', no = 'counts')
 			} else {
 				stop(paste0('Unknown class: ', class(assayObj)[1]))
 			}

@@ -30,7 +30,7 @@ GenerateCellHashCallsThreshold <- function(barcodeMatrix, verbose = TRUE, assay 
 }
 
 ThresholdDemux <- function(seuratObj, positivity_threshold, assay) {
-	if (!'data' %in% names(Seurat::GetAssay(seuratObj, assay = assay)@layers)) {
+	if (!'data' %in% SeuratObject::Layers(Seurat::GetAssay(seuratObj, assay = assay))) {
 		stop('Missing data layer!')
 	}
 

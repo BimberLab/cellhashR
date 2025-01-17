@@ -218,7 +218,7 @@ SetAssayData4Or5 <- function(seuratObj, theLayer, new.data, ...) {
 }
 
 GetAssayData4Or5 <- function(seuratObj, theLayer, ...) {
-	if (! theLayer %in% names(Seurat::GetAssayData(seuratObj)@layers)) {
+	if (! theLayer %in% SeuratObject::Layers(Seurat::GetAssay(seuratObj))) {
 		stop(paste0('Unknown layer: ', theLayer))
 	}
 

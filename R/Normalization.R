@@ -97,7 +97,7 @@ NormalizeCLR <- function(mat) {
   seuratObj <- Seurat::CreateSeuratObject(SeuratObject::as.sparse(mat), assay = 'Hashing')
   seuratObj <- Seurat::NormalizeData(seuratObj, assay = 'Hashing', normalization.method = "CLR", verbose = FALSE)
 
-  if (!'data' %in% names(Seurat::GetAssay(seuratObj, assay = 'Hashing')@layers)) {
+  if (!'data' %in% SeuratObject::Layers(Seurat::GetAssay(seuratObj, assay = 'Hashing'))) {
     stop('Missing data layer!')
   }
 

@@ -33,7 +33,7 @@ GenerateCellHashCallsDropletUtils <- function(barcodeMatrix, verbose = TRUE, ass
 }
 
 ThresholdHashedDrops <- function(seuratObj, assay, columnSuffix, runEmptyDrops = FALSE, seed = 1234, metricsFile = NULL) {
-	if (!'counts' %in% names(Seurat::GetAssay(seuratObj, assay = assay)@layers)) {
+	if (!'counts' %in% SeuratObject::Layers(Seurat::GetAssay(seuratObj, assay = assay))) {
 		stop('Missing counts layer!')
 	}
 	barcodeMatrix <- Seurat::GetAssayData(
