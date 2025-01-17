@@ -58,6 +58,11 @@ MULTIseqDemux <- function(
 	if (is.na(assay) || is.null(assay)) {
 		assay <- DefaultAssay(object = object)
 	}
+
+	if (!'data' %in% names(Seurat::GetAssay(seuratObj, assay = assay)@layers)) {
+		stop('Missing counts layer from multiseq object!')
+	}
+
 	multi_data_norm <- t(x = GetAssayData(
 		object = object,
 		layer = "data",

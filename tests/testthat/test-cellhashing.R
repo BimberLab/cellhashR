@@ -163,9 +163,9 @@ test_that("dropletutils calling works", {
 	metricsFile <- l$metricsFile
 	unlink(metricsFile)
 
-	print(unique(df$dropletutils))
 	print(table(df$dropletutils))
-	expect_equal(object = sum(test[['dropletutils']] == 'HTO-1'), expected = 12, info = testName)
+	expect_equal(object = sum(df$dropletutils == 'MS-11'), expected = 1193, info = testName)
+	expect_equal(object = sum(df$dropletutils == 'MS-12'), expected = 1926, info = testName)
 })
 
 test_that("Distinct methods and consensus work", {
