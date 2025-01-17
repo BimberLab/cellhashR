@@ -60,7 +60,7 @@ MULTIseqDemux <- function(
 	}
 	multi_data_norm <- t(x = GetAssayData(
 		object = object,
-		slot = "data",
+		layer = "data",
 		assay = assay
 	))
 

@@ -66,8 +66,8 @@ HTODemux <- function(
 	counts <- GetAssayData(
 		object = object,
 		assay = assay,
-		slot = 'counts'
-	)[, colnames(x = object)]
+		layer = 'counts'
+	)
 
 	ncenters <- (nrow(x = data) + 1)
 	switch(
@@ -99,7 +99,7 @@ HTODemux <- function(
 	average.expression <- suppressWarnings(Seurat::AverageExpression(
 		object = object,
 		assays = c(assay),
-		slot = 'counts',
+		layer = 'counts',
 		verbose = FALSE
 	))[[assay]]
 

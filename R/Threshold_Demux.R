@@ -33,8 +33,8 @@ ThresholdDemux <- function(seuratObj, positivity_threshold, assay) {
 	barcodeMatrix <- GetAssayData(
 		object = seuratObj,
 		assay = assay,
-		slot = 'data'
-	)[, colnames(x = seuratObj)]
+		layer = 'data'
+	)
 
 	#loop over HTOs in matrix, perform thresholding and store cells that pass the threshold
 	#return a discrete matrix, with 1 equal to a call positive for that barcode

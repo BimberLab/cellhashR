@@ -36,8 +36,8 @@ ThresholdHashedDrops <- function(seuratObj, assay, columnSuffix, runEmptyDrops =
 	barcodeMatrix <- Seurat::GetAssayData(
 		object = seuratObj,
 		assay = assay,
-		slot = 'data'
-	)[, colnames(x = seuratObj)]
+		layer = 'data'
+	)
 
 	set.seed(seed)
 
