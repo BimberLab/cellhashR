@@ -489,8 +489,8 @@ BFFDemux <- function(seuratObj, assay, simple_threshold=simple_threshold, double
   barcodeMatrix <- GetAssayData(
     object = seuratObj,
     assay = assay,
-    slot = 'counts'
-  )[, colnames(x = seuratObj)]
+    layer = 'counts'
+  )
   
   if (!simple_threshold) {
     print('Running BFF_cluster')

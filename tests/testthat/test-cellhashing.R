@@ -50,7 +50,7 @@ test_that("Workflow works", {
 
 	df <- read.table(output, sep = '\t', header = TRUE)
 	expect_equal(nrow(df), 2500)
-	expect_equal(sum(df$consensuscall == 'MS-12'), 1242)
+	expect_equal(sum(df$consensuscall == 'MS-12'), 1243)
 
 	expect_true(file.exists(metricsFile))
 	metrics <- read.table(metricsFile, sep = '\t', header = FALSE)
@@ -74,7 +74,7 @@ test_that("Workflow works", {
 	
 	df <- read.table(output, sep = '\t', header = TRUE)
 	expect_equal(nrow(df), 2500)
-	expect_equal(sum(df$consensuscall == 'MS-12'), 1242)
+	expect_equal(sum(df$consensuscall == 'MS-12'), 1243)
 
 	# Repeat with callerDisagreementThreshold, which should drop htodemux
 	unlink(md)
@@ -84,9 +84,9 @@ test_that("Workflow works", {
 	
 	df <- read.table(output, sep = '\t', header = TRUE)
 	expect_equal(nrow(df), 2500)
-	expect_equal(sum(df$consensuscall == 'MS-12'), 1242)
-	expect_equal(sum(df$consensuscall == 'MS-11'), 980)
-	expect_equal(sum(df$consensuscall.global == 'Singlet'), 2222)
+	expect_equal(sum(df$consensuscall == 'MS-12'), 1243)
+	expect_equal(sum(df$consensuscall == 'MS-11'), 982)
+	expect_equal(sum(df$consensuscall.global == 'Singlet'), 2225)
 
 	unlink(html)
 	unlink(output)
@@ -151,6 +151,22 @@ test_that("BFF calling works", {
 	expect_equal(expected = test[['BffQuantile']], object = sum(df$bff_cluster != 'Negative' & df$bff_cluster != 'ND'), info = testName)
 })
 
+test_that("dropletutils calling works", {
+	testName <- names(tests)[4]
+
+	print(paste0('Running test: ', testName))
+	test <- tests[[testName]]
+
+	l <- DoTest(test, methods = c('dropletutils'), skipNormalizationQc = TRUE)
+	barcodeData <- l$barcodeData
+	df <- l$df
+	metricsFile <- l$metricsFile
+	unlink(metricsFile)
+
+	print(table(df$dropletutils))
+	expect_equal(object = sum(df$dropletutils == 'MS-11'), expected = 1193, info = testName)
+	expect_equal(object = sum(df$dropletutils == 'MS-12'), expected = 1926, info = testName)
+})
 
 test_that("Distinct methods and consensus work", {
 	testName <- names(tests)[4]

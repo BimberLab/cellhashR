@@ -89,11 +89,15 @@ GenerateCellHashCallsSeqND <- function(barcodeMatrix, assay = "HTO", min_quantil
 
 SeqNDDemux <- function(seuratObj, assay, min_quantile = 0.01, plotcolor =  "#00BFC4") {
   #Perform thresholding
+  if (!'data' %in% SeuratObject::Layers(Seurat::GetAssay(seuratObj, assay = assay))) {
+    stop('Missing data layer!')
+  }
+
   barcodeMatrix <- GetAssayData(
 		object = seuratObj,
 		assay = assay,
-		slot = 'data'
-  )[, colnames(x = seuratObj)]
+		layer = 'data'
+  )
 
   #loop over HTOs in matrix, perform thresholding and store cells that pass the threshold
   #return a discrete matrix, with 1 equal to a call positive for that barcode

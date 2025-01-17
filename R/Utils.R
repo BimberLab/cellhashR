@@ -218,6 +218,10 @@ SetAssayData4Or5 <- function(seuratObj, theLayer, new.data, ...) {
 }
 
 GetAssayData4Or5 <- function(seuratObj, theLayer, ...) {
+	if (! theLayer %in% SeuratObject::Layers(Seurat::GetAssay(seuratObj))) {
+		stop(paste0('Unknown layer: ', theLayer))
+	}
+
 	if (!seuratObj@version < '5.0.0') {
 		return(Seurat::GetAssayData(seuratObj, slot = theLayer, ...))
 	} else {
