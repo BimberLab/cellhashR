@@ -59,7 +59,7 @@ MULTIseqDemux <- function(
 		assay <- DefaultAssay(object = object)
 	}
 
-	if (!'data' %in% SeuratObject::Layers(Seurat::GetAssay(seuratObj, assay = assay))) {
+	if (!'data' %in% SeuratObject::Layers(Seurat::GetAssay(object, assay = assay))) {
 		stop('Missing counts layer from multiseq object!')
 	}
 
