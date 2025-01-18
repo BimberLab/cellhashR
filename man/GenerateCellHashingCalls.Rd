@@ -19,6 +19,7 @@ GenerateCellHashingCalls(
   rawFeatureMatrixH5 = NULL,
   maxAllowableDoubletRate = "auto",
   minAllowableDoubletRateFilter = 0.3,
+  minAllowableSingletRate = 0.05,
   ...
 )
 }
@@ -50,6 +51,8 @@ GenerateCellHashingCalls(
 \item{maxAllowableDoubletRate}{Per caller, the doublet rate will be computed as the total doublets / total droplets (including negatives). Any individual caller with a doublet rate above this value will be converted to NoCall. Note: if 'auto' is chosen, the value will be selected as 3x the theoretical doublet rate (see EstimateMultipletRate).}
 
 \item{minAllowableDoubletRateFilter}{This is the lower bound allowed for maxAllowableDoubletRate. This is primarily used to avoid excessively low values when selecting 'auto' for maxAllowableDoubletRate.}
+
+\item{minAllowableSingletRate}{If any algorithm scored fewer than this fraction of cells as singlets, it will be discarded from the consensus call. This is primarily designed as a means to automatically discard poorly performing algorithms.}
 
 \item{\dots}{Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).}
 }

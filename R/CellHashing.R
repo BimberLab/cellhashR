@@ -137,11 +137,12 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @param rawFeatureMatrixH5 If either demuxem or demuxmix are used, you must provide the filepath to the 10x h5 gene expression counts file
 #' @param maxAllowableDoubletRate Per caller, the doublet rate will be computed as the total doublets / total droplets (including negatives). Any individual caller with a doublet rate above this value will be converted to NoCall. Note: if 'auto' is chosen, the value will be selected as 3x the theoretical doublet rate (see EstimateMultipletRate).
 #' @param minAllowableDoubletRateFilter This is the lower bound allowed for maxAllowableDoubletRate. This is primarily used to avoid excessively low values when selecting 'auto' for maxAllowableDoubletRate.
+#' @param minAllowableSingletRate If any algorithm scored fewer than this fraction of cells as singlets, it will be discarded from the consensus call. This is primarily designed as a means to automatically discard poorly performing algorithms.
 #' @param \dots Caller-specific arguments can be passed by prefixing with the method name. For example, htodemux.positive.quantile = 0.95, will be passed to the htodemux positive.quantile argument).
 #' @description The primary methods to generating cell hashing calls from a filtered matrix of count data.
 #' @return A data frame of results.
 #' @export
-GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'gmm_demux', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = FALSE, doHeatmap = TRUE, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, rawFeatureMatrixH5 = NULL, maxAllowableDoubletRate = 'auto', minAllowableDoubletRateFilter = 0.3, ...) {
+GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'gmm_demux', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = FALSE, doHeatmap = TRUE, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, rawFeatureMatrixH5 = NULL, maxAllowableDoubletRate = 'auto', minAllowableDoubletRateFilter = 0.3, minAllowableSingletRate = 0.05, ...) {
   .LogProgress('Generating calls')
   if (is.data.frame(barcodeMatrix)) {
     print('Converting input data.frame to a matrix')
@@ -254,13 +255,13 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     .LogProgress(paste0('Finished method: ', method))
   }
 
-  return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, methodsForConsensus = methodsForConsensus, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = perCellSaturation, majorityConsensusThreshold = majorityConsensusThreshold, chemistry = chemistry, callerDisagreementThreshold = callerDisagreementThreshold, maxAllowableDoubletRate = maxAllowableDoubletRate, minAllowableDoubletRateFilter = minAllowableDoubletRateFilter))
+  return(.ProcessEnsemblHtoCalls(callList, expectedMethods = methods, methodsForConsensus = methodsForConsensus, cellbarcodeWhitelist = cellbarcodeWhitelist, metricsFile = metricsFile, perCellSaturation = perCellSaturation, majorityConsensusThreshold = majorityConsensusThreshold, chemistry = chemistry, callerDisagreementThreshold = callerDisagreementThreshold, maxAllowableDoubletRate = maxAllowableDoubletRate, minAllowableDoubletRateFilter = minAllowableDoubletRateFilter, minAllowableSingletRate = minAllowableSingletRate))
 }
 
 #' @import ggplot2
 #' @import patchwork
 #' @importFrom dplyr %>% group_by summarise n filter
-.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, methodsForConsensus, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, maxAllowableDoubletRate = 'auto', minAllowableDoubletRateFilter = 0.3, throwIfNoSingletsFound = TRUE) {
+.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, methodsForConsensus, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, maxAllowableDoubletRate = 'auto', minAllowableDoubletRateFilter = 0.3, throwIfNoSingletsFound = TRUE, minAllowableSingletRate = 0.05) {
   print('Generating consensus calls')
 
   if (length(callList) == 0){
@@ -339,6 +340,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     doubleRateByCaller$Singlet <- 0
   }
 
+  doubleRateByCaller$FractionSinglet <- doubleRateByCaller$Singlet / dplyr::n_distinct(allCalls$cellbarcode)
   doubleRateByCaller$FractionDoublet <- doubleRateByCaller$Doublet / dplyr::n_distinct(allCalls$cellbarcode)
   doubleRateByCaller$SingleDoubletRatio <- doubleRateByCaller$Singlet / doubleRateByCaller$Doublet
   doubleRateByCaller$SingleDoubletRatio[is.na(doubleRateByCaller$SingleDoubletRatio)] <- 0
@@ -358,6 +360,21 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
 
   if (!is.null(maxAllowableDoubletRate)) {
     P1 <- P1 + geom_hline(yintercept = maxAllowableDoubletRate, size=0.25, linetype = "dotted", color = "red")
+  }
+
+  print(P1)
+
+  P1 <- ggplot(doubleRateByCaller, aes(x = method, y = FractionSinglet, fill = method)) +
+    geom_bar(position = position_dodge2(preserve = 'single'), stat = 'identity') +
+    egg::theme_presentation(base_size = 14) +
+    labs(x = '', y = 'Fraction Singlet', fill = 'Caller') +
+    theme(
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+    ) +
+    ggtitle('Singlet Rate')
+
+  if (!is.null(minAllowableSingletRate)) {
+    P1 <- P1 + geom_hline(yintercept = minAllowableSingletRate, size=0.25, linetype = "dotted", color = "red")
   }
 
   print(P1)
@@ -484,6 +501,22 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
     methodsWithCalls <- methodsForConsensus[! methodsForConsensus %in% methodsMissingData]
     if (length(methodsWithCalls) == 0) {
       stop(paste0('No consensus methods remained after doublet filter! Filter threshold was: ', maxAllowableDoubletRate))
+    }
+  }
+
+  # Singlet check:
+  if (!is.null(minAllowableSingletRate)) {
+    for (method in methodsForConsensus) {
+      singletRate <- ifelse(sum(doubleRateByCaller$method == method) == 0, yes = 0, no = doubleRateByCaller$FractionSinglet[doubleRateByCaller$method == method])
+      if (singletRate < minAllowableSingletRate) {
+        print(paste0('Dropping caller due to low singlet rate of ', singletRate, ': ', method))
+        methodsForConsensus <- methodsForConsensus[methodsForConsensus != method]
+      }
+    }
+
+    methodsWithCalls <- methodsForConsensus[! methodsForConsensus %in% methodsMissingData]
+    if (length(methodsWithCalls) == 0) {
+      stop(paste0('No consensus methods remained after singlet filter! Filter threshold was: ', minAllowableSingletRate))
     }
   }
 
@@ -793,6 +826,7 @@ GetExampleMarkdown <- function(dest) {
 #' @param datatypeName For output from CellRanger >= 3.0 with multiple data types, the result of Seurat::Read10X is a list. You need to supply the name of the Antibody Capture
 #' @param maxAllowableDoubletRate Per caller, the doublet rate will be computed as the total doublets / total droplets (including negatives). Any individual caller with a doublet rate above this value will be converted to NoCall. Note: if 'auto' is chosen, the value will be selected as 3x the theoretical doublet rate.
 #' @param minAllowableDoubletRateFilter This is the lower bound allowed for maxAllowableDoubletRate. This is primarily used to avoid excessively low values when selecting 'auto' for maxAllowableDoubletRate.
+#' @param minAllowableSingletRate If any algorithm scored fewer than this fraction of cells as singlets, it will be discarded from the consensus call. This is primarily designed as a means to automatically discard poorly performing algorithms.
 #' @param title A title for the HTML report
 #' @importFrom rmdformats html_clean
 #' @export
