@@ -102,7 +102,7 @@ test_that("Saturation plot works", {
 })
 
 test_that("Cell hashing works", {
-    for (testName in names(tests)) {
+  for (testName in names(tests)) {
 		print(paste0('Running test: ', testName))
 		test <- tests[[testName]]
 

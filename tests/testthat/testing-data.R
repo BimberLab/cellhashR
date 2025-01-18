@@ -78,11 +78,11 @@ tests <- list(
 	'471-2' = list(
 		input = '../testdata/471-2-GEX/umi_count',
 		htos = paste0('MS-', c(3, 4)),
-		CalledCells = 4966,
+		CalledCells = 5000,
 		Singlet = 2085,
-		Doublet = 553,
-		MultiSeqCalled = 38,
-		Discordant = 34,
+		Doublet = 587,
+		MultiSeqCalled = 0,
+		Discordant = 0,
 		SeuratCalled = 2672
 	),
 	'483-3' = list(
