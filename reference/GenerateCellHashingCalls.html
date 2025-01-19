@@ -81,6 +81,7 @@
 <span>  rawFeatureMatrixH5 <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  maxAllowableDoubletRate <span class="op">=</span> <span class="st">"auto"</span>,</span>
 <span>  minAllowableDoubletRateFilter <span class="op">=</span> <span class="fl">0.3</span>,</span>
+<span>  minAllowableSingletRate <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -143,6 +144,10 @@
 
 <dt id="arg-minallowabledoubletratefilter">minAllowableDoubletRateFilter<a class="anchor" aria-label="anchor" href="#arg-minallowabledoubletratefilter"></a></dt>
 <dd><p>This is the lower bound allowed for maxAllowableDoubletRate. This is primarily used to avoid excessively low values when selecting 'auto' for maxAllowableDoubletRate.</p></dd>
+
+
+<dt id="arg-minallowablesingletrate">minAllowableSingletRate<a class="anchor" aria-label="anchor" href="#arg-minallowablesingletrate"></a></dt>
+<dd><p>If any algorithm scored fewer than this fraction of cells as singlets, it will be discarded from the consensus call. This is primarily designed as a means to automatically discard poorly performing algorithms.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
