@@ -26,7 +26,8 @@ CallAndGenerateReport(
   doTSNE = FALSE,
   datatypeName = NULL,
   maxAllowableDoubletRate = "auto",
-  minAllowableDoubletRateFilter = 0.3
+  minAllowableDoubletRateFilter = 0.3,
+  minAllowableSingletRate = 0.05
 )
 }
 \arguments{
