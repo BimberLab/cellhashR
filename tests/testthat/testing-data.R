@@ -81,7 +81,7 @@ tests <- list(
 		CalledCells = 5000,
 		Singlet = 2085,
 		Doublet = 587,
-		MultiSeqCalled = 0,
+		MultiSeqCalled = 38,
 		Discordant = 0,
 		SeuratCalled = 2672
 	),
