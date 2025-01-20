@@ -122,7 +122,8 @@ if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
       callerDisagreementThreshold = callerDisagreementThreshold,
       doTSNE = doTSNE,
       maxAllowableDoubletRate = maxAllowableDoubletRate,
-      minAllowableDoubletRateFilter = minAllowableDoubletRateFilter
+      minAllowableDoubletRateFilter = minAllowableDoubletRateFilter,
+      minAllowableSingletRate = minAllowableSingletRate
     )
 	write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
 
