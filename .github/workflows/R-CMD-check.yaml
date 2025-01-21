@@ -44,14 +44,13 @@ jobs:
         if: runner.os != 'Windows'
         # NOTE: switch back to main GMM_demux repo when this is resolved: https://github.com/CHPGenetics/GMM-Demux/pull/8
         # NOTE: remove zarr when this is resolved: https://github.com/laminlabs/lamindb/pull/2334/files
-        # NOTE: libharfbuzz-dev libfribidi-dev added for textshaping
         # libglpk-dev added due to igraph
         # libpoppler-cpp-dev added due to demuxEM
         run: |
-          sudo apt-get update && sudo apt-get install -yq python3 python3-pip libglpk-dev libmagick++-dev libpoppler-cpp-dev libharfbuzz-dev libfribidi-dev
+          sudo apt-get update && sudo apt-get install -yq python3 python3-pip libglpk-dev libmagick++-dev libpoppler-cpp-dev
           python3 -m pip install --upgrade pip   
           python3 -m pip install "zarr>=2.16.0,<3.0.0a0"
-          python3 -m pip install demuxEM.git
+          python3 -m pip install demuxEM
           python3 -m pip install git+https://github.com/bbimber/GMM-Demux.git
 
       # The install_github() on remotes is to ensure system_requirements() supports 22.04
