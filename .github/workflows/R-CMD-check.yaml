@@ -46,8 +46,9 @@ jobs:
         # NOTE: remove zarr when this is resolved: https://github.com/laminlabs/lamindb/pull/2334/files
         # libglpk-dev added due to igraph
         # libpoppler-cpp-dev added due to demuxEM
+        # libharfbuzz-dev libfribidi-dev added due to textshaping
         run: |
-          sudo apt-get update && sudo apt-get install -yq python3 python3-pip libglpk-dev libmagick++-dev libpoppler-cpp-dev
+          sudo apt-get update && sudo apt-get install -yq python3 python3-pip libglpk-dev libmagick++-dev libpoppler-cpp-dev libharfbuzz-dev libfribidi-dev
           python3 -m pip install --upgrade pip   
           python3 -m pip install "zarr>=2.16.0,<3.0.0a0"
           python3 -m pip install demuxEM
