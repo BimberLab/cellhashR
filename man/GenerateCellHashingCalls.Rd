@@ -18,7 +18,7 @@ GenerateCellHashingCalls(
   callerDisagreementThreshold = NULL,
   rawFeatureMatrixH5 = NULL,
   maxAllowableDoubletRate = "auto",
-  minAllowableDoubletRateFilter = 0.3,
+  minAllowableDoubletRateFilter = 0.5,
   minAllowableSingletRate = 0.05,
   ...
 )
