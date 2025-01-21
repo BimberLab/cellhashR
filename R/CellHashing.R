@@ -142,7 +142,7 @@ AppendCellHashing <- function(seuratObj, barcodeCallFile, barcodePrefix) {
 #' @description The primary methods to generating cell hashing calls from a filtered matrix of count data.
 #' @return A data frame of results.
 #' @export
-GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'gmm_demux', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = FALSE, doHeatmap = TRUE, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, rawFeatureMatrixH5 = NULL, maxAllowableDoubletRate = 'auto', minAllowableDoubletRateFilter = 0.3, minAllowableSingletRate = 0.05, ...) {
+GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', 'gmm_demux', 'dropletutils'), methodsForConsensus = NULL, cellbarcodeWhitelist = NULL, metricsFile = NULL, doTSNE = FALSE, doHeatmap = TRUE, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, rawFeatureMatrixH5 = NULL, maxAllowableDoubletRate = 'auto', minAllowableDoubletRateFilter = 0.5, minAllowableSingletRate = 0.05, ...) {
   .LogProgress('Generating calls')
   if (is.data.frame(barcodeMatrix)) {
     print('Converting input data.frame to a matrix')
@@ -261,7 +261,7 @@ GenerateCellHashingCalls <- function(barcodeMatrix, methods = c('bff_cluster', '
 #' @import ggplot2
 #' @import patchwork
 #' @importFrom dplyr %>% group_by summarise n filter
-.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, methodsForConsensus, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, maxAllowableDoubletRate = 'auto', minAllowableDoubletRateFilter = 0.3, throwIfNoSingletsFound = TRUE, minAllowableSingletRate = 0.05) {
+.ProcessEnsemblHtoCalls <- function(callList, expectedMethods, methodsForConsensus, cellbarcodeWhitelist = NULL, metricsFile = NULL, perCellSaturation = NULL, majorityConsensusThreshold = NULL, chemistry = '10xV3', callerDisagreementThreshold = NULL, maxAllowableDoubletRate = 'auto', minAllowableDoubletRateFilter = 0.5, throwIfNoSingletsFound = TRUE, minAllowableSingletRate = 0.05) {
   print('Generating consensus calls')
 
   if (length(callList) == 0){
