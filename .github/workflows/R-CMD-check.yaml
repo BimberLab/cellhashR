@@ -6,7 +6,7 @@ on:
     branches: [ master, dev ]
   pull_request:
   schedule:
-    - cron:  "0 6 * * 3"
+    - cron:  "0 6 10 * *"
 
 name: R Build and Checks
 
@@ -83,8 +83,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-${{ matrix.config.bioc }}-1-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-${{ matrix.config.bioc }}-${{ secrets.CACHE_VERSION || 1 }}-
+          key: ${{ format('{0}-{1}-{2}-{3}-{4}', runner.os, matrix.config.r, matrix.config.bioc, secrets.CACHE_VERSION || 1, hashFiles(format('{0}/.github/pkg.lock', inputs.working-directory ))) }}
+          restore-keys: ${{ format('{0}-{1}-{2}-{3}-', runner.os, matrix.config.r, matrix.config.bioc, secrets.CACHE_VERSION || 1 ) }}
 
       - name: Install system dependencies
         if: runner.os == 'Linux'
