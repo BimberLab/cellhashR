@@ -6,7 +6,7 @@ on:
     branches: [ master, dev ]
   pull_request:
   schedule:
-    - cron:  "0 6 10 * *"
+    - cron: "0 6 10 * *"
 
 name: R Build and Checks
 
@@ -20,111 +20,29 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          #- {os: 24.04, r: 'devel', bioc: 'devel'}
-          - {os: 24.04, r: '4.4', bioc: '3.20', pkgdown: "true"}
-          - {os: 22.04, r: '4.3', bioc: '3.18'}
+          - { os: 24.04, r: '4.4', bioc: '3.20', pkgdown: "true" }
+          - { os: 22.04, r: '4.3', bioc: '3.18' }
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      CELLHASHR_DEBUG: 1
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: r-lib/actions/setup-r@v2
+      - uses: bimberlabinternal/DevOps/githubActions/r-gh-setup@master
         with:
-          r-version: ${{ matrix.config.r }}
-          http-user-agent: ${{ matrix.config.http-user-agent }}
-          use-public-rspm: true
+          r_version: ${{ matrix.config.r }}
+          bioc_version: ${{ matrix.config.bioc }}
+          cache_version: ${{ secrets.CACHE_VERSION }}
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: r-lib/actions/setup-pandoc@v2
-
-      - name: Install packages
-        if: runner.os != 'Windows'
-        # NOTE: switch back to main GMM_demux repo when this is resolved: https://github.com/CHPGenetics/GMM-Demux/pull/8
-        # NOTE: remove zarr when this is resolved: https://github.com/laminlabs/lamindb/pull/2334/files
-        # libglpk-dev added due to igraph
-        # libpoppler-cpp-dev added due to demuxEM
-        # libharfbuzz-dev libfribidi-dev added due to textshaping
-        run: |
-          sudo apt-get update && sudo apt-get install -yq python3 python3-pip libglpk-dev libmagick++-dev libpoppler-cpp-dev libharfbuzz-dev libfribidi-dev
-          python3 -m pip install --upgrade pip   
-          python3 -m pip install "zarr>=2.16.0,<3.0.0a0"
-          python3 -m pip install demuxEM
-          python3 -m pip install git+https://github.com/bbimber/GMM-Demux.git
-
-      # The install_github() on remotes is to ensure system_requirements() supports 22.04
-      - name: Setup Bioconductor
-        run: |
-          install.packages(c('remotes', 'devtools'))
-          remotes::install_github("r-lib/remotes")
-          if (!requireNamespace("BiocManager", quietly=TRUE))  install.packages("BiocManager");
-          BiocManager::install(version = "${{ matrix.config.bioc }}", ask = FALSE);
-          cat(append = TRUE, file = "~/.Rprofile", "local({");
-          cat(append = TRUE, file = "~/.Rprofile", "repos <- append(getOption('repos'), BiocManager::repositories());");
-          cat(append = TRUE, file = "~/.Rprofile", "repos <- repos[!duplicated(names(repos))];");
-          cat(append = TRUE, file = "~/.Rprofile", "options(repos = repos);");
-          cat(append = TRUE, file = "~/.Rprofile", "});");
-          cat(append = TRUE, file = "~/.Rprofile", "Sys.setenv(R_BIOC_VERSION=as.character(BiocManager::version()));");
-          cat(append = TRUE, file = "~/.Rprofile", "Sys.setenv(USE_GMMDEMUX_SEED=1);");
-          # To avoid pthread_create() error. See: https://github.com/bmbolstad/preprocessCore/issues/1 and https://github.com/bmbolstad/preprocessCore/issues/12
-          remotes::install_github("bmbolstad/preprocessCore", dependencies = T, upgrade = "always", force = TRUE, configure.args = "--disable-threading")
-        shell: Rscript {0}
-
-      - name: Query dependencies
-        run: |
-          saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
-          writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
-        shell: Rscript {0}
-
-      - name: Cache R packages
-        if: runner.os != 'Windows'
-        uses: actions/cache@v4
+      - uses: r-lib/actions/check-r-package@v2
         with:
-          path: ${{ env.R_LIBS_USER }}
-          key: ${{ format('{0}-{1}-{2}-{3}-{4}', runner.os, matrix.config.r, matrix.config.bioc, secrets.CACHE_VERSION || 1, hashFiles(format('{0}/.github/pkg.lock', inputs.working-directory ))) }}
-          restore-keys: ${{ format('{0}-{1}-{2}-{3}-', runner.os, matrix.config.r, matrix.config.bioc, secrets.CACHE_VERSION || 1 ) }}
-
-      - name: Install system dependencies
-        if: runner.os == 'Linux'
-        run: |
-          while read -r cmd
-          do
-            eval sudo $cmd
-          done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "${{ matrix.config.os }}"))')
-
-      - name: Install dependencies
-        run: |
-          remotes::install_deps(dependencies = TRUE, upgrade = "always")
-          install.packages("pkgdown")
-          remotes::install_cran("rcmdcheck")
-        shell: Rscript {0}
-
-      - name: Session info
-        run: |
-          options(width = 100)
-          pkgs <- installed.packages()[, "Package"]
-          sessioninfo::session_info(pkgs, include_base = TRUE)
-        shell: Rscript {0}
-
-      - name: Check
+          args: 'c("--no-manual")'
         env:
           _R_CHECK_CRAN_INCOMING_: false
-        run: rcmdcheck::rcmdcheck(args = c("--no-manual", "--no-build-vignettes"), error_on = "warning", check_dir = "check")
-        shell: Rscript {0}
-
-      - name: Show testthat output
-        if: always()
-        run: find check -name 'testthat.Rout*' -exec cat '{}' \; || true
-        shell: bash
-
-      - name: Upload check results
-        if: failure()
-        uses: actions/upload-artifact@main
-        with:
-          name: ${{ runner.os }}-r${{ matrix.config.r }}-bioc${{ matrix.config.bioc }}-results
-          path: check
 
       - name: Install package
         if: github.ref == 'refs/heads/master' && matrix.config.pkgdown == 'true'
