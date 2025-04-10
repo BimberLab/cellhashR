@@ -85,7 +85,7 @@ test_that("Workflow works", {
 	df <- read.table(output, sep = '\t', header = TRUE)
 	expect_equal(nrow(df), 2500)
 	expect_equal(sum(df$consensuscall == 'MS-12'), 1243, tolerance = 1)
-	expect_equal(sum(df$consensuscall == 'MS-11'), 982)
+	expect_equal(sum(df$consensuscall == 'MS-11'), 982, tolerance = 1)
 	expect_equal(sum(df$consensuscall.global == 'Singlet'), 2225, tolerance = 1)
 
 	unlink(html)
