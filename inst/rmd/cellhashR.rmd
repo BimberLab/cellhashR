@@ -133,7 +133,7 @@ if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
     }
   }, error = function(e){
     message(e)
-    traceback(e)
+    traceback()
   })
 } else {
 	stop('No passing cells were found in the count matrix')
