@@ -105,12 +105,13 @@ if (!is.null(molInfoFile)) {
 df <- NULL
 if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
 
-	if (!is.null(saveOriginalCellBarcodeFile)) {
-	  cellbarcodeWhitelist <- read.table(saveOriginalCellBarcodeFile, header = FALSE, col.names = c('cellbarcode'))
-	  cellbarcodeWhitelist <- cellbarcodeWhitelist$cellbarcode
+  if (!is.null(saveOriginalCellBarcodeFile)) {
+    cellbarcodeWhitelist <- read.table(saveOriginalCellBarcodeFile, header = FALSE, col.names = c('cellbarcode'))
+    cellbarcodeWhitelist <- cellbarcodeWhitelist$cellbarcode
   }
 
-	df <- GenerateCellHashingCalls(
+  tryCatch({
+    df <- GenerateCellHashingCalls(
       barcodeMatrix = barcodeData,
       methods = methods,
       methodsForConsensus = methodsForConsensus,
@@ -125,13 +126,17 @@ if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
       minAllowableDoubletRateFilter = minAllowableDoubletRateFilter,
       minAllowableSingletRate = minAllowableSingletRate
     )
-	write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
+    write.table(df, file = callFile, sep = '\t', row.names = FALSE, quote = FALSE)
 
-	if (!is.null(saveOriginalCellBarcodeFile)) {
-	  unlink(saveOriginalCellBarcodeFile)
-  }
+    if (!is.null(saveOriginalCellBarcodeFile)) {
+      unlink(saveOriginalCellBarcodeFile)
+    }
+  }, error = function(e){
+    message(e)
+    traceBack(e)
+  })
 } else {
-	stop('No passing cels were found in the count matrix')
+	stop('No passing cells were found in the count matrix')
 }
 
 ```
