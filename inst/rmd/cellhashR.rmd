@@ -22,7 +22,7 @@ output:
 library(cellhashR)
 library(dplyr)
 
-knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error=FALSE)
+knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error=TRUE)
 
 ```
 
@@ -102,9 +102,13 @@ if (!is.null(molInfoFile)) {
 
 ```{r GenerateCalls}
 
+# Ensure the output does not exist unless generated below
+if (file.exists(callFile)) {
+  unlink(callFile)
+}
+
 df <- NULL
 if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
-
   if (!is.null(saveOriginalCellBarcodeFile)) {
     cellbarcodeWhitelist <- read.table(saveOriginalCellBarcodeFile, header = FALSE, col.names = c('cellbarcode'))
     cellbarcodeWhitelist <- cellbarcodeWhitelist$cellbarcode
