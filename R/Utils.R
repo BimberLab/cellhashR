@@ -210,11 +210,7 @@ SetAssayData4Or5 <- function(seuratObj, theLayer, new.data, ...) {
 		new.data <- Seurat::as.sparse(as.matrix(new.data))
 	}
 
-	if (!seuratObj@version < '5.0.0') {
-		return(Seurat::SetAssayData(seuratObj, slot = theLayer, new.data = new.data, ...))
-	} else {
-		return(Seurat::SetAssayData(seuratObj, layer = theLayer, new.data = new.data, ...))
-	}
+    return(Seurat::SetAssayData(seuratObj, layer = theLayer, new.data = new.data, ...))
 }
 
 GetAssayData4Or5 <- function(seuratObj, theLayer, ...) {
@@ -222,9 +218,5 @@ GetAssayData4Or5 <- function(seuratObj, theLayer, ...) {
 		stop(paste0('Unknown layer: ', theLayer))
 	}
 
-	if (!seuratObj@version < '5.0.0') {
-		return(Seurat::GetAssayData(seuratObj, slot = theLayer, ...))
-	} else {
-		return(Seurat::GetAssayData(seuratObj, layer = theLayer, ...))
-	}
+    return(Seurat::GetAssayData(seuratObj, layer = theLayer, ...))
 }
